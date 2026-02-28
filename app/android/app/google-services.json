@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "239139234503",
+    "project_id": "bap-pulse",
+    "storage_bucket": "bap-pulse.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:239139234503:android:91bbff631f09c9002fd4e2",
+        "android_client_info": {
+          "package_name": "com.example.bap_pulse"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "239139234503-c9bgm9g06ipe80rk3hb2nmf82ersgf2v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCNayT5EU6FmhYP33tJwhvHqSJVWmGsbZw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "239139234503-c9bgm9g06ipe80rk3hb2nmf82ersgf2v.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "239139234503-vlnnipcniuq2vth0tag96jg8n8v9v5os.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bapPulse"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

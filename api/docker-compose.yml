@@ -1,0 +1,29 @@
+name: bap-pulse
+services:
+  postgres:
+    image: postgres:17
+    container_name: bap-pulse-db
+    environment:
+      POSTGRES_DB: bappulse
+      POSTGRES_USER: bappulse
+      POSTGRES_PASSWORD: "caOqvamDrZsUxOgyZxhXzsiPOwdfFiCQ"
+    volumes:
+      - ./.docker/db/data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  storage:
+    image: rustfs/rustfs:latest
+    container_name: bap-pulse-storage
+    environment:
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: "0.0.0.0:9000"
+      RUSTFS_CONSOLE_ADDRESS: "0.0.0.0:9001"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_ACCESS_KEY: bappulse
+      RUSTFS_SECRET_KEY: "eeDrvchNZFeQuKrjvkjVYnaloKNyvFIK"
+    volumes:
+      - ./.docker/storage/data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"

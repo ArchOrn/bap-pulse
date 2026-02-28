@@ -1,0 +1,214 @@
+package handlers
+
+import (
+	"time"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
+
+	"bap-pulse/db"
+	"bap-pulse/services"
+)
+
+type createMatchRequest struct {
+	MatchType      string `json:"match_type"`       // SINGLES | DOUBLES | MIXED
+	Team1Player1ID string `json:"team1_player1_id"` // always required
+	Team1Player2ID string `json:"team1_player2_id"` // required for DOUBLES / MIXED
+	Team2Player1ID string `json:"team2_player1_id"` // always required
+	Team2Player2ID string `json:"team2_player2_id"` // required for DOUBLES / MIXED
+	ScoreTeam1     int32  `json:"score_team1"`
+	ScoreTeam2     int32  `json:"score_team2"`
+}
+
+// GetMatches godoc
+// GET /matches
+func GetMatches(pool *pgxpool.Pool) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		q := db.New(pool)
+		matches, err := q.ListMatches(c.Context())
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Erreur interne"})
+		}
+		return c.JSON(matches)
+	}
+}
+
+// GetMatch godoc
+// GET /matches/:id
+func GetMatch(pool *pgxpool.Pool) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		id, err := parseUUID(c.Params("id"))
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "ID invalide"})
+		}
+
+		q := db.New(pool)
+		match, err := q.GetMatchByID(c.Context(), id)
+		if err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Match introuvable"})
+		}
+		return c.JSON(match)
+	}
+}
+
+// CreateMatch godoc
+// POST /matches
+//
+// Creates a match, recalculates ELOs and records the history.
+// Singles: provide team1_player1_id and team2_player1_id only.
+// Doubles/Mixed: provide all 4 player IDs.
+func CreateMatch(pool *pgxpool.Pool) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		var req createMatchRequest
+		if err := c.BodyParser(&req); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Corps de la requête invalide"})
+		}
+
+		isDoubles := req.MatchType == string(db.MatchTypeDOUBLES) || req.MatchType == string(db.MatchTypeMIXED)
+
+		if req.Team1Player1ID == "" || req.Team2Player1ID == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "team1_player1_id et team2_player1_id sont requis"})
+		}
+		if isDoubles && (req.Team1Player2ID == "" || req.Team2Player2ID == "") {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Les 4 joueurs sont requis pour un match en double"})
+		}
+
+		q := db.New(pool)
+
+		p1, err := q.GetPlayerByID(c.Context(), req.Team1Player1ID)
+		if err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Équipe 1 joueur 1 introuvable"})
+		}
+		p3, err := q.GetPlayerByID(c.Context(), req.Team2Player1ID)
+		if err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Équipe 2 joueur 1 introuvable"})
+		}
+
+		// Nullable fields for partner slots (singles leaves them empty).
+		team1P2 := pgtype.Text{}
+		team2P2 := pgtype.Text{}
+
+		var p2, p4 db.Player
+		if isDoubles {
+			p2, err = q.GetPlayerByID(c.Context(), req.Team1Player2ID)
+			if err != nil {
+				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Équipe 1 joueur 2 introuvable"})
+			}
+			p4, err = q.GetPlayerByID(c.Context(), req.Team2Player2ID)
+			if err != nil {
+				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Équipe 2 joueur 2 introuvable"})
+			}
+			team1P2 = pgtype.Text{String: req.Team1Player2ID, Valid: true}
+			team2P2 = pgtype.Text{String: req.Team2Player2ID, Valid: true}
+		}
+
+		match, err := q.CreateMatch(c.Context(), db.CreateMatchParams{
+			MatchType:      db.MatchType(req.MatchType),
+			Team1Player1ID: req.Team1Player1ID,
+			Team1Player2ID: team1P2,
+			Team2Player1ID: req.Team2Player1ID,
+			Team2Player2ID: team2P2,
+			ScoreTeam1:     req.ScoreTeam1,
+			ScoreTeam2:     req.ScoreTeam2,
+			PlayedAt:       pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		})
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Erreur création du match"})
+		}
+
+		eloChanges, err := applyEloChanges(c, q, match.ID, req, p1, p2, p3, p4, isDoubles)
+		if err != nil {
+			return err
+		}
+
+		return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+			"match": match,
+			"elo":   eloChanges,
+		})
+	}
+}
+
+// applyEloChanges computes and persists new ELO ratings for all players in the match.
+func applyEloChanges(
+	c *fiber.Ctx,
+	q *db.Queries,
+	matchID pgtype.UUID,
+	req createMatchRequest,
+	p1, p2, p3, p4 db.Player,
+	isDoubles bool,
+) (fiber.Map, error) {
+	team1Wins := req.ScoreTeam1 > req.ScoreTeam2
+	team2Wins := req.ScoreTeam2 > req.ScoreTeam1
+
+	type eloChange struct {
+		Before int32
+		After  int32
+	}
+
+	changes := make(map[string]eloChange)
+
+	if isDoubles {
+		// Doubles / Mixed: compute delta from team average ELOs,
+		// then apply the same delta to each player individually.
+		avgTeam1 := services.TeamAverageElo(int(p1.Elo), int(p2.Elo))
+		avgTeam2 := services.TeamAverageElo(int(p3.Elo), int(p4.Elo))
+
+		var deltaTeam1, deltaTeam2 int
+		if team1Wins {
+			deltaTeam1, deltaTeam2 = services.CalculateTeamEloDelta(avgTeam1, avgTeam2)
+		} else if team2Wins {
+			deltaTeam2, deltaTeam1 = services.CalculateTeamEloDelta(avgTeam2, avgTeam1)
+		}
+		// Draw: both deltas remain 0.
+
+		for _, entry := range []struct {
+			player db.Player
+			delta  int
+		}{
+			{p1, deltaTeam1}, {p2, deltaTeam1},
+			{p3, deltaTeam2}, {p4, deltaTeam2},
+		} {
+			newElo := int32(int(entry.player.Elo) + entry.delta)
+			changes[entry.player.ID] = eloChange{Before: entry.player.Elo, After: newElo}
+		}
+	} else {
+		// Singles: standard 1v1 ELO calculation.
+		var newEloP1, newEloP3 int
+		if team1Wins {
+			newEloP1, newEloP3 = services.CalculateMatchElo(int(p1.Elo), int(p3.Elo))
+		} else if team2Wins {
+			newEloP3, newEloP1 = services.CalculateMatchElo(int(p3.Elo), int(p1.Elo))
+		} else {
+			// Draw: ELOs unchanged.
+			newEloP1, newEloP3 = int(p1.Elo), int(p3.Elo)
+		}
+		changes[p1.ID] = eloChange{Before: p1.Elo, After: int32(newEloP1)}
+		changes[p3.ID] = eloChange{Before: p3.Elo, After: int32(newEloP3)}
+	}
+
+	// Persist new ELOs and record history for each player.
+	for playerID, ch := range changes {
+		if _, err := q.UpdatePlayerElo(c.Context(), db.UpdatePlayerEloParams{
+			ID:  playerID,
+			Elo: ch.After,
+		}); err != nil {
+			return nil, c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Erreur mise à jour ELO"})
+		}
+		if _, err := q.CreateEloHistory(c.Context(), db.CreateEloHistoryParams{
+			PlayerID:  playerID,
+			EloBefore: ch.Before,
+			EloAfter:  ch.After,
+			MatchID:   matchID,
+		}); err != nil {
+			return nil, c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Erreur historique ELO"})
+		}
+	}
+
+	// Build the ELO response map.
+	result := fiber.Map{}
+	for id, ch := range changes {
+		result[id] = fiber.Map{"before": ch.Before, "after": ch.After}
+	}
+	return result, nil
+}
