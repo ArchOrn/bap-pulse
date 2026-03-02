@@ -1,7 +1,20 @@
+//	@title			BAP Pulse API
+//	@version		1.0
+//	@description	REST API for the BAP Pulse badminton club app — Bad A Paname.
+//
+//	@host		localhost:3000
+//	@BasePath	/
+//
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
+//	@description				Firebase ID Token — format: Bearer <token>
+
 package main
 
 import (
 	"context"
+	_ "embed"
 	"log"
 
 	firebase "firebase.google.com/go/v4"
@@ -12,9 +25,36 @@ import (
 	"google.golang.org/api/option"
 
 	"bap-pulse/config"
+	_ "bap-pulse/docs"
 	"bap-pulse/handlers"
 	"bap-pulse/middleware"
 )
+
+//go:embed docs/swagger.json
+var swaggerJSON []byte
+
+const swaggerUI = `<!DOCTYPE html>
+<html>
+<head>
+  <title>BAP Pulse API</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    SwaggerUIBundle({
+      url: "/swagger/doc.json",
+      dom_id: '#swagger-ui',
+      presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
+      layout: "BaseLayout",
+      deepLinking: true,
+    })
+  </script>
+</body>
+</html>`
 
 func main() {
 	ctx := context.Background()
@@ -67,24 +107,39 @@ func main() {
 		return c.JSON(fiber.Map{"status": "ok"})
 	})
 
-	// --- Auth: profile sync after client-side Firebase login ---
-	// The client authenticates via the Firebase SDK, obtains an ID Token,
-	// then calls POST /auth/sync to create or retrieve their profile.
-	app.Post("/auth/sync", middleware.FirebaseAuth(authClient), handlers.Sync(pool))
+	// --- Swagger UI (dev only) ---
+	swaggerHandler := func(c *fiber.Ctx) error {
+		return c.Type("html").SendString(swaggerUI)
+	}
+	app.Get("/swagger", swaggerHandler)
+	app.Get("/swagger/", swaggerHandler)
+	app.Get("/swagger/index.html", swaggerHandler)
+	app.Get("/swagger/doc.json", func(c *fiber.Ctx) error {
+		c.Set("Content-Type", "application/json")
+		return c.Send(swaggerJSON)
+	})
 
-	// --- Public routes ---
+	// --- Firebase Auth applied globally, public paths excluded ---
+	app.Use(middleware.Except(
+		[]string{"/health", "/rankings", "/swagger"},
+		middleware.FirebaseAuth(authClient),
+	))
+
+	// --- Auth ---
+	app.Post("/auth/sync", handlers.Sync(pool))
+
+	// --- Public ---
 	app.Get("/rankings", handlers.GetRankings(pool))
 
-	// --- Routes protected by Firebase Auth ---
-	protected := app.Group("", middleware.FirebaseAuth(authClient))
-
-	players := protected.Group("/players")
+	// --- Players ---
+	players := app.Group("/players")
 	players.Get("/", handlers.GetPlayers(pool))
 	players.Get("/:id", handlers.GetPlayer(pool))
 	players.Put("/:id", handlers.UpdatePlayer(pool))
 	players.Delete("/:id", handlers.DeletePlayer(pool))
 
-	matches := protected.Group("/matches")
+	// --- Matches ---
+	matches := app.Group("/matches")
 	matches.Get("/", handlers.GetMatches(pool))
 	matches.Post("/", handlers.CreateMatch(pool))
 	matches.Get("/:id", handlers.GetMatch(pool))

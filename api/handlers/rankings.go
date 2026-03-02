@@ -9,8 +9,14 @@ import (
 )
 
 // GetRankings godoc
-// GET /api/v1/rankings
-// Retourne le classement ELO de tous les joueurs.
+//
+//	@Summary		ELO leaderboard
+//	@Description	Returns all players sorted by descending ELO with their rank position.
+//	@Tags			rankings
+//	@Produce		json
+//	@Success		200	{array}		services.PlayerRanking
+//	@Failure		500	{object}	map[string]string
+//	@Router			/rankings [get]
 func GetRankings(pool *pgxpool.Pool) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		q := db.New(pool)

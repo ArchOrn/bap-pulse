@@ -12,13 +12,19 @@ type syncRequest struct {
 }
 
 // Sync godoc
-// POST /auth/sync
 //
-// Called by the client right after a successful Firebase login.
-// Creates the player profile in the database on first login,
-// or returns the existing profile.
-//
-// The Firebase ID Token is already validated by the FirebaseAuth middleware.
+//	@Summary		Sync player profile
+//	@Description	Called after a successful Firebase login. Creates the player profile on first login, or returns the existing one.
+//	@Tags			auth
+//	@Security		BearerAuth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		syncRequest	true	"Player display name (required on first login)"
+//	@Success		200		{object}	db.Player
+//	@Success		201		{object}	db.Player
+//	@Failure		400		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/auth/sync [post]
 func Sync(pool *pgxpool.Pool) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		firebaseUID := c.Locals("firebaseUID").(string)

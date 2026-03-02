@@ -9,7 +9,14 @@ import (
 )
 
 // GetPlayers godoc
-// GET /players
+//
+//	@Summary		List all players
+//	@Tags			players
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Success		200	{array}		db.Player
+//	@Failure		500	{object}	map[string]string
+//	@Router			/players [get]
 func GetPlayers(pool *pgxpool.Pool) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		q := db.New(pool)
@@ -22,7 +29,15 @@ func GetPlayers(pool *pgxpool.Pool) fiber.Handler {
 }
 
 // GetPlayer godoc
-// GET /players/:id
+//
+//	@Summary		Get a player
+//	@Tags			players
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			id	path		string	true	"Player ID (Firebase UID)"
+//	@Success		200	{object}	db.Player
+//	@Failure		404	{object}	map[string]string
+//	@Router			/players/{id} [get]
 func GetPlayer(pool *pgxpool.Pool) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		q := db.New(pool)
@@ -40,7 +55,20 @@ type updatePlayerRequest struct {
 }
 
 // UpdatePlayer godoc
-// PUT /players/:id
+//
+//	@Summary		Update player profile
+//	@Description	Only the authenticated player can update their own profile.
+//	@Tags			players
+//	@Security		BearerAuth
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string				true	"Player ID (Firebase UID)"
+//	@Param			body	body		updatePlayerRequest	true	"Updated player data"
+//	@Success		200		{object}	db.Player
+//	@Failure		400		{object}	map[string]string
+//	@Failure		403		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/players/{id} [put]
 func UpdatePlayer(pool *pgxpool.Pool) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		// The player ID is their Firebase UID: ownership check is a simple string comparison.
@@ -67,7 +95,17 @@ func UpdatePlayer(pool *pgxpool.Pool) fiber.Handler {
 }
 
 // DeletePlayer godoc
-// DELETE /players/:id
+//
+//	@Summary		Delete player account
+//	@Description	Only the authenticated player can delete their own account.
+//	@Tags			players
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			id	path	string	true	"Player ID (Firebase UID)"
+//	@Success		204
+//	@Failure		403	{object}	map[string]string
+//	@Failure		500	{object}	map[string]string
+//	@Router			/players/{id} [delete]
 func DeletePlayer(pool *pgxpool.Pool) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		if c.Params("id") != c.Locals("firebaseUID").(string) {

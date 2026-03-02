@@ -2,7 +2,7 @@
 -include .env
 export
 
-.PHONY: run build migrate-up migrate-down sqlc tidy
+.PHONY: run build migrate-up migrate-down sqlc swagger tidy
 
 # Start the server in development mode
 run:
@@ -23,6 +23,10 @@ migrate-down:
 # Generate Go code from SQL queries
 sqlc:
 	sqlc generate
+
+# Generate Swagger docs from annotations
+swagger:
+	swag init -g main.go --output docs --parseDependency --parseInternal
 
 # Install dependencies
 tidy:

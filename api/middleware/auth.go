@@ -7,6 +7,18 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// Except wraps a handler and skips it for requests whose path starts with one of the given prefixes.
+func Except(prefixes []string, handler fiber.Handler) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		for _, prefix := range prefixes {
+			if strings.HasPrefix(c.Path(), prefix) {
+				return c.Next()
+			}
+		}
+		return handler(c)
+	}
+}
+
 // FirebaseAuth verifies the Firebase ID Token sent in the Authorization header.
 // On success, it stores the firebase_uid in the Fiber context.
 //

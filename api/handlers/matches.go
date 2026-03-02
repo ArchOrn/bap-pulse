@@ -22,7 +22,14 @@ type createMatchRequest struct {
 }
 
 // GetMatches godoc
-// GET /matches
+//
+//	@Summary		List all matches
+//	@Tags			matches
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Success		200	{array}		db.Match
+//	@Failure		500	{object}	map[string]string
+//	@Router			/matches [get]
 func GetMatches(pool *pgxpool.Pool) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		q := db.New(pool)
@@ -35,7 +42,16 @@ func GetMatches(pool *pgxpool.Pool) fiber.Handler {
 }
 
 // GetMatch godoc
-// GET /matches/:id
+//
+//	@Summary		Get a match
+//	@Tags			matches
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			id	path		string	true	"Match ID (UUID)"
+//	@Success		200	{object}	db.Match
+//	@Failure		400	{object}	map[string]string
+//	@Failure		404	{object}	map[string]string
+//	@Router			/matches/{id} [get]
 func GetMatch(pool *pgxpool.Pool) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := parseUUID(c.Params("id"))
@@ -53,11 +69,19 @@ func GetMatch(pool *pgxpool.Pool) fiber.Handler {
 }
 
 // CreateMatch godoc
-// POST /matches
 //
-// Creates a match, recalculates ELOs and records the history.
-// Singles: provide team1_player1_id and team2_player1_id only.
-// Doubles/Mixed: provide all 4 player IDs.
+//	@Summary		Create a match
+//	@Description	Creates a match, recalculates ELO ratings, and records history. Singles: provide team1_player1_id and team2_player1_id only. Doubles/Mixed: provide all 4 player IDs.
+//	@Tags			matches
+//	@Security		BearerAuth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		createMatchRequest	true	"Match details"
+//	@Success		201		{object}	map[string]interface{}
+//	@Failure		400		{object}	map[string]string
+//	@Failure		404		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/matches [post]
 func CreateMatch(pool *pgxpool.Pool) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var req createMatchRequest

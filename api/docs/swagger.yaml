@@ -1,0 +1,414 @@
+basePath: /
+definitions:
+  db.Match:
+    properties:
+      id:
+        type: string
+      match_type:
+        $ref: '#/definitions/db.MatchType'
+      played_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      score_team1:
+        type: integer
+      score_team2:
+        type: integer
+      team1_player1_id:
+        type: string
+      team1_player2_id:
+        $ref: '#/definitions/pgtype.Text'
+      team2_player1_id:
+        type: string
+      team2_player2_id:
+        $ref: '#/definitions/pgtype.Text'
+      validated:
+        type: boolean
+    type: object
+  db.MatchType:
+    enum:
+    - SINGLES
+    - DOUBLES
+    - MIXED
+    type: string
+    x-enum-varnames:
+    - MatchTypeSINGLES
+    - MatchTypeDOUBLES
+    - MatchTypeMIXED
+  db.Player:
+    properties:
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      elo:
+        type: integer
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  handlers.createMatchRequest:
+    properties:
+      match_type:
+        description: SINGLES | DOUBLES | MIXED
+        type: string
+      score_team1:
+        type: integer
+      score_team2:
+        type: integer
+      team1_player1_id:
+        description: always required
+        type: string
+      team1_player2_id:
+        description: required for DOUBLES / MIXED
+        type: string
+      team2_player1_id:
+        description: always required
+        type: string
+      team2_player2_id:
+        description: required for DOUBLES / MIXED
+        type: string
+    type: object
+  handlers.syncRequest:
+    properties:
+      name:
+        type: string
+    type: object
+  handlers.updatePlayerRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+    type: object
+  pgtype.InfinityModifier:
+    enum:
+    - 1
+    - 0
+    - -1
+    format: int32
+    type: integer
+    x-enum-varnames:
+    - Infinity
+    - Finite
+    - NegativeInfinity
+  pgtype.Text:
+    properties:
+      string:
+        type: string
+      valid:
+        type: boolean
+    type: object
+  pgtype.Timestamptz:
+    properties:
+      infinityModifier:
+        $ref: '#/definitions/pgtype.InfinityModifier'
+      time:
+        type: string
+      valid:
+        type: boolean
+    type: object
+  services.PlayerRanking:
+    properties:
+      player:
+        $ref: '#/definitions/db.Player'
+      rank:
+        type: integer
+    type: object
+host: localhost:3000
+info:
+  contact: {}
+  description: REST API for the BAP Pulse badminton club app — Bad A Paname.
+  title: BAP Pulse API
+  version: "1.0"
+paths:
+  /auth/sync:
+    post:
+      consumes:
+      - application/json
+      description: Called after a successful Firebase login. Creates the player profile
+        on first login, or returns the existing one.
+      parameters:
+      - description: Player display name (required on first login)
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.syncRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Player'
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/db.Player'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Sync player profile
+      tags:
+      - auth
+  /matches:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Match'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List all matches
+      tags:
+      - matches
+    post:
+      consumes:
+      - application/json
+      description: 'Creates a match, recalculates ELO ratings, and records history.
+        Singles: provide team1_player1_id and team2_player1_id only. Doubles/Mixed:
+        provide all 4 player IDs.'
+      parameters:
+      - description: Match details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createMatchRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a match
+      tags:
+      - matches
+  /matches/{id}:
+    get:
+      parameters:
+      - description: Match ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Match'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a match
+      tags:
+      - matches
+  /players:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Player'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List all players
+      tags:
+      - players
+  /players/{id}:
+    delete:
+      description: Only the authenticated player can delete their own account.
+      parameters:
+      - description: Player ID (Firebase UID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete player account
+      tags:
+      - players
+    get:
+      parameters:
+      - description: Player ID (Firebase UID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Player'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a player
+      tags:
+      - players
+    put:
+      consumes:
+      - application/json
+      description: Only the authenticated player can update their own profile.
+      parameters:
+      - description: Player ID (Firebase UID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated player data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.updatePlayerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Player'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update player profile
+      tags:
+      - players
+  /rankings:
+    get:
+      description: Returns all players sorted by descending ELO with their rank position.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/services.PlayerRanking'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: ELO leaderboard
+      tags:
+      - rankings
+securityDefinitions:
+  BearerAuth:
+    description: 'Firebase ID Token — format: Bearer <token>'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
