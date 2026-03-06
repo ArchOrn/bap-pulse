@@ -1,76 +1,72 @@
+<script setup lang="ts">
+
+const { baseURL } = useApi()
+
+const { data: rankings, status } = await useFetch<PlayerRanking[]>(`${baseURL}/rankings`)
+
+const stats = computed(() => [
+  {
+    label: 'Joueurs inscrits',
+    value: rankings.value?.length ?? 0,
+    icon: 'i-lucide-users'
+  },
+  {
+    label: 'Meilleur ELO',
+    value: rankings.value?.[0]?.Player.elo ?? '—',
+    icon: 'i-lucide-trophy'
+  },
+  {
+    label: 'Leader',
+    value: rankings.value?.[0]?.Player.name ?? '—',
+    icon: 'i-lucide-crown'
+  }
+])
+
+const topColumns = [
+  { accessorKey: 'rank', header: '#' },
+  { accessorKey: 'name', header: 'Joueur' },
+  { accessorKey: 'elo', header: 'ELO' }
+]
+
+const topRows = computed(() =>
+  (rankings.value ?? []).slice(0, 5).map(r => ({
+    rank: r.Rank,
+    name: r.Player.name,
+    elo: r.Player.elo
+  }))
+)
+</script>
+
 <template>
-  <div>
-    <UPageHero
-      title="Nuxt Starter Template"
-      description="A production-ready starter template powered by Nuxt UI. Build beautiful, accessible, and performant applications in minutes, not hours."
-      :links="[{
-        label: 'Get started',
-        to: 'https://ui.nuxt.com/docs/getting-started/installation/nuxt',
-        target: '_blank',
-        trailingIcon: 'i-lucide-arrow-right',
-        size: 'xl'
-      }, {
-        label: 'Use this template',
-        to: 'https://github.com/nuxt-ui-templates/starter',
-        target: '_blank',
-        icon: 'i-simple-icons-github',
-        size: 'xl',
-        color: 'neutral',
-        variant: 'subtle'
-      }]"
-    />
+  <div class="p-6 space-y-6">
+    <div>
+      <h1 class="text-xl font-bold">Dashboard</h1>
+      <p class="text-sm text-muted mt-1">Vue d'ensemble du club Bad A Paname</p>
+    </div>
 
-    <UPageSection
-      id="features"
-      title="Everything you need to build modern Nuxt apps"
-      description="Start with a solid foundation. This template includes all the essentials for building production-ready applications with Nuxt UI's powerful component system."
-      :features="[{
-        icon: 'i-lucide-rocket',
-        title: 'Production-ready from day one',
-        description: 'Pre-configured with TypeScript, ESLint, Tailwind CSS, and all the best practices. Focus on building features, not setting up tooling.'
-      }, {
-        icon: 'i-lucide-palette',
-        title: 'Beautiful by default',
-        description: 'Leveraging Nuxt UI\'s design system with automatic dark mode, consistent spacing, and polished components that look great out of the box.'
-      }, {
-        icon: 'i-lucide-zap',
-        title: 'Lightning fast',
-        description: 'Optimized for performance with SSR/SSG support, automatic code splitting, and edge-ready deployment. Your users will love the speed.'
-      }, {
-        icon: 'i-lucide-blocks',
-        title: '100+ components included',
-        description: 'Access Nuxt UI\'s comprehensive component library. From forms to navigation, everything is accessible, responsive, and customizable.'
-      }, {
-        icon: 'i-lucide-code-2',
-        title: 'Developer experience first',
-        description: 'Auto-imports, hot module replacement, and TypeScript support. Write less boilerplate and ship more features.'
-      }, {
-        icon: 'i-lucide-shield-check',
-        title: 'Built for scale',
-        description: 'Enterprise-ready architecture with proper error handling, SEO optimization, and security best practices built-in.'
-      }]"
-    />
+    <!-- Stats -->
+    <div class="grid grid-cols-3 gap-4">
+      <UCard v-for="stat in stats" :key="stat.label">
+        <div class="flex items-center gap-3">
+          <UIcon :name="stat.icon" class="size-5 text-primary shrink-0" />
+          <div>
+            <p class="text-xs text-muted">{{ stat.label }}</p>
+            <p class="text-lg font-bold">{{ stat.value }}</p>
+          </div>
+        </div>
+      </UCard>
+    </div>
 
-    <UPageSection>
-      <UPageCTA
-        title="Ready to build your next Nuxt app?"
-        description="Join thousands of developers building with Nuxt and Nuxt UI. Get this template and start shipping today."
-        variant="subtle"
-        :links="[{
-          label: 'Start building',
-          to: 'https://ui.nuxt.com/docs/getting-started/installation/nuxt',
-          target: '_blank',
-          trailingIcon: 'i-lucide-arrow-right',
-          color: 'neutral'
-        }, {
-          label: 'View on GitHub',
-          to: 'https://github.com/nuxt-ui-templates/starter',
-          target: '_blank',
-          icon: 'i-simple-icons-github',
-          color: 'neutral',
-          variant: 'outline'
-        }]"
-      />
-    </UPageSection>
+    <!-- Top 5 -->
+    <UCard>
+      <template #header>
+        <p class="font-semibold text-sm">Top 5 joueurs</p>
+      </template>
+
+      <div v-if="status === 'pending'" class="space-y-2">
+        <USkeleton v-for="i in 5" :key="i" class="h-8 w-full" />
+      </div>
+      <UTable v-else :data="topRows" :columns="topColumns" />
+    </UCard>
   </div>
 </template>

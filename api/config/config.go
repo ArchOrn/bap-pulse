@@ -13,6 +13,8 @@ type Config struct {
 	// Local dev: path to the Firebase service account JSON file.
 	// Production (Cloud Run): leave empty, ADC handles authentication automatically.
 	FirebaseCredentialsFile string
+	// Comma-separated list of allowed CORS origins (e.g. "http://localhost:3000,https://bo.example.com")
+	CORSOrigins string
 }
 
 func Load() (*Config, error) {
@@ -22,8 +24,9 @@ func Load() (*Config, error) {
 
 	cfg := &Config{
 		DatabaseURL:             os.Getenv("DATABASE_URL"),
-		Port:                    getEnvOrDefault("PORT", "3000"),
+		Port:                    getEnvOrDefault("PORT", "8080"),
 		FirebaseCredentialsFile: os.Getenv("FIREBASE_CREDENTIALS_FILE"),
+		CORSOrigins:             getEnvOrDefault("CORS_ORIGINS", "http://localhost:3000"),
 	}
 
 	if cfg.DatabaseURL == "" {

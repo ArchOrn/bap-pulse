@@ -11,8 +11,22 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
-  routeRules: {
-    '/': { prerender: true }
+  runtimeConfig: {
+    public: {
+      apiBaseUrl: 'http://localhost:8080',
+      firebaseApiKey: '',
+      firebaseAuthDomain: '',
+      firebaseProjectId: '',
+      firebaseStorageBucket: '',
+      firebaseMessagingSenderId: '',
+      firebaseAppId: ''
+    }
+  },
+
+  ssr: false,
+
+  typescript: {
+    typeCheck: false
   },
 
   compatibilityDate: '2025-01-15',

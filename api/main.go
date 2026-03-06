@@ -2,7 +2,7 @@
 //	@version		1.0
 //	@description	REST API for the BAP Pulse badminton club app — Bad A Paname.
 //
-//	@host		localhost:3000
+//	@host		localhost:8080
 //	@BasePath	/
 //
 //	@securityDefinitions.apikey	BearerAuth
@@ -19,6 +19,7 @@ import (
 
 	firebase "firebase.google.com/go/v4"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -102,6 +103,13 @@ func main() {
 
 	app.Use(recover.New())
 	app.Use(logger.New())
+
+	// --- CORS ---
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: cfg.CORSOrigins,
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+		AllowMethods: "GET, POST, PUT, DELETE, OPTIONS",
+	}))
 
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"status": "ok"})

@@ -1,78 +1,82 @@
-<script setup>
+<script setup lang="ts">
 useHead({
-  meta: [
-    { name: 'viewport', content: 'width=device-width, initial-scale=1' }
-  ],
-  link: [
-    { rel: 'icon', href: '/favicon.ico' }
-  ],
-  htmlAttrs: {
-    lang: 'en'
-  }
+  meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }],
+  link: [{ rel: 'icon', href: '/favicon.ico' }],
+  htmlAttrs: { lang: 'fr' }
 })
 
-const title = 'Nuxt Starter Template'
-const description = 'A production-ready starter template powered by Nuxt UI. Build beautiful, accessible, and performant applications in minutes, not hours.'
+useSeoMeta({ title: 'BAP Pulse — Back-office' })
 
-useSeoMeta({
-  title,
-  description,
-  ogTitle: title,
-  ogDescription: description,
-  ogImage: 'https://ui.nuxt.com/assets/templates/nuxt/starter-light.png',
-  twitterImage: 'https://ui.nuxt.com/assets/templates/nuxt/starter-light.png',
-  twitterCard: 'summary_large_image'
+const route = useRoute()
+const isLoginPage = computed(() => route.path === '/login')
+
+const { user, signOut } = useAuth()
+
+const navItems = [[
+  { label: 'Dashboard', icon: 'i-lucide-layout-dashboard', to: '/' },
+  { label: 'Joueurs', icon: 'i-lucide-users', to: '/players' },
+  { label: 'Matchs', icon: 'i-lucide-swords', to: '/matches' },
+  { label: 'Classement', icon: 'i-lucide-trophy', to: '/rankings' }
+]]
+
+const displayName = computed(() =>
+  user.value?.displayName || user.value?.email || ''
+)
+const initials = computed(() => {
+  const name = user.value?.displayName
+  if (name) {
+    return name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
+  }
+  return user.value?.email?.[0]?.toUpperCase() ?? '?'
 })
 </script>
 
 <template>
   <UApp>
-    <UHeader>
-      <template #left>
-        <NuxtLink to="/">
-          <AppLogo class="w-auto h-6 shrink-0" />
-        </NuxtLink>
+    <!-- Login page: no sidebar -->
+    <NuxtPage v-if="isLoginPage" />
 
-        <TemplateMenu />
-      </template>
+    <!-- App shell -->
+    <div v-else class="flex h-screen overflow-hidden">
+      <!-- Sidebar -->
+      <aside class="w-56 shrink-0 border-r border-default flex flex-col">
+        <div class="px-4 py-5 border-b border-default">
+          <p class="font-bold text-sm">BAP Pulse</p>
+          <p class="text-xs text-muted">Back-office</p>
+        </div>
 
-      <template #right>
-        <UColorModeButton />
-
-        <UButton
-          to="https://github.com/nuxt-ui-templates/starter"
-          target="_blank"
-          icon="i-simple-icons-github"
-          aria-label="GitHub"
-          color="neutral"
-          variant="ghost"
+        <UNavigationMenu
+          orientation="vertical"
+          :items="navItems"
+          class="flex-1 p-2"
         />
-      </template>
-    </UHeader>
 
-    <UMain>
-      <NuxtPage />
-    </UMain>
+        <div class="p-3 border-t border-default space-y-2">
+          <!-- User info -->
+          <div v-if="user" class="flex items-center gap-2 min-w-0">
+            <UAvatar :alt="initials" size="xs" class="shrink-0" />
+            <span class="text-xs text-muted truncate">{{ displayName }}</span>
+          </div>
 
-    <USeparator icon="i-simple-icons-nuxtdotjs" />
+          <div class="flex items-center justify-between">
+            <UButton
+              variant="ghost"
+              color="neutral"
+              size="xs"
+              icon="i-lucide-log-out"
+              :padded="false"
+              title="Se déconnecter"
+              @click="signOut"
+            />
+            <UColorModeButton size="xs" />
+          </div>
+        </div>
+      </aside>
 
-    <UFooter>
-      <template #left>
-        <p class="text-sm text-muted">
-          Built with Nuxt UI • © {{ new Date().getFullYear() }}
-        </p>
-      </template>
-
-      <template #right>
-        <UButton
-          to="https://github.com/nuxt-ui-templates/starter"
-          target="_blank"
-          icon="i-simple-icons-github"
-          aria-label="GitHub"
-          color="neutral"
-          variant="ghost"
-        />
-      </template>
-    </UFooter>
+      <!-- Content -->
+      <div class="flex-1 flex flex-col min-w-0 overflow-auto">
+        <NuxtPage />
+      </div>
+    </div>
   </UApp>
 </template>
