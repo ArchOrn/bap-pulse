@@ -45,7 +45,7 @@ func InviteUser(pool *pgxpool.Pool, authClient *firebaseauth.Client) fiber.Handl
 		var req inviteRequest
 		if err := c.BodyParser(&req); err != nil || req.FirstName == "" || req.Email == "" {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Les champs 'first_name' et 'email' sont requis",
+				"error": "'first_name' and 'email' are required",
 			})
 		}
 
@@ -65,7 +65,7 @@ func InviteUser(pool *pgxpool.Pool, authClient *firebaseauth.Client) fiber.Handl
 		fbUser, err := authClient.CreateUser(c.Context(), params)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": fmt.Sprintf("Erreur Firebase : %v", err),
+				"error": fmt.Sprintf("Firebase error: %v", err),
 			})
 		}
 
@@ -81,7 +81,7 @@ func InviteUser(pool *pgxpool.Pool, authClient *firebaseauth.Client) fiber.Handl
 			// Best-effort rollback: remove the Firebase user.
 			_ = authClient.DeleteUser(c.Context(), fbUser.UID)
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "Erreur lors de la création du profil utilisateur",
+				"error": "Failed to create user profile",
 			})
 		}
 
@@ -112,14 +112,14 @@ func SetAdminRole(pool *pgxpool.Pool) fiber.Handler {
 		uid := c.Params("uid")
 		if uid == "" {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "UID manquant",
+				"error": "Missing UID",
 			})
 		}
 
 		var req setRoleRequest
 		if err := c.BodyParser(&req); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Corps de requête invalide",
+				"error": "Invalid request body",
 			})
 		}
 
@@ -135,7 +135,7 @@ func SetAdminRole(pool *pgxpool.Pool) fiber.Handler {
 		})
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "Impossible de modifier le rôle",
+				"error": "Failed to update role",
 			})
 		}
 

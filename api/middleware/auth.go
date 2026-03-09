@@ -32,21 +32,21 @@ func FirebaseAuth(authClient *firebaseauth.Client) fiber.Handler {
 		header := c.Get("Authorization")
 		if header == "" {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": "Authorization header manquant",
+				"error": "Missing Authorization header",
 			})
 		}
 
 		parts := strings.SplitN(header, " ", 2)
 		if len(parts) != 2 || parts[0] != "Bearer" {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": "Format invalide (attendu: Bearer <firebase_id_token>)",
+				"error": "Invalid format (expected: Bearer <firebase_id_token>)",
 			})
 		}
 
 		token, err := authClient.VerifyIDToken(c.Context(), parts[1])
 		if err != nil {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": "Token Firebase invalide ou expiré",
+				"error": "Invalid or expired Firebase token",
 			})
 		}
 
@@ -69,7 +69,7 @@ func RequireAdmin(pool *pgxpool.Pool) fiber.Handler {
 		uid, ok := c.Locals("firebaseUID").(string)
 		if !ok || uid == "" {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": "Non authentifié",
+				"error": "Unauthenticated",
 			})
 		}
 
@@ -77,7 +77,7 @@ func RequireAdmin(pool *pgxpool.Pool) fiber.Handler {
 		user, err := q.GetUserByID(c.Context(), uid)
 		if err != nil || user.Role != "admin" {
 			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-				"error": "Accès réservé aux administrateurs",
+				"error": "Admin access required",
 			})
 		}
 

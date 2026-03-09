@@ -35,7 +35,7 @@ func GetMatches(pool *pgxpool.Pool) fiber.Handler {
 		q := db.New(pool)
 		matches, err := q.ListMatches(c.Context())
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Erreur interne"})
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal server error"})
 		}
 		return c.JSON(matches)
 	}
@@ -56,13 +56,13 @@ func GetMatch(pool *pgxpool.Pool) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := parseUUID(c.Params("id"))
 		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "ID invalide"})
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
 		}
 
 		q := db.New(pool)
 		match, err := q.GetMatchByID(c.Context(), id)
 		if err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Match introuvable"})
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Match not found"})
 		}
 		return c.JSON(match)
 	}
@@ -86,27 +86,27 @@ func CreateMatch(pool *pgxpool.Pool) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var req createMatchRequest
 		if err := c.BodyParser(&req); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Corps de la requête invalide"})
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 		}
 
 		isDoubles := req.MatchType == string(db.MatchTypeDOUBLES) || req.MatchType == string(db.MatchTypeMIXED)
 
 		if req.Team1Player1ID == "" || req.Team2Player1ID == "" {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "team1_player1_id et team2_player1_id sont requis"})
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "team1_player1_id and team2_player1_id are required"})
 		}
 		if isDoubles && (req.Team1Player2ID == "" || req.Team2Player2ID == "") {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Les 4 joueurs sont requis pour un match en double"})
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "All 4 player IDs are required for doubles/mixed"})
 		}
 
 		q := db.New(pool)
 
 		p1, err := q.GetUserByID(c.Context(), req.Team1Player1ID)
 		if err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Équipe 1 joueur 1 introuvable"})
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Team 1 player 1 not found"})
 		}
 		p3, err := q.GetUserByID(c.Context(), req.Team2Player1ID)
 		if err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Équipe 2 joueur 1 introuvable"})
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Team 2 player 1 not found"})
 		}
 
 		// Nullable fields for partner slots (singles leaves them empty).
@@ -117,11 +117,11 @@ func CreateMatch(pool *pgxpool.Pool) fiber.Handler {
 		if isDoubles {
 			p2, err = q.GetUserByID(c.Context(), req.Team1Player2ID)
 			if err != nil {
-				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Équipe 1 joueur 2 introuvable"})
+				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Team 1 player 2 not found"})
 			}
 			p4, err = q.GetUserByID(c.Context(), req.Team2Player2ID)
 			if err != nil {
-				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Équipe 2 joueur 2 introuvable"})
+				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Team 2 player 2 not found"})
 			}
 			team1P2 = pgtype.Text{String: req.Team1Player2ID, Valid: true}
 			team2P2 = pgtype.Text{String: req.Team2Player2ID, Valid: true}
@@ -138,7 +138,7 @@ func CreateMatch(pool *pgxpool.Pool) fiber.Handler {
 			PlayedAt:       pgtype.Timestamptz{Time: time.Now(), Valid: true},
 		})
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Erreur création du match"})
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create match"})
 		}
 
 		eloChanges, err := applyEloChanges(c, q, match.ID, req, p1, p2, p3, p4, isDoubles)
@@ -217,7 +217,7 @@ func applyEloChanges(
 			ID:  playerID,
 			Elo: ch.After,
 		}); err != nil {
-			return nil, c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Erreur mise à jour ELO"})
+			return nil, c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update ELO"})
 		}
 		if _, err := q.CreateEloHistory(c.Context(), db.CreateEloHistoryParams{
 			PlayerID:  playerID,
@@ -225,7 +225,7 @@ func applyEloChanges(
 			EloAfter:  ch.After,
 			MatchID:   matchID,
 		}); err != nil {
-			return nil, c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Erreur historique ELO"})
+			return nil, c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to record ELO history"})
 		}
 	}
 

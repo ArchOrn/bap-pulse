@@ -22,7 +22,7 @@ func GetUsers(pool *pgxpool.Pool) fiber.Handler {
 		q := db.New(pool)
 		users, err := q.ListUsers(c.Context())
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Erreur interne"})
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal server error"})
 		}
 		return c.JSON(users)
 	}
@@ -43,7 +43,7 @@ func GetUser(pool *pgxpool.Pool) fiber.Handler {
 		q := db.New(pool)
 		user, err := q.GetUserByID(c.Context(), c.Params("id"))
 		if err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Utilisateur introuvable"})
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
 		}
 		return c.JSON(user)
 	}
@@ -74,12 +74,12 @@ func UpdateUser(pool *pgxpool.Pool) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		// The user ID is their Firebase UID: ownership check is a simple string comparison.
 		if c.Params("id") != c.Locals("firebaseUID").(string) {
-			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Accès interdit"})
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Forbidden"})
 		}
 
 		var req updateUserRequest
 		if err := c.BodyParser(&req); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Corps de la requête invalide"})
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 		}
 
 		q := db.New(pool)
@@ -90,7 +90,7 @@ func UpdateUser(pool *pgxpool.Pool) fiber.Handler {
 			Email:     req.Email,
 		})
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Erreur interne"})
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal server error"})
 		}
 		return c.JSON(user)
 	}
@@ -111,12 +111,12 @@ func UpdateUser(pool *pgxpool.Pool) fiber.Handler {
 func DeleteUser(pool *pgxpool.Pool) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		if c.Params("id") != c.Locals("firebaseUID").(string) {
-			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Accès interdit"})
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Forbidden"})
 		}
 
 		q := db.New(pool)
 		if err := q.DeleteUser(c.Context(), c.Params("id")); err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Erreur interne"})
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal server error"})
 		}
 		return c.SendStatus(fiber.StatusNoContent)
 	}

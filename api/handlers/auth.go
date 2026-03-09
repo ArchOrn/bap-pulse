@@ -52,7 +52,7 @@ func Sync(pool *pgxpool.Pool) fiber.Handler {
 		})
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "Erreur lors de la création du profil",
+				"error": "Failed to create user profile",
 			})
 		}
 
