@@ -65,6 +65,44 @@ const handleInvite = async () => {
   }
 }
 
+// ---- Edit modal ----
+const showEdit = ref(false)
+const editTarget = ref<User | null>(null)
+const editForm = reactive({ first_name: '', last_name: '', email: '' })
+const editLoading = ref(false)
+const editError = ref<string | null>(null)
+
+const openEdit = (user: User) => {
+  editTarget.value = user
+  editForm.first_name = user.first_name
+  editForm.last_name = user.last_name
+  editForm.email = user.email
+  editError.value = null
+  showEdit.value = true
+}
+
+const handleEdit = async () => {
+  if (!editTarget.value) return
+  editError.value = null
+  editLoading.value = true
+  try {
+    await $fetch(`${baseURL}/users/${editTarget.value.id}`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: editForm
+    })
+    await refresh()
+    showEdit.value = false
+  }
+  catch (e: unknown) {
+    const msg = (e as { data?: { error?: string } })?.data?.error
+    editError.value = msg ?? 'Une erreur est survenue.'
+  }
+  finally {
+    editLoading.value = false
+  }
+}
+
 // ---- Promote / demote ----
 // Tracks admin UIDs locally based on current DB role + actions taken this session
 const adminUIDs = ref<Set<string>>(new Set(
@@ -132,15 +170,25 @@ const toggleRole = async (uid: string) => {
         </template>
 
         <template #actions-cell="{ row }">
-          <UButton
-            :icon="isUserAdmin(row.original.id) ? 'i-lucide-shield-minus' : 'i-lucide-shield-plus'"
-            :color="isUserAdmin(row.original.id) ? 'error' : 'neutral'"
-            variant="ghost"
-            size="xs"
-            :loading="roleLoading === row.original.id"
-            :title="isUserAdmin(row.original.id) ? 'Révoquer admin' : 'Promouvoir admin'"
-            @click="toggleRole(row.original.id)"
-          />
+          <div class="flex items-center gap-1">
+            <UButton
+              icon="i-lucide-pencil"
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              title="Modifier le profil"
+              @click="openEdit(row.original)"
+            />
+            <UButton
+              :icon="isUserAdmin(row.original.id) ? 'i-lucide-shield-minus' : 'i-lucide-shield-plus'"
+              :color="isUserAdmin(row.original.id) ? 'error' : 'neutral'"
+              variant="ghost"
+              size="xs"
+              :loading="roleLoading === row.original.id"
+              :title="isUserAdmin(row.original.id) ? 'Révoquer admin' : 'Promouvoir admin'"
+              @click="toggleRole(row.original.id)"
+            />
+          </div>
         </template>
       </UTable>
     </UCard>
@@ -214,6 +262,63 @@ const toggleRole = async (uid: string) => {
             @click="handleInvite"
           >
             Créer et inviter
+          </UButton>
+        </div>
+      </template>
+    </UModal>
+
+    <!-- Edit modal -->
+    <UModal v-model:open="showEdit" :title="`Modifier — ${editTarget ? fullName(editTarget) || editTarget.email : ''}`">
+      <template #body>
+        <form class="space-y-4" @submit.prevent="handleEdit">
+          <UAlert
+            v-if="editError"
+            icon="i-lucide-circle-alert"
+            color="error"
+            variant="subtle"
+            :description="editError"
+          />
+
+          <div class="grid grid-cols-2 gap-3">
+            <UFormField label="Prénom">
+              <UInput
+                v-model="editForm.first_name"
+                placeholder="Prénom"
+                class="w-full"
+              />
+            </UFormField>
+
+            <UFormField label="Nom">
+              <UInput
+                v-model="editForm.last_name"
+                placeholder="Nom"
+                class="w-full"
+              />
+            </UFormField>
+          </div>
+
+          <UFormField label="Email">
+            <UInput
+              v-model="editForm.email"
+              type="email"
+              placeholder="joueur@example.com"
+              class="w-full"
+            />
+          </UFormField>
+        </form>
+      </template>
+
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <UButton variant="ghost" color="neutral" @click="showEdit = false">
+            Annuler
+          </UButton>
+          <UButton
+            icon="i-lucide-check"
+            :loading="editLoading"
+            @click="handleEdit"
+          >
+            Enregistrer
           </UButton>
         </div>
       </template>

@@ -58,7 +58,7 @@ type updateUserRequest struct {
 // UpdateUser godoc
 //
 //	@Summary		Update user profile
-//	@Description	Only the authenticated user can update their own profile.
+//	@Description	Users can only update their own profile. Admins can update any profile.
 //	@Tags			users
 //	@Security		BearerAuth
 //	@Accept			json
@@ -72,19 +72,27 @@ type updateUserRequest struct {
 //	@Router			/users/{id} [put]
 func UpdateUser(pool *pgxpool.Pool) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		// The user ID is their Firebase UID: ownership check is a simple string comparison.
-		if c.Params("id") != c.Locals("firebaseUID").(string) {
-			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Forbidden"})
+		requesterUID := c.Locals("firebaseUID").(string)
+		targetUID := c.Params("id")
+
+		q := db.New(pool)
+
+		if requesterUID != targetUID {
+			requester, err := q.GetUserByID(c.Context(), requesterUID)
+			if err != nil {
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal server error"})
+			}
+			if requester.Role != "admin" {
+				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Forbidden"})
+			}
 		}
 
 		var req updateUserRequest
 		if err := c.BodyParser(&req); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 		}
-
-		q := db.New(pool)
 		user, err := q.UpdateUser(c.Context(), db.UpdateUserParams{
-			ID:        c.Params("id"),
+			ID:        targetUID,
 			FirstName: req.FirstName,
 			LastName:  req.LastName,
 			Email:     req.Email,
@@ -99,7 +107,7 @@ func UpdateUser(pool *pgxpool.Pool) fiber.Handler {
 // DeleteUser godoc
 //
 //	@Summary		Delete user account
-//	@Description	Only the authenticated user can delete their own account.
+//	@Description	Users can only delete their own account. Admins can delete any account.
 //	@Tags			users
 //	@Security		BearerAuth
 //	@Produce		json
@@ -110,12 +118,22 @@ func UpdateUser(pool *pgxpool.Pool) fiber.Handler {
 //	@Router			/users/{id} [delete]
 func DeleteUser(pool *pgxpool.Pool) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		if c.Params("id") != c.Locals("firebaseUID").(string) {
-			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Forbidden"})
-		}
+		requesterUID := c.Locals("firebaseUID").(string)
+		targetUID := c.Params("id")
 
 		q := db.New(pool)
-		if err := q.DeleteUser(c.Context(), c.Params("id")); err != nil {
+
+		if requesterUID != targetUID {
+			requester, err := q.GetUserByID(c.Context(), requesterUID)
+			if err != nil {
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal server error"})
+			}
+			if requester.Role != "admin" {
+				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Forbidden"})
+			}
+		}
+
+		if err := q.DeleteUser(c.Context(), targetUID); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal server error"})
 		}
 		return c.SendStatus(fiber.StatusNoContent)

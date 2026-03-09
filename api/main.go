@@ -111,9 +111,11 @@ func main() {
 		AllowMethods: "GET, POST, PUT, DELETE, OPTIONS",
 	}))
 
+	// --- Public routes (no auth required) ---
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"status": "ok"})
 	})
+	app.Get("/rankings", handlers.GetRankings(pool))
 
 	// --- Swagger UI (dev only) ---
 	swaggerHandler := func(c *fiber.Ctx) error {
@@ -127,17 +129,11 @@ func main() {
 		return c.Send(swaggerJSON)
 	})
 
-	// --- Firebase Auth applied globally, public paths excluded ---
-	app.Use(middleware.Except(
-		[]string{"/health", "/rankings", "/swagger"},
-		middleware.FirebaseAuth(authClient),
-	))
+	// --- All routes below require a valid Firebase token ---
+	app.Use(middleware.FirebaseAuth(authClient))
 
 	// --- Auth ---
 	app.Post("/auth/sync", handlers.Sync(pool))
-
-	// --- Public ---
-	app.Get("/rankings", handlers.GetRankings(pool))
 
 	// --- Users ---
 	users := app.Group("/users")
