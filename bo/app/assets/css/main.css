@@ -16,3 +16,27 @@
   --color-green-900: #0A5331;
   --color-green-950: #052E16;
 }
+
+/* Badminton court grid pattern — used on the login page */
+.court-pattern {
+  background-image:
+    linear-gradient(rgba(0, 220, 130, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 220, 130, 0.07) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Sidebar nav active state glow */
+.nav-active {
+  position: relative;
+}
+.nav-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: var(--color-green-400);
+  border-radius: 0 2px 2px 0;
+}
