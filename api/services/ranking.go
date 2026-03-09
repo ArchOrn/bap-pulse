@@ -6,23 +6,23 @@ import (
 	"bap-pulse/db"
 )
 
-type PlayerRanking struct {
-	Rank   int
-	Player db.Player
+type UserRanking struct {
+	Rank int
+	User db.User
 }
 
-// GetRankings returns players sorted by descending ELO with their rank position.
-func GetRankings(ctx context.Context, q *db.Queries) ([]PlayerRanking, error) {
-	players, err := q.ListPlayers(ctx)
+// GetRankings returns users sorted by descending ELO with their rank position.
+func GetRankings(ctx context.Context, q *db.Queries) ([]UserRanking, error) {
+	users, err := q.ListUsers(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	rankings := make([]PlayerRanking, len(players))
-	for i, p := range players {
-		rankings[i] = PlayerRanking{
-			Rank:   i + 1,
-			Player: p,
+	rankings := make([]UserRanking, len(users))
+	for i, u := range users {
+		rankings[i] = UserRanking{
+			Rank: i + 1,
+			User: u,
 		}
 	}
 	return rankings, nil

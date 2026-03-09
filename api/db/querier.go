@@ -13,18 +13,19 @@ import (
 type Querier interface {
 	CreateEloHistory(ctx context.Context, arg CreateEloHistoryParams) (EloHistory, error)
 	CreateMatch(ctx context.Context, arg CreateMatchParams) (Match, error)
-	CreatePlayer(ctx context.Context, arg CreatePlayerParams) (Player, error)
-	DeletePlayer(ctx context.Context, id string) error
+	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeleteUser(ctx context.Context, id string) error
 	GetMatchByID(ctx context.Context, id pgtype.UUID) (Match, error)
 	GetMatchEloHistory(ctx context.Context, matchID pgtype.UUID) ([]EloHistory, error)
-	GetPlayerByEmail(ctx context.Context, email string) (Player, error)
-	GetPlayerByID(ctx context.Context, id string) (Player, error)
-	GetPlayerEloHistory(ctx context.Context, playerID string) ([]EloHistory, error)
 	GetPlayerMatches(ctx context.Context, team1Player1ID string) ([]Match, error)
+	GetUserByEmail(ctx context.Context, email string) (User, error)
+	GetUserByID(ctx context.Context, id string) (User, error)
+	GetUserEloHistory(ctx context.Context, playerID string) ([]EloHistory, error)
 	ListMatches(ctx context.Context) ([]Match, error)
-	ListPlayers(ctx context.Context) ([]Player, error)
-	UpdatePlayer(ctx context.Context, arg UpdatePlayerParams) (Player, error)
-	UpdatePlayerElo(ctx context.Context, arg UpdatePlayerEloParams) (Player, error)
+	ListUsers(ctx context.Context) ([]User, error)
+	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
+	UpdateUserElo(ctx context.Context, arg UpdateUserEloParams) (User, error)
+	UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) (User, error)
 	ValidateMatch(ctx context.Context, id pgtype.UUID) (Match, error)
 }
 

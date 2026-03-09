@@ -8,13 +8,14 @@ useHead({
 useSeoMeta({ title: 'BAP Pulse — Back-office' })
 
 const route = useRoute()
-const isLoginPage = computed(() => route.path === '/login')
+const PUBLIC_PATHS = ['/login', '/unauthorized']
+const isLoginPage = computed(() => PUBLIC_PATHS.includes(route.path))
 
 const { user, signOut } = useAuth()
 
 const navItems = [[
   { label: 'Dashboard', icon: 'i-lucide-layout-dashboard', to: '/' },
-  { label: 'Joueurs', icon: 'i-lucide-users', to: '/players' },
+  { label: 'Joueurs', icon: 'i-lucide-users', to: '/users' },
   { label: 'Matchs', icon: 'i-lucide-swords', to: '/matches' },
   { label: 'Classement', icon: 'i-lucide-trophy', to: '/rankings' }
 ]]

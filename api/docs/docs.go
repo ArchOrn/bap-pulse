@@ -15,6 +15,136 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/admin/invite": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a Firebase user and their profile. Returns a temporary password to share with the new user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Invite a new user",
+                "parameters": [
+                    {
+                        "description": "User first name, last name and email",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.inviteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.inviteResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/{uid}/role": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates the user's role in the database. Takes effect immediately on the next request (no token refresh needed).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Grant or revoke admin role",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Firebase UID of the target user",
+                        "name": "uid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Role payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.setRoleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/auth/sync": {
             "post": {
                 "security": [
@@ -22,7 +152,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Called after a successful Firebase login. Creates the player profile on first login, or returns the existing one.",
+                "description": "Called after a successful Firebase login. Creates the user profile on first login, or returns the existing one.",
                 "consumes": [
                     "application/json"
                 ],
@@ -32,10 +162,10 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "Sync player profile",
+                "summary": "Sync user profile",
                 "parameters": [
                     {
-                        "description": "Player display name (required on first login)",
+                        "description": "User first and last name (required on first login)",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -48,13 +178,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/db.Player"
+                            "$ref": "#/definitions/db.User"
                         }
                     },
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/db.Player"
+                            "$ref": "#/definitions/db.User"
                         }
                     },
                     "400": {
@@ -230,27 +360,23 @@ const docTemplate = `{
                 }
             }
         },
-        "/players": {
+        "/rankings": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
+                "description": "Returns all users sorted by descending ELO with their rank position.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "players"
+                    "rankings"
                 ],
-                "summary": "List all players",
+                "summary": "ELO leaderboard",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/db.Player"
+                                "$ref": "#/definitions/services.UserRanking"
                             }
                         }
                     },
@@ -266,7 +392,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/players/{id}": {
+        "/users": {
             "get": {
                 "security": [
                     {
@@ -277,13 +403,49 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "players"
+                    "users"
                 ],
-                "summary": "Get a player",
+                "summary": "List all users",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.User"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get a user",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Player ID (Firebase UID)",
+                        "description": "User ID (Firebase UID)",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -293,7 +455,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/db.Player"
+                            "$ref": "#/definitions/db.User"
                         }
                     },
                     "404": {
@@ -313,7 +475,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Only the authenticated player can update their own profile.",
+                "description": "Only the authenticated user can update their own profile.",
                 "consumes": [
                     "application/json"
                 ],
@@ -321,24 +483,24 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "players"
+                    "users"
                 ],
-                "summary": "Update player profile",
+                "summary": "Update user profile",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Player ID (Firebase UID)",
+                        "description": "User ID (Firebase UID)",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Updated player data",
+                        "description": "Updated user data",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.updatePlayerRequest"
+                            "$ref": "#/definitions/handlers.updateUserRequest"
                         }
                     }
                 ],
@@ -346,7 +508,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/db.Player"
+                            "$ref": "#/definitions/db.User"
                         }
                     },
                     "400": {
@@ -384,18 +546,18 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Only the authenticated player can delete their own account.",
+                "description": "Only the authenticated user can delete their own account.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "players"
+                    "users"
                 ],
-                "summary": "Delete player account",
+                "summary": "Delete user account",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Player ID (Firebase UID)",
+                        "description": "User ID (Firebase UID)",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -411,38 +573,6 @@ const docTemplate = `{
                             "type": "object",
                             "additionalProperties": {
                                 "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/rankings": {
-            "get": {
-                "description": "Returns all players sorted by descending ELO with their rank position.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "rankings"
-                ],
-                "summary": "ELO leaderboard",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/services.PlayerRanking"
                             }
                         }
                     },
@@ -508,7 +638,7 @@ const docTemplate = `{
                 "MatchTypeMIXED"
             ]
         },
-        "db.Player": {
+        "db.User": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -520,10 +650,16 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "first_name": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
-                "name": {
+                "last_name": {
+                    "type": "string"
+                },
+                "role": {
                     "type": "string"
                 }
             }
@@ -559,21 +695,60 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.syncRequest": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.updatePlayerRequest": {
+        "handlers.inviteRequest": {
             "type": "object",
             "properties": {
                 "email": {
                     "type": "string"
                 },
-                "name": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.inviteResponse": {
+            "type": "object",
+            "properties": {
+                "temp_password": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/db.User"
+                }
+            }
+        },
+        "handlers.setRoleRequest": {
+            "type": "object",
+            "properties": {
+                "admin": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "handlers.syncRequest": {
+            "type": "object",
+            "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.updateUserRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
                     "type": "string"
                 }
             }
@@ -617,14 +792,14 @@ const docTemplate = `{
                 }
             }
         },
-        "services.PlayerRanking": {
+        "services.UserRanking": {
             "type": "object",
             "properties": {
-                "player": {
-                    "$ref": "#/definitions/db.Player"
-                },
                 "rank": {
                     "type": "integer"
+                },
+                "user": {
+                    "$ref": "#/definitions/db.User"
                 }
             }
         }
@@ -642,7 +817,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:3000",
+	Host:             "localhost:8080",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "BAP Pulse API",

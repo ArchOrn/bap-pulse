@@ -2,7 +2,9 @@
 
 const { baseURL } = useApi()
 
-const { data: rankings, status } = await useFetch<PlayerRanking[]>(`${baseURL}/rankings`)
+const { data: rankings, status } = await useFetch<UserRanking[]>(`${baseURL}/rankings`)
+
+const fullName = (u: ApiUser) => [u.first_name, u.last_name].filter(Boolean).join(' ')
 
 const stats = computed(() => [
   {
@@ -12,12 +14,12 @@ const stats = computed(() => [
   },
   {
     label: 'Meilleur ELO',
-    value: rankings.value?.[0]?.Player.elo ?? '—',
+    value: rankings.value?.[0]?.User.elo ?? '—',
     icon: 'i-lucide-trophy'
   },
   {
     label: 'Leader',
-    value: rankings.value?.[0]?.Player.name ?? '—',
+    value: rankings.value?.[0] ? fullName(rankings.value[0].User) : '—',
     icon: 'i-lucide-crown'
   }
 ])
@@ -31,8 +33,8 @@ const topColumns = [
 const topRows = computed(() =>
   (rankings.value ?? []).slice(0, 5).map(r => ({
     rank: r.Rank,
-    name: r.Player.name,
-    elo: r.Player.elo
+    name: fullName(r.User),
+    elo: r.User.elo
   }))
 )
 </script>

@@ -100,11 +100,11 @@ func CreateMatch(pool *pgxpool.Pool) fiber.Handler {
 
 		q := db.New(pool)
 
-		p1, err := q.GetPlayerByID(c.Context(), req.Team1Player1ID)
+		p1, err := q.GetUserByID(c.Context(), req.Team1Player1ID)
 		if err != nil {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Équipe 1 joueur 1 introuvable"})
 		}
-		p3, err := q.GetPlayerByID(c.Context(), req.Team2Player1ID)
+		p3, err := q.GetUserByID(c.Context(), req.Team2Player1ID)
 		if err != nil {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Équipe 2 joueur 1 introuvable"})
 		}
@@ -113,13 +113,13 @@ func CreateMatch(pool *pgxpool.Pool) fiber.Handler {
 		team1P2 := pgtype.Text{}
 		team2P2 := pgtype.Text{}
 
-		var p2, p4 db.Player
+		var p2, p4 db.User
 		if isDoubles {
-			p2, err = q.GetPlayerByID(c.Context(), req.Team1Player2ID)
+			p2, err = q.GetUserByID(c.Context(), req.Team1Player2ID)
 			if err != nil {
 				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Équipe 1 joueur 2 introuvable"})
 			}
-			p4, err = q.GetPlayerByID(c.Context(), req.Team2Player2ID)
+			p4, err = q.GetUserByID(c.Context(), req.Team2Player2ID)
 			if err != nil {
 				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Équipe 2 joueur 2 introuvable"})
 			}
@@ -153,13 +153,13 @@ func CreateMatch(pool *pgxpool.Pool) fiber.Handler {
 	}
 }
 
-// applyEloChanges computes and persists new ELO ratings for all players in the match.
+// applyEloChanges computes and persists new ELO ratings for all users in the match.
 func applyEloChanges(
 	c *fiber.Ctx,
 	q *db.Queries,
 	matchID pgtype.UUID,
 	req createMatchRequest,
-	p1, p2, p3, p4 db.Player,
+	p1, p2, p3, p4 db.User,
 	isDoubles bool,
 ) (fiber.Map, error) {
 	team1Wins := req.ScoreTeam1 > req.ScoreTeam2
@@ -187,7 +187,7 @@ func applyEloChanges(
 		// Draw: both deltas remain 0.
 
 		for _, entry := range []struct {
-			player db.Player
+			player db.User
 			delta  int
 		}{
 			{p1, deltaTeam1}, {p2, deltaTeam1},
@@ -211,9 +211,9 @@ func applyEloChanges(
 		changes[p3.ID] = eloChange{Before: p3.Elo, After: int32(newEloP3)}
 	}
 
-	// Persist new ELOs and record history for each player.
+	// Persist new ELOs and record history for each user.
 	for playerID, ch := range changes {
-		if _, err := q.UpdatePlayerElo(c.Context(), db.UpdatePlayerEloParams{
+		if _, err := q.UpdateUserElo(c.Context(), db.UpdateUserEloParams{
 			ID:  playerID,
 			Elo: ch.After,
 		}); err != nil {

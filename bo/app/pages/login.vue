@@ -19,7 +19,10 @@ const handleSubmit = async () => {
   }
   catch (e: unknown) {
     const code = (e as { code?: string })?.code
-    if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
+    if (code === 'auth/not-admin') {
+      error.value = 'Accès refusé. Ce back-office est réservé aux administrateurs.'
+    }
+    else if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
       error.value = 'Email ou mot de passe incorrect.'
     }
     else if (code === 'auth/too-many-requests') {
@@ -41,8 +44,14 @@ const handleGoogle = async () => {
     await signInWithGoogle()
     await navigateTo('/')
   }
-  catch {
-    error.value = 'Connexion Google annulée ou échouée.'
+  catch (e: unknown) {
+    const code = (e as { code?: string })?.code
+    if (code === 'auth/not-admin') {
+      error.value = 'Accès refusé. Ce back-office est réservé aux administrateurs.'
+    }
+    else {
+      error.value = 'Connexion Google annulée ou échouée.'
+    }
   }
   finally {
     loading.value = false

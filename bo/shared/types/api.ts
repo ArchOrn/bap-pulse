@@ -1,8 +1,10 @@
-export interface Player {
+export interface User {
   id: string
-  name: string
+  first_name: string
+  last_name: string
   email: string
   elo: number
+  role: 'player' | 'admin'
   created_at: string
 }
 
@@ -19,7 +21,10 @@ export interface Match {
   validated: boolean
 }
 
-export interface PlayerRanking {
+export interface UserRanking {
   Rank: number
-  Player: Player
+  User: User
 }
+
+// Alias to avoid conflicts with firebase/auth's `User` type in plugins/composables.
+export type ApiUser = User

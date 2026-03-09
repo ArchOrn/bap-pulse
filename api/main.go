@@ -139,18 +139,24 @@ func main() {
 	// --- Public ---
 	app.Get("/rankings", handlers.GetRankings(pool))
 
-	// --- Players ---
-	players := app.Group("/players")
-	players.Get("/", handlers.GetPlayers(pool))
-	players.Get("/:id", handlers.GetPlayer(pool))
-	players.Put("/:id", handlers.UpdatePlayer(pool))
-	players.Delete("/:id", handlers.DeletePlayer(pool))
+	// --- Users ---
+	users := app.Group("/users")
+	users.Get("/", handlers.GetUsers(pool))
+	users.Get("/:id", handlers.GetUser(pool))
+	users.Put("/:id", handlers.UpdateUser(pool))
+	users.Delete("/:id", handlers.DeleteUser(pool))
 
 	// --- Matches ---
 	matches := app.Group("/matches")
 	matches.Get("/", handlers.GetMatches(pool))
 	matches.Post("/", handlers.CreateMatch(pool))
 	matches.Get("/:id", handlers.GetMatch(pool))
+
+	// --- Admin (requires role = 'admin' in DB) ---
+	admin := app.Group("/admin")
+	admin.Use(middleware.RequireAdmin(pool))
+	admin.Post("/invite", handlers.InviteUser(pool, authClient))
+	admin.Post("/users/:uid/role", handlers.SetAdminRole(pool))
 
 	log.Printf("Server listening on port %s", cfg.Port)
 	log.Fatal(app.Listen(":" + cfg.Port))

@@ -11,10 +11,10 @@ import (
 // GetRankings godoc
 //
 //	@Summary		ELO leaderboard
-//	@Description	Returns all players sorted by descending ELO with their rank position.
+//	@Description	Returns all users sorted by descending ELO with their rank position.
 //	@Tags			rankings
 //	@Produce		json
-//	@Success		200	{array}		services.PlayerRanking
+//	@Success		200	{array}		services.UserRanking
 //	@Failure		500	{object}	map[string]string
 //	@Router			/rankings [get]
 func GetRankings(pool *pgxpool.Pool) fiber.Handler {

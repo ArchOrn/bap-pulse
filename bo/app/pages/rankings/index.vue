@@ -4,7 +4,9 @@ useHead({ title: 'Classement — BAP Pulse' })
 
 const { baseURL } = useApi()
 
-const { data: rankings, status } = await useFetch<PlayerRanking[]>(`${baseURL}/rankings`)
+const { data: rankings, status } = await useFetch<UserRanking[]>(`${baseURL}/rankings`)
+
+const fullName = (u: ApiUser) => [u.first_name, u.last_name].filter(Boolean).join(' ')
 
 const columns = [
   { accessorKey: 'rank', header: '#' },
@@ -16,9 +18,9 @@ const columns = [
 const rows = computed(() =>
   (rankings.value ?? []).map(r => ({
     rank: r.Rank,
-    name: r.Player.name,
-    elo: r.Player.elo,
-    email: r.Player.email
+    name: fullName(r.User),
+    elo: r.User.elo,
+    email: r.User.email
   }))
 )
 </script>

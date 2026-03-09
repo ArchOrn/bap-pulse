@@ -75,14 +75,14 @@ func (q *Queries) GetMatchEloHistory(ctx context.Context, matchID pgtype.UUID) (
 	return items, nil
 }
 
-const getPlayerEloHistory = `-- name: GetPlayerEloHistory :many
+const getUserEloHistory = `-- name: GetUserEloHistory :many
 SELECT id, player_id, elo_before, elo_after, match_id, created_at FROM elo_history
 WHERE player_id = $1
 ORDER BY created_at DESC
 `
 
-func (q *Queries) GetPlayerEloHistory(ctx context.Context, playerID string) ([]EloHistory, error) {
-	rows, err := q.db.Query(ctx, getPlayerEloHistory, playerID)
+func (q *Queries) GetUserEloHistory(ctx context.Context, playerID string) ([]EloHistory, error) {
+	rows, err := q.db.Query(ctx, getUserEloHistory, playerID)
 	if err != nil {
 		return nil, err
 	}

@@ -76,10 +76,12 @@ type Match struct {
 	Validated      bool               `json:"validated"`
 }
 
-type Player struct {
+type User struct {
 	ID        string             `json:"id"`
-	Name      string             `json:"name"`
 	Email     string             `json:"email"`
 	Elo       int32              `json:"elo"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	Role      string             `json:"role"`
+	FirstName string             `json:"first_name"`
+	LastName  string             `json:"last_name"`
 }
