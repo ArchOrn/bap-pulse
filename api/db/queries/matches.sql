@@ -3,9 +3,11 @@ INSERT INTO matches (
     match_type,
     team1_player1_id, team1_player2_id,
     team2_player1_id, team2_player2_id,
-    score_team1, score_team2,
+    set1_team1, set1_team2,
+    set2_team1, set2_team2,
+    set3_team1, set3_team2,
     played_at
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 RETURNING *;
 
 -- name: GetMatchByID :one

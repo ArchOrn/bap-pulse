@@ -15,8 +15,12 @@ export interface Match {
   team1_player2_id: string | null
   team2_player1_id: string
   team2_player2_id: string | null
-  score_team1: number
-  score_team2: number
+  set1_team1: number
+  set1_team2: number
+  set2_team1: number
+  set2_team2: number
+  set3_team1: number | null
+  set3_team2: number | null
   played_at: string
   validated: boolean
 }

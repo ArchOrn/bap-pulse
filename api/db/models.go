@@ -70,10 +70,14 @@ type Match struct {
 	Team1Player2ID pgtype.Text        `json:"team1_player2_id"`
 	Team2Player1ID string             `json:"team2_player1_id"`
 	Team2Player2ID pgtype.Text        `json:"team2_player2_id"`
-	ScoreTeam1     int32              `json:"score_team1"`
-	ScoreTeam2     int32              `json:"score_team2"`
 	PlayedAt       pgtype.Timestamptz `json:"played_at"`
 	Validated      bool               `json:"validated"`
+	Set1Team1      int32              `json:"set1_team1"`
+	Set1Team2      int32              `json:"set1_team2"`
+	Set2Team1      int32              `json:"set2_team1"`
+	Set2Team2      int32              `json:"set2_team2"`
+	Set3Team1      pgtype.Int4        `json:"set3_team1"`
+	Set3Team2      pgtype.Int4        `json:"set3_team2"`
 }
 
 type User struct {

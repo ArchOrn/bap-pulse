@@ -16,10 +16,12 @@ INSERT INTO matches (
     match_type,
     team1_player1_id, team1_player2_id,
     team2_player1_id, team2_player2_id,
-    score_team1, score_team2,
+    set1_team1, set1_team2,
+    set2_team1, set2_team2,
+    set3_team1, set3_team2,
     played_at
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-RETURNING id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, score_team1, score_team2, played_at, validated
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+RETURNING id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, played_at, validated, set1_team1, set1_team2, set2_team1, set2_team2, set3_team1, set3_team2
 `
 
 type CreateMatchParams struct {
@@ -28,8 +30,12 @@ type CreateMatchParams struct {
 	Team1Player2ID pgtype.Text        `json:"team1_player2_id"`
 	Team2Player1ID string             `json:"team2_player1_id"`
 	Team2Player2ID pgtype.Text        `json:"team2_player2_id"`
-	ScoreTeam1     int32              `json:"score_team1"`
-	ScoreTeam2     int32              `json:"score_team2"`
+	Set1Team1      int32              `json:"set1_team1"`
+	Set1Team2      int32              `json:"set1_team2"`
+	Set2Team1      int32              `json:"set2_team1"`
+	Set2Team2      int32              `json:"set2_team2"`
+	Set3Team1      pgtype.Int4        `json:"set3_team1"`
+	Set3Team2      pgtype.Int4        `json:"set3_team2"`
 	PlayedAt       pgtype.Timestamptz `json:"played_at"`
 }
 
@@ -40,8 +46,12 @@ func (q *Queries) CreateMatch(ctx context.Context, arg CreateMatchParams) (Match
 		arg.Team1Player2ID,
 		arg.Team2Player1ID,
 		arg.Team2Player2ID,
-		arg.ScoreTeam1,
-		arg.ScoreTeam2,
+		arg.Set1Team1,
+		arg.Set1Team2,
+		arg.Set2Team1,
+		arg.Set2Team2,
+		arg.Set3Team1,
+		arg.Set3Team2,
 		arg.PlayedAt,
 	)
 	var i Match
@@ -52,16 +62,20 @@ func (q *Queries) CreateMatch(ctx context.Context, arg CreateMatchParams) (Match
 		&i.Team1Player2ID,
 		&i.Team2Player1ID,
 		&i.Team2Player2ID,
-		&i.ScoreTeam1,
-		&i.ScoreTeam2,
 		&i.PlayedAt,
 		&i.Validated,
+		&i.Set1Team1,
+		&i.Set1Team2,
+		&i.Set2Team1,
+		&i.Set2Team2,
+		&i.Set3Team1,
+		&i.Set3Team2,
 	)
 	return i, err
 }
 
 const getMatchByID = `-- name: GetMatchByID :one
-SELECT id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, score_team1, score_team2, played_at, validated FROM matches
+SELECT id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, played_at, validated, set1_team1, set1_team2, set2_team1, set2_team2, set3_team1, set3_team2 FROM matches
 WHERE id = $1
 `
 
@@ -75,16 +89,20 @@ func (q *Queries) GetMatchByID(ctx context.Context, id pgtype.UUID) (Match, erro
 		&i.Team1Player2ID,
 		&i.Team2Player1ID,
 		&i.Team2Player2ID,
-		&i.ScoreTeam1,
-		&i.ScoreTeam2,
 		&i.PlayedAt,
 		&i.Validated,
+		&i.Set1Team1,
+		&i.Set1Team2,
+		&i.Set2Team1,
+		&i.Set2Team2,
+		&i.Set3Team1,
+		&i.Set3Team2,
 	)
 	return i, err
 }
 
 const getPlayerMatches = `-- name: GetPlayerMatches :many
-SELECT id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, score_team1, score_team2, played_at, validated FROM matches
+SELECT id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, played_at, validated, set1_team1, set1_team2, set2_team1, set2_team2, set3_team1, set3_team2 FROM matches
 WHERE team1_player1_id = $1 OR team1_player2_id = $1
    OR team2_player1_id = $1 OR team2_player2_id = $1
 ORDER BY played_at DESC
@@ -106,10 +124,14 @@ func (q *Queries) GetPlayerMatches(ctx context.Context, team1Player1ID string) (
 			&i.Team1Player2ID,
 			&i.Team2Player1ID,
 			&i.Team2Player2ID,
-			&i.ScoreTeam1,
-			&i.ScoreTeam2,
 			&i.PlayedAt,
 			&i.Validated,
+			&i.Set1Team1,
+			&i.Set1Team2,
+			&i.Set2Team1,
+			&i.Set2Team2,
+			&i.Set3Team1,
+			&i.Set3Team2,
 		); err != nil {
 			return nil, err
 		}
@@ -122,7 +144,7 @@ func (q *Queries) GetPlayerMatches(ctx context.Context, team1Player1ID string) (
 }
 
 const listMatches = `-- name: ListMatches :many
-SELECT id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, score_team1, score_team2, played_at, validated FROM matches
+SELECT id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, played_at, validated, set1_team1, set1_team2, set2_team1, set2_team2, set3_team1, set3_team2 FROM matches
 ORDER BY played_at DESC
 `
 
@@ -142,10 +164,14 @@ func (q *Queries) ListMatches(ctx context.Context) ([]Match, error) {
 			&i.Team1Player2ID,
 			&i.Team2Player1ID,
 			&i.Team2Player2ID,
-			&i.ScoreTeam1,
-			&i.ScoreTeam2,
 			&i.PlayedAt,
 			&i.Validated,
+			&i.Set1Team1,
+			&i.Set1Team2,
+			&i.Set2Team1,
+			&i.Set2Team2,
+			&i.Set3Team1,
+			&i.Set3Team2,
 		); err != nil {
 			return nil, err
 		}
@@ -161,7 +187,7 @@ const validateMatch = `-- name: ValidateMatch :one
 UPDATE matches
 SET validated = true
 WHERE id = $1
-RETURNING id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, score_team1, score_team2, played_at, validated
+RETURNING id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, played_at, validated, set1_team1, set1_team2, set2_team1, set2_team2, set3_team1, set3_team2
 `
 
 func (q *Queries) ValidateMatch(ctx context.Context, id pgtype.UUID) (Match, error) {
@@ -174,10 +200,14 @@ func (q *Queries) ValidateMatch(ctx context.Context, id pgtype.UUID) (Match, err
 		&i.Team1Player2ID,
 		&i.Team2Player1ID,
 		&i.Team2Player2ID,
-		&i.ScoreTeam1,
-		&i.ScoreTeam2,
 		&i.PlayedAt,
 		&i.Validated,
+		&i.Set1Team1,
+		&i.Set1Team2,
+		&i.Set2Team1,
+		&i.Set2Team2,
+		&i.Set3Team1,
+		&i.Set3Team2,
 	)
 	return i, err
 }
