@@ -8,13 +8,13 @@ export default defineNuxtPlugin(async () => {
 
   const firebaseApp = getApps().length === 0
     ? initializeApp({
-      apiKey: config.public.firebaseApiKey as string,
-      authDomain: config.public.firebaseAuthDomain as string,
-      projectId: config.public.firebaseProjectId as string,
-      storageBucket: config.public.firebaseStorageBucket as string,
-      messagingSenderId: config.public.firebaseMessagingSenderId as string,
-      appId: config.public.firebaseAppId as string
-    })
+        apiKey: config.public.firebaseApiKey as string,
+        authDomain: config.public.firebaseAuthDomain as string,
+        projectId: config.public.firebaseProjectId as string,
+        storageBucket: config.public.firebaseStorageBucket as string,
+        messagingSenderId: config.public.firebaseMessagingSenderId as string,
+        appId: config.public.firebaseAppId as string
+      })
     : getApps()[0]
 
   const auth = getAuth(firebaseApp)
@@ -50,16 +50,14 @@ export default defineNuxtPlugin(async () => {
           return
         }
         isAdmin.value = true
-      }
-      catch {
+      } catch {
         // API unreachable — sign out to avoid an inconsistent state.
         await auth.signOut()
         user.value = null
         token.value = null
         isAdmin.value = false
       }
-    }
-    else {
+    } else {
       user.value = null
       token.value = null
       isAdmin.value = false

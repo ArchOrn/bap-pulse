@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 useHead({ title: 'Matchs — BAP Pulse' })
 
 const { baseURL, authHeaders } = useApi()
@@ -41,11 +40,15 @@ const formatSets = (m: Match) => {
 }
 
 const setsWon = (m: Match): [number, number] => {
-  let t1 = 0, t2 = 0
-  if (m.set1_team1 > m.set1_team2) t1++; else if (m.set1_team2 > m.set1_team1) t2++
-  if (m.set2_team1 > m.set2_team2) t1++; else if (m.set2_team2 > m.set2_team1) t2++
+  let t1 = 0
+  let t2 = 0
+  if (m.set1_team1 > m.set1_team2) t1++
+  else if (m.set1_team2 > m.set1_team1) t2++
+  if (m.set2_team1 > m.set2_team2) t1++
+  else if (m.set2_team2 > m.set2_team1) t2++
   if (m.set3_team1 != null && m.set3_team2 != null) {
-    if (m.set3_team1 > m.set3_team2) t1++; else if (m.set3_team2 > m.set3_team1) t2++
+    if (m.set3_team1 > m.set3_team2) t1++
+    else if (m.set3_team2 > m.set3_team1) t2++
   }
   return [t1, t2]
 }
@@ -60,7 +63,7 @@ const columns = [
 ]
 
 const rows = computed(() =>
-  (matches.value ?? []).map(m => {
+  (matches.value ?? []).map((m) => {
     const [w1, w2] = setsWon(m)
     return {
       ...m,
@@ -168,33 +171,45 @@ const handleCreate = async () => {
     })
     await refresh()
     showCreate.value = false
-  }
-  catch (e: unknown) {
+  } catch (e: unknown) {
     const msg = (e as { data?: { error?: string } })?.data?.error
     createError.value = msg ?? 'Une erreur est survenue.'
-  }
-  finally {
+  } finally {
     createLoading.value = false
   }
 }
 </script>
 
 <template>
-  <div class="p-6 space-y-6">
+  <div class="space-y-6">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-xl font-bold">Matchs</h1>
-        <p class="text-sm text-muted mt-1">{{ rows.length }} match{{ rows.length !== 1 ? 's' : '' }} enregistré{{ rows.length !== 1 ? 's' : '' }}</p>
+        <h1 class="text-2xl font-bold">
+          Matchs
+        </h1>
+        <p class="text-sm text-muted mt-1">
+          {{ rows.length }} match{{ rows.length !== 1 ? 's' : '' }} enregistré{{ rows.length !== 1 ? 's' : '' }}
+        </p>
       </div>
 
-      <UButton icon="i-lucide-plus" @click="openCreate">
+      <UButton
+        icon="i-lucide-plus"
+        @click="openCreate"
+      >
         Ajouter un match
       </UButton>
     </div>
 
-    <UCard>
-      <div v-if="status === 'pending'" class="space-y-2">
-        <USkeleton v-for="i in 8" :key="i" class="h-8 w-full" />
+    <AppCard>
+      <div
+        v-if="status === 'pending'"
+        class="space-y-2 p-4"
+      >
+        <USkeleton
+          v-for="i in 8"
+          :key="i"
+          class="h-8 w-full"
+        />
       </div>
 
       <UAlert
@@ -205,7 +220,11 @@ const handleCreate = async () => {
         :description="error.message"
       />
 
-      <UTable v-else :data="rows" :columns="columns">
+      <UTable
+        v-else
+        :data="rows"
+        :columns="columns"
+      >
         <template #type-cell="{ row }">
           <UBadge
             :label="matchTypeBadge[row.original.type]?.label ?? row.original.type"
@@ -227,12 +246,18 @@ const handleCreate = async () => {
           />
         </template>
       </UTable>
-    </UCard>
+    </AppCard>
 
     <!-- Create match modal -->
-    <UModal v-model:open="showCreate" title="Ajouter un match">
+    <UModal
+      v-model:open="showCreate"
+      title="Ajouter un match"
+    >
       <template #body>
-        <form class="space-y-4" @submit.prevent="handleCreate">
+        <form
+          class="space-y-4"
+          @submit.prevent="handleCreate"
+        >
           <UAlert
             v-if="createError"
             icon="i-lucide-circle-alert"
@@ -255,7 +280,9 @@ const handleCreate = async () => {
           <div class="grid grid-cols-2 gap-4">
             <!-- Team 1 -->
             <fieldset class="space-y-3">
-              <legend class="text-sm font-semibold">Équipe 1</legend>
+              <legend class="text-sm font-semibold">
+                Équipe 1
+              </legend>
               <UFormField label="Joueur 1">
                 <USelect
                   v-model="createForm.team1_player1_id"
@@ -265,7 +292,10 @@ const handleCreate = async () => {
                   class="w-full"
                 />
               </UFormField>
-              <UFormField v-if="isDoubles" label="Joueur 2">
+              <UFormField
+                v-if="isDoubles"
+                label="Joueur 2"
+              >
                 <USelect
                   v-model="createForm.team1_player2_id"
                   :items="playerOptions"
@@ -278,7 +308,9 @@ const handleCreate = async () => {
 
             <!-- Team 2 -->
             <fieldset class="space-y-3">
-              <legend class="text-sm font-semibold">Équipe 2</legend>
+              <legend class="text-sm font-semibold">
+                Équipe 2
+              </legend>
               <UFormField label="Joueur 1">
                 <USelect
                   v-model="createForm.team2_player1_id"
@@ -288,7 +320,10 @@ const handleCreate = async () => {
                   class="w-full"
                 />
               </UFormField>
-              <UFormField v-if="isDoubles" label="Joueur 2">
+              <UFormField
+                v-if="isDoubles"
+                label="Joueur 2"
+              >
                 <USelect
                   v-model="createForm.team2_player2_id"
                   :items="playerOptions"
@@ -310,7 +345,9 @@ const handleCreate = async () => {
 
           <!-- Sets -->
           <fieldset class="space-y-3">
-            <legend class="text-sm font-semibold">Sets (30 points max)</legend>
+            <legend class="text-sm font-semibold">
+              Sets (30 points max)
+            </legend>
             <div
               v-for="(s, i) in createForm.sets"
               :key="i"
@@ -335,7 +372,10 @@ const handleCreate = async () => {
                 class="w-full"
               />
             </div>
-            <p v-if="createForm.sets.length === 2 && !needsSet3" class="text-xs text-muted">
+            <p
+              v-if="createForm.sets.length === 2 && !needsSet3"
+              class="text-xs text-muted"
+            >
               Le set 3 apparaitra automatiquement si chaque équipe gagne un set.
             </p>
           </fieldset>
@@ -344,7 +384,11 @@ const handleCreate = async () => {
 
       <template #footer>
         <div class="flex justify-end gap-2">
-          <UButton variant="ghost" color="neutral" @click="showCreate = false">
+          <UButton
+            variant="ghost"
+            color="neutral"
+            @click="showCreate = false"
+          >
             Annuler
           </UButton>
           <UButton

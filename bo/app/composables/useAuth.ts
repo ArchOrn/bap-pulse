@@ -33,8 +33,7 @@ export function useAuth() {
         throw Object.assign(new Error('Accès réservé aux administrateurs.'), { code: 'auth/not-admin' })
       }
       isAdmin.value = true
-    }
-    catch (e) {
+    } catch (e) {
       // Sign out and clear state on any error (not-admin or API failure).
       await firebaseSignOut($firebaseAuth)
       user.value = null

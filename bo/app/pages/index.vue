@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 const { baseURL } = useApi()
 
 const { data: rankings, status } = await useFetch<UserRanking[]>(`${baseURL}/rankings`)
@@ -40,35 +39,62 @@ const topRows = computed(() =>
 </script>
 
 <template>
-  <div class="p-6 space-y-6">
+  <div class="space-y-6">
     <div>
-      <h1 class="text-xl font-bold">Dashboard</h1>
-      <p class="text-sm text-muted mt-1">Vue d'ensemble du club Bad A Paname</p>
+      <h1 class="text-2xl font-bold">
+        Dashboard
+      </h1>
+      <p class="text-sm text-muted mt-1">
+        Vue d'ensemble du club Bad A Paname
+      </p>
     </div>
 
     <!-- Stats -->
     <div class="grid grid-cols-3 gap-4">
-      <UCard v-for="stat in stats" :key="stat.label">
-        <div class="flex items-center gap-3">
-          <UIcon :name="stat.icon" class="size-5 text-primary shrink-0" />
+      <AppCard
+        v-for="stat in stats"
+        :key="stat.label"
+      >
+        <div class="flex items-center gap-3 p-4">
+          <UIcon
+            :name="stat.icon"
+            class="size-5 text-primary shrink-0"
+          />
           <div>
-            <p class="text-xs text-muted">{{ stat.label }}</p>
-            <p class="text-lg font-bold">{{ stat.value }}</p>
+            <p class="text-xs text-muted">
+              {{ stat.label }}
+            </p>
+            <p class="text-lg font-bold">
+              {{ stat.value }}
+            </p>
           </div>
         </div>
-      </UCard>
+      </AppCard>
     </div>
 
     <!-- Top 5 -->
-    <UCard>
+    <AppCard>
       <template #header>
-        <p class="font-semibold text-sm">Top 5 joueurs</p>
+        <p class="font-semibold text-sm">
+          Top 5 joueurs
+        </p>
       </template>
 
-      <div v-if="status === 'pending'" class="space-y-2">
-        <USkeleton v-for="i in 5" :key="i" class="h-8 w-full" />
+      <div
+        v-if="status === 'pending'"
+        class="space-y-2 p-4"
+      >
+        <USkeleton
+          v-for="i in 5"
+          :key="i"
+          class="h-8 w-full"
+        />
       </div>
-      <UTable v-else :data="topRows" :columns="topColumns" />
-    </UCard>
+      <UTable
+        v-else
+        :data="topRows"
+        :columns="topColumns"
+      />
+    </AppCard>
   </div>
 </template>

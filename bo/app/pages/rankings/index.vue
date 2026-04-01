@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 useHead({ title: 'Classement — BAP Pulse' })
 
 const { baseURL } = useApi()
@@ -26,15 +25,26 @@ const rows = computed(() =>
 </script>
 
 <template>
-  <div class="p-6 space-y-6">
+  <div class="space-y-6">
     <div>
-      <h1 class="text-xl font-bold">Classement ELO</h1>
-      <p class="text-sm text-muted mt-1">Joueurs triés par score ELO décroissant</p>
+      <h1 class="text-2xl font-bold">
+        Classement ELO
+      </h1>
+      <p class="text-sm text-muted mt-1">
+        Joueurs triés par score ELO décroissant
+      </p>
     </div>
 
-    <UCard>
-      <div v-if="status === 'pending'" class="space-y-2">
-        <USkeleton v-for="i in 10" :key="i" class="h-8 w-full" />
+    <AppCard>
+      <div
+        v-if="status === 'pending'"
+        class="space-y-2 p-4"
+      >
+        <USkeleton
+          v-for="i in 10"
+          :key="i"
+          class="h-8 w-full"
+        />
       </div>
 
       <UAlert
@@ -45,7 +55,11 @@ const rows = computed(() =>
         description="Une erreur est survenue lors de la récupération des données."
       />
 
-      <UTable v-else :data="rows" :columns="columns">
+      <UTable
+        v-else
+        :data="rows"
+        :columns="columns"
+      >
         <template #rank-cell="{ row }">
           <div class="flex items-center gap-2">
             <UIcon
@@ -65,9 +79,13 @@ const rows = computed(() =>
         </template>
 
         <template #elo-cell="{ row }">
-          <UBadge :label="String(row.original.elo)" color="primary" variant="subtle" />
+          <UBadge
+            :label="String(row.original.elo)"
+            color="primary"
+            variant="subtle"
+          />
         </template>
       </UTable>
-    </UCard>
+    </AppCard>
   </div>
 </template>

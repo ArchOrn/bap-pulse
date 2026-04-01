@@ -1,8 +1,17 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: [
+    '@nuxt/ui',
+    '@nuxt/fonts',
     '@nuxt/eslint',
-    '@nuxt/ui'
+    '@nuxt/icon',
+    '@vueuse/nuxt'
+  ],
+
+  ssr: false,
+
+  components: [
+    { path: '~/components', pathPrefix: false }
   ],
 
   devtools: {
@@ -23,13 +32,11 @@ export default defineNuxtConfig({
     }
   },
 
-  ssr: false,
+  compatibilityDate: '2025-01-15',
 
   typescript: {
     typeCheck: false
   },
-
-  compatibilityDate: '2025-01-15',
 
   eslint: {
     config: {

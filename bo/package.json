@@ -13,7 +13,10 @@
   "dependencies": {
     "@iconify-json/lucide": "^1.2.95",
     "@iconify-json/simple-icons": "^1.2.72",
+    "@nuxt/fonts": "^0.14.0",
+    "@nuxt/icon": "^2.2.1",
     "@nuxt/ui": "^4.5.1",
+    "@vueuse/nuxt": "^14.2.1",
     "firebase": "^12.10.0",
     "nuxt": "^4.3.1",
     "tailwindcss": "^4.2.1"

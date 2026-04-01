@@ -4,39 +4,34 @@
 @theme static {
   --font-sans: 'Public Sans', sans-serif;
 
-  --color-green-50: #EFFDF5;
-  --color-green-100: #D9FBE8;
-  --color-green-200: #B3F5D1;
-  --color-green-300: #75EDAE;
-  --color-green-400: #00DC82;
-  --color-green-500: #00C16A;
-  --color-green-600: #00A155;
-  --color-green-700: #007F45;
-  --color-green-800: #016538;
-  --color-green-900: #0A5331;
-  --color-green-950: #052E16;
+  --color-black-haze-50: #fafafa;
+  --color-black-haze-100: #f7f7f7;
+  --color-black-haze-200: #e6e6e6;
+  --color-black-haze-300: #d6d6d6;
+  --color-black-haze-400: #a5a5a5;
+  --color-black-haze-500: #767676;
+  --color-black-haze-600: #575757;
+  --color-black-haze-700: #434343;
+  --color-black-haze-800: #292929;
+  --color-black-haze-900: #1a1a1a;
+  --color-black-haze-950: #0a0a0a;
+}
+
+:root {
+  --ui-primary: var(--color-black-haze-950);
+  --ui-bg: var(--color-black-haze-50);
+}
+
+.dark {
+  --ui-primary: var(--color-black-haze-50);
+  --ui-border: var(--color-neutral-800);
+  --ui-bg: var(--color-black-haze-950);
 }
 
 /* Badminton court grid pattern — used on the login page */
 .court-pattern {
   background-image:
-    linear-gradient(rgba(0, 220, 130, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 220, 130, 0.07) 1px, transparent 1px);
+    linear-gradient(rgba(16, 185, 129, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 185, 129, 0.07) 1px, transparent 1px);
   background-size: 48px 48px;
-}
-
-/* Sidebar nav active state glow */
-.nav-active {
-  position: relative;
-}
-.nav-active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 60%;
-  background: var(--color-green-400);
-  border-radius: 0 2px 2px 0;
 }
