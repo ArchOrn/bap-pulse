@@ -9,32 +9,26 @@ import 'package:bap_pulse/core/widgets/pulse_logo.dart';
 import 'package:bap_pulse/auth/bloc/auth_bloc.dart';
 import 'package:bap_pulse/auth/presentation/_auth_background.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
-  final _passwordCtrl = TextEditingController();
-  bool _obscure = true;
 
   @override
   void dispose() {
     _emailCtrl.dispose();
-    _passwordCtrl.dispose();
     super.dispose();
   }
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    context.read<AuthBloc>().add(AuthSignInRequested(
-          email: _emailCtrl.text,
-          password: _passwordCtrl.text,
-        ));
+    context.read<AuthBloc>().add(AuthPasswordResetRequested(_emailCtrl.text));
   }
 
   @override
@@ -73,92 +67,63 @@ class _LoginScreenState extends State<LoginScreen> {
                     const PulseLogo(size: 56, color: Colors.white),
                     const SizedBox(height: 32),
                     Text(
-                      'Bon retour\nsur la ligue.',
+                      'Mot de\npasse oublié ?',
                       style: AppTextStyles.h1.copyWith(fontSize: 38),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     Text(
-                      'Connecte-toi pour reprendre le tour d\'avril.',
+                      'Indique l\'email de ton compte BAP. On t\'envoie un lien pour le réinitialiser.',
                       style: AppTextStyles.bodyLarge
                           .copyWith(color: AppColors.textMuted),
                     ),
                     const SizedBox(height: 32),
+                    if (auth.resetEmailSent) ...[
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.accentGreen.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: AppColors.accentGreen.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.check_circle_rounded,
+                                color: AppColors.accentGreen),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Email envoyé. Vérifie ta boîte de réception.',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: AppColors.accentGreen,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                    ],
                     _label('Email'),
                     TextFormField(
                       controller: _emailCtrl,
                       keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
                       autofillHints: const [AutofillHints.email],
                       decoration: const InputDecoration(
-                        hintText: 'thomas.l@bap.fr',
+                        hintText: 'prenom.nom@bap.fr',
                         prefixIcon: Icon(Icons.mail_outline, size: 20),
                       ),
                       validator: (v) =>
                           v == null || !v.contains('@') ? 'Email invalide' : null,
-                    ),
-                    const SizedBox(height: 18),
-                    _label('Mot de passe'),
-                    TextFormField(
-                      controller: _passwordCtrl,
-                      obscureText: _obscure,
-                      autofillHints: const [AutofillHints.password],
-                      decoration: InputDecoration(
-                        hintText: '••••••••',
-                        prefixIcon:
-                            const Icon(Icons.lock_outline, size: 20),
-                        suffixIcon: IconButton(
-                          onPressed: () =>
-                              setState(() => _obscure = !_obscure),
-                          icon: Icon(
-                            _obscure
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                      validator: (v) => v == null || v.length < 6
-                          ? 'Mot de passe trop court'
-                          : null,
                       onFieldSubmitted: (_) => _submit(),
                     ),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () => context.push('/forgot-password'),
-                        child: const Text('Mot de passe oublié ?'),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     PrimaryButton(
-                      label: 'Se connecter',
-                      icon: Icons.arrow_forward,
+                      label: 'Envoyer le lien',
                       loading: auth.busy,
                       onPressed: auth.busy ? null : _submit,
-                    ),
-                    const SizedBox(height: 24),
-                    Center(
-                      child: Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Text(
-                            'Pas encore membre ? ',
-                            style: AppTextStyles.bodyMedium
-                                .copyWith(color: AppColors.textMuted),
-                          ),
-                          GestureDetector(
-                            onTap: () => context.push('/register'),
-                            child: Text(
-                              'Créer un compte',
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
                   ],
                 ),
