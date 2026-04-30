@@ -8,7 +8,7 @@ BAP Pulse is a badminton club management system (Bad A Paname) with real-time ma
 
 - **`/api`** — Go REST API (Fiber v2, PostgreSQL 17, Firebase Auth, sqlc)
 - **`/bo`** — Nuxt 4 back-office frontend (Vue 3, TypeScript, Nuxt UI, Firebase client auth)
-- **`/app`** — Flutter mobile app (early stage, Firebase Auth)
+- **`/app`** — Flutter mobile + web app (Material 3 dark theme, flutter_bloc, go_router, Firebase Auth). Targets iOS, Android, and web (mobile-framed on desktop)
 
 ## Development Commands
 
@@ -35,12 +35,17 @@ pnpm lint                     # ESLint
 pnpm typecheck                # TypeScript validation
 ```
 
-### Mobile (`/app`)
+### Mobile / Web (`/app`)
 
 ```bash
 flutter pub get               # Install dependencies
-flutter run                   # Run on emulator/device
+flutter analyze               # Static analysis (zero issues expected)
+flutter run                   # Run on connected device / picks default
+flutter run -d chrome         # Run web build (mobile-framed on desktop)
+flutter run -d <iPhone-UDID>  # Run on a specific iOS simulator
 ```
+
+iOS deployment target is **15.0** (required by current Firebase iOS pods). Bumping it lower will break `pod install`.
 
 ## Architecture
 
@@ -74,6 +79,17 @@ flutter run                   # Run on emulator/device
 - **SSR disabled** — runs as SPA
 - **CI:** GitHub Actions runs lint + typecheck on push (Node 22)
 
+### Mobile / Web App
+
+- **Entry:** `lib/main.dart` initializes Firebase, then `lib/app.dart` provides `AuthBloc` + `MaterialApp.router`. The router is wrapped in `MobileFrame` so desktop-web viewports render in a centered phone-width column (`>600px` viewport ⇒ frame, otherwise full-bleed)
+- **Routing:** `lib/core/router/app_router.dart` — go_router with a top-level `redirect` driven by `AuthBloc` state, plus a `ShellRoute` for the 5 bottom-nav tabs
+- **State:** flutter_bloc + Equatable. One BLoC per feature. Currently only `AuthBloc` is wired to Firebase; the rest read from `MockRepository` (no API integration yet)
+- **Mock data:** `lib/shared/data/mock_repository.dart` — port of `data.jsx` from the Claude Design kit. Will be swapped for an `ApiRepository` without changing the BLoCs
+- **Theme:** Material 3 dark only. Design tokens in `lib/core/theme/colors.dart`, typography (Space Grotesk + Inter via `google_fonts`) in `text_styles.dart`. Brand accent is one swappable line (`AccentSage`/`AccentPulse`/`AccentBlue`/etc. — see `lib/core/theme/accent.dart`)
+- **Layout under `lib/`:** flat — each feature has its own folder (`auth/`, `home/`, `score/`, `leaderboard/`, `club/`, `jerseys/`, `profile/`, `shell/`) with `bloc/` + `presentation/` subfolders. Shared building blocks live in `core/widgets/` (`PlayerAvatar`, `JerseyBadge`, `TrendChip`, `PrimaryButton`, `BapLogo`, `PulseLogo`, `MobileFrame`, etc.)
+- **Auth flow:** Splash → Login / Register / Forgot password (email + password only). Firebase Auth wrapper is `lib/auth/data/auth_service.dart`. `redirect` in the router bounces unauthenticated users back to `/`
+- **Assets:** `assets/images/bap_pulse_logo.svg` (app brand) and `assets/images/logo_bap.svg` (club brand). Both rendered via `flutter_svg` and tintable
+
 ### Cross-cutting
 
 - Firebase is the auth backbone across all three components
@@ -87,5 +103,6 @@ flutter run                   # Run on emulator/device
 - API error responses follow `{"error": "message"}` format, in English
 - ELO calculation: individual delta for singles, team-average delta for doubles/mixed
 - Firebase UIDs as user primary keys; UUIDs for matches and ELO history
-- Frontend uses composables pattern for shared logic
+- Frontend (BO) uses composables pattern for shared logic
+- Mobile/web app uses flutter_bloc; UI strings are in French; semantic colors (win/defeat/streak/leader) are independent from the brand accent and stay constant when the accent palette is swapped
 - Commit messages are descriptive, no conventional commit prefix enforced

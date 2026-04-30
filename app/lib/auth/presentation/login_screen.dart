@@ -1,13 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
-
+import 'package:bap_pulse/auth/bloc/auth_bloc.dart';
+import 'package:bap_pulse/auth/presentation/_auth_background.dart';
 import 'package:bap_pulse/core/theme/colors.dart';
 import 'package:bap_pulse/core/theme/text_styles.dart';
 import 'package:bap_pulse/core/widgets/primary_button.dart';
-import 'package:bap_pulse/core/widgets/pulse_logo.dart';
-import 'package:bap_pulse/auth/bloc/auth_bloc.dart';
-import 'package:bap_pulse/auth/presentation/_auth_background.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -31,10 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    context.read<AuthBloc>().add(AuthSignInRequested(
-          email: _emailCtrl.text,
-          password: _passwordCtrl.text,
-        ));
+    context.read<AuthBloc>().add(AuthSignInRequested(email: _emailCtrl.text, password: _passwordCtrl.text));
   }
 
   @override
@@ -51,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
         body: AuthBackground(
           child: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -61,26 +56,19 @@ class _LoginScreenState extends State<LoginScreen> {
                       alignment: Alignment.centerLeft,
                       child: IconButton.filled(
                         style: IconButton.styleFrom(
-                          backgroundColor:
-                              Colors.white.withValues(alpha: 0.08),
+                          backgroundColor: Colors.white.withValues(alpha: 0.08),
                           foregroundColor: AppColors.textPrimary,
                         ),
                         onPressed: () => context.pop(),
                         icon: const Icon(Icons.arrow_back, size: 20),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    const PulseLogo(size: 56, color: Colors.white),
                     const SizedBox(height: 32),
-                    Text(
-                      'Bon retour\nsur la ligue.',
-                      style: AppTextStyles.h1.copyWith(fontSize: 38),
-                    ),
+                    Text('Bon retour\nsur la ligue.', style: AppTextStyles.h1.copyWith(fontSize: 38)),
                     const SizedBox(height: 8),
                     Text(
                       'Connecte-toi pour reprendre le tour d\'avril.',
-                      style: AppTextStyles.bodyLarge
-                          .copyWith(color: AppColors.textMuted),
+                      style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textMuted),
                     ),
                     const SizedBox(height: 32),
                     _label('Email'),
@@ -93,8 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         hintText: 'thomas.l@bap.fr',
                         prefixIcon: Icon(Icons.mail_outline, size: 20),
                       ),
-                      validator: (v) =>
-                          v == null || !v.contains('@') ? 'Email invalide' : null,
+                      validator: (v) => v == null || !v.contains('@') ? 'Email invalide' : null,
                     ),
                     const SizedBox(height: 18),
                     _label('Mot de passe'),
@@ -104,22 +91,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       autofillHints: const [AutofillHints.password],
                       decoration: InputDecoration(
                         hintText: '••••••••',
-                        prefixIcon:
-                            const Icon(Icons.lock_outline, size: 20),
+                        prefixIcon: const Icon(Icons.lock_outline, size: 20),
                         suffixIcon: IconButton(
-                          onPressed: () =>
-                              setState(() => _obscure = !_obscure),
-                          icon: Icon(
-                            _obscure
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                            size: 20,
-                          ),
+                          onPressed: () => setState(() => _obscure = !_obscure),
+                          icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 20),
                         ),
                       ),
-                      validator: (v) => v == null || v.length < 6
-                          ? 'Mot de passe trop court'
-                          : null,
+                      validator: (v) => v == null || v.length < 6 ? 'Mot de passe trop court' : null,
                       onFieldSubmitted: (_) => _submit(),
                     ),
                     const SizedBox(height: 8),
@@ -144,8 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           Text(
                             'Pas encore membre ? ',
-                            style: AppTextStyles.bodyMedium
-                                .copyWith(color: AppColors.textMuted),
+                            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textMuted),
                           ),
                           GestureDetector(
                             onTap: () => context.push('/register'),
@@ -171,15 +148,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _label(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 8, left: 4),
-        child: Text(
-          text.toUpperCase(),
-          style: TextStyle(
-            color: AppColors.textMuted,
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.2,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.only(bottom: 8, left: 4),
+    child: Text(
+      text.toUpperCase(),
+      style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.2),
+    ),
+  );
 }

@@ -1,6 +1,6 @@
 {
-    "name": "BAP Pulse",
-    "short_name": "BAP Pulse",
+    "name": "La Ligue du BAP",
+    "short_name": "La Ligue du BAP",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0B0F14",

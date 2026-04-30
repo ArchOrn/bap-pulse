@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:bap_pulse/core/theme/colors.dart';
 import 'package:bap_pulse/core/theme/text_styles.dart';
+import 'package:bap_pulse/core/widgets/bap_logo.dart';
 import 'package:bap_pulse/core/widgets/primary_button.dart';
-import 'package:bap_pulse/core/widgets/pulse_logo.dart';
 import 'package:bap_pulse/auth/bloc/auth_bloc.dart';
 import 'package:bap_pulse/auth/presentation/_auth_background.dart';
 
@@ -34,8 +34,8 @@ class SplashScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     const Spacer(flex: 3),
-                    const PulseLogo(size: 130, color: Colors.white),
-                    const SizedBox(height: 28),
+                    const BapLogo(height: 110, color: Colors.white),
+                    const SizedBox(height: 32),
                     Text(
                       'La Ligue\ndu BAP',
                       textAlign: TextAlign.center,
@@ -46,7 +46,7 @@ class SplashScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Le championnat interne du club.\nDéfis, ELO, maillots du mois.',
+                      'Le championnat interne du club de Bad\' A Paname',
                       textAlign: TextAlign.center,
                       style: AppTextStyles.bodyLarge.copyWith(
                         color: AppColors.textMuted,
@@ -67,7 +67,7 @@ class SplashScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Réservé aux membres du BAP — code requis',
+                      'Réservé aux membres du BAP',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.textFaint,
                       ),

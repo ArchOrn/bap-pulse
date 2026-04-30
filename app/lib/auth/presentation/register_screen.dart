@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:bap_pulse/core/theme/colors.dart';
 import 'package:bap_pulse/core/theme/text_styles.dart';
 import 'package:bap_pulse/core/widgets/primary_button.dart';
-import 'package:bap_pulse/core/widgets/pulse_logo.dart';
 import 'package:bap_pulse/auth/bloc/auth_bloc.dart';
 import 'package:bap_pulse/auth/presentation/_auth_background.dart';
 
@@ -39,14 +38,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    context.read<AuthBloc>().add(AuthRegisterRequested(
-          email: _emailCtrl.text,
-          password: _passwordCtrl.text,
-          firstName: _firstNameCtrl.text,
-          lastName: _lastNameCtrl.text,
-          username: _usernameCtrl.text,
-          inviteCode: _inviteCtrl.text,
-        ));
+    context.read<AuthBloc>().add(
+      AuthRegisterRequested(
+        email: _emailCtrl.text,
+        password: _passwordCtrl.text,
+        firstName: _firstNameCtrl.text,
+        lastName: _lastNameCtrl.text,
+        username: _usernameCtrl.text,
+        inviteCode: _inviteCtrl.text,
+      ),
+    );
   }
 
   @override
@@ -63,7 +64,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         body: AuthBackground(
           child: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -73,26 +74,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       alignment: Alignment.centerLeft,
                       child: IconButton.filled(
                         style: IconButton.styleFrom(
-                          backgroundColor:
-                              Colors.white.withValues(alpha: 0.08),
+                          backgroundColor: Colors.white.withValues(alpha: 0.08),
                           foregroundColor: AppColors.textPrimary,
                         ),
                         onPressed: () => context.pop(),
                         icon: const Icon(Icons.arrow_back, size: 20),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    const PulseLogo(size: 56, color: Colors.white),
                     const SizedBox(height: 32),
-                    Text(
-                      'Rejoins\nla ligue.',
-                      style: AppTextStyles.h1.copyWith(fontSize: 38),
-                    ),
+                    Text('Rejoins\nla ligue.', style: AppTextStyles.h1.copyWith(fontSize: 38)),
                     const SizedBox(height: 8),
                     Text(
                       'Quelques infos et c\'est parti.',
-                      style: AppTextStyles.bodyLarge
-                          .copyWith(color: AppColors.textMuted),
+                      style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textMuted),
                     ),
                     const SizedBox(height: 32),
                     Row(
@@ -106,10 +100,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               TextFormField(
                                 controller: _firstNameCtrl,
                                 textInputAction: TextInputAction.next,
-                                decoration:
-                                    const InputDecoration(hintText: 'Thomas'),
-                                validator: (v) =>
-                                    v == null || v.isEmpty ? 'Requis' : null,
+                                decoration: const InputDecoration(hintText: 'Thomas'),
+                                validator: (v) => v == null || v.isEmpty ? 'Requis' : null,
                               ),
                             ],
                           ),
@@ -123,10 +115,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               TextFormField(
                                 controller: _lastNameCtrl,
                                 textInputAction: TextInputAction.next,
-                                decoration:
-                                    const InputDecoration(hintText: 'Lefèvre'),
-                                validator: (v) =>
-                                    v == null || v.isEmpty ? 'Requis' : null,
+                                decoration: const InputDecoration(hintText: 'Lefèvre'),
+                                validator: (v) => v == null || v.isEmpty ? 'Requis' : null,
                               ),
                             ],
                           ),
@@ -142,8 +132,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         hintText: 'thomas_l',
                         prefixIcon: Icon(Icons.person_outline, size: 20),
                       ),
-                      validator: (v) =>
-                          v == null || v.length < 3 ? 'Au moins 3 caractères' : null,
+                      validator: (v) => v == null || v.length < 3 ? 'Au moins 3 caractères' : null,
                     ),
                     const SizedBox(height: 18),
                     _label('Email'),
@@ -156,8 +145,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         hintText: 'prenom.nom@bap.fr',
                         prefixIcon: Icon(Icons.mail_outline, size: 20),
                       ),
-                      validator: (v) =>
-                          v == null || !v.contains('@') ? 'Email invalide' : null,
+                      validator: (v) => v == null || !v.contains('@') ? 'Email invalide' : null,
                     ),
                     const SizedBox(height: 18),
                     _label('Mot de passe'),
@@ -167,22 +155,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       autofillHints: const [AutofillHints.newPassword],
                       decoration: InputDecoration(
                         hintText: '8 caractères minimum',
-                        prefixIcon:
-                            const Icon(Icons.lock_outline, size: 20),
+                        prefixIcon: const Icon(Icons.lock_outline, size: 20),
                         suffixIcon: IconButton(
-                          onPressed: () =>
-                              setState(() => _obscure = !_obscure),
-                          icon: Icon(
-                            _obscure
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                            size: 20,
-                          ),
+                          onPressed: () => setState(() => _obscure = !_obscure),
+                          icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 20),
                         ),
                       ),
-                      validator: (v) => v == null || v.length < 8
-                          ? '8 caractères minimum'
-                          : null,
+                      validator: (v) => v == null || v.length < 8 ? '8 caractères minimum' : null,
                     ),
                     const SizedBox(height: 18),
                     _label('Code d\'invitation BAP'),
@@ -193,8 +172,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         hintText: 'ex. BAP-2026-XXXX',
                         prefixIcon: Icon(Icons.vpn_key_outlined, size: 20),
                       ),
-                      validator: (v) =>
-                          v == null || v.isEmpty ? 'Requis' : null,
+                      validator: (v) => v == null || v.isEmpty ? 'Requis' : null,
                     ),
                     const SizedBox(height: 24),
                     PrimaryButton(
@@ -214,11 +192,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: Wrap(
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          Text(
-                            'Déjà membre ? ',
-                            style: AppTextStyles.bodyMedium
-                                .copyWith(color: AppColors.textMuted),
-                          ),
+                          Text('Déjà membre ? ', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textMuted)),
                           GestureDetector(
                             onTap: () => context.pop(),
                             child: Text(
@@ -243,15 +217,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _label(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 8, left: 4),
-        child: Text(
-          text.toUpperCase(),
-          style: TextStyle(
-            color: AppColors.textMuted,
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.2,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.only(bottom: 8, left: 4),
+    child: Text(
+      text.toUpperCase(),
+      style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.2),
+    ),
+  );
 }

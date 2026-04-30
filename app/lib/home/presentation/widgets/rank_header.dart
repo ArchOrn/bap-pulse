@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bap_pulse/core/theme/colors.dart';
 import 'package:bap_pulse/core/theme/text_styles.dart';
+import 'package:bap_pulse/core/widgets/bap_logo.dart';
 import 'package:bap_pulse/core/widgets/pulse_logo.dart';
 import 'package:bap_pulse/core/widgets/stat_card.dart';
 import 'package:bap_pulse/shared/models/player.dart';
@@ -67,9 +68,13 @@ class RankHeader extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'La Ligue du BAP',
-                          style: AppTextStyles.h3,
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text('La Ligue du', style: AppTextStyles.h3),
+                            const SizedBox(width: 8),
+                            const BapLogo(height: 20, color: Colors.white),
+                          ],
                         ),
                         const SizedBox(height: 2),
                         Text(
