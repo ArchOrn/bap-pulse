@@ -181,15 +181,15 @@ class RankHeader extends StatelessWidget {
                   children: [
                     Expanded(
                       child: InlineMetric(
-                        value: me.elo.toString(),
-                        label: 'ELO',
+                        value: me.performance.toString(),
+                        label: 'Score',
                         color: AppColors.primary,
                       ),
                     ),
                     Expanded(
                       child: InlineMetric(
-                        value: me.trend >= 0 ? '+${me.trend}' : '${me.trend}',
-                        label: 'Ce mois',
+                        value: '+${me.perfGain}',
+                        label: '7 jours',
                         color: AppColors.trendUp,
                       ),
                     ),

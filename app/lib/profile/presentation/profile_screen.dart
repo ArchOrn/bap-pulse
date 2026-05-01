@@ -13,8 +13,9 @@ import 'package:bap_pulse/shared/models/jersey.dart';
 import 'package:bap_pulse/shared/models/player.dart';
 
 /// Profile — Variant A.
-/// Stats-heavy: cover avec gradient + avatar bordé blanc, gros card ELO avec
-/// sparkline, grille 2×2 de stats colorées, maillots, face-à-face, réglages.
+/// Stats-heavy: cover avec gradient + avatar bordé blanc, gros card Score
+/// avec sparkline, grille 2×2 de stats colorées, maillots, face-à-face,
+/// réglages.
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
@@ -22,8 +23,8 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = MockRepository.instance;
     final me = repo.currentUser;
-    final rank = repo.rankOf(me.id);
-    final eloHistory = repo.eloHistory(me.id);
+    final rank = repo.perfRankOf(me.id);
+    final history = repo.perfHistory(me.id);
 
     return Scaffold(
       backgroundColor: AppColors.bgScaffold,
@@ -31,13 +32,18 @@ class ProfileScreen extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           _Cover(me: me),
-          // Big ELO card overlapping the cover bottom
+          // Big Score card overlapping the cover bottom
           Transform.translate(
             offset: const Offset(0, -4),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: _EloCard(
-                  elo: me.elo, trend: me.trend, rank: rank, history: eloHistory),
+              child: _ScoreCard(
+                score: me.performance,
+                gain: me.perfGain,
+                elo: me.elo,
+                rank: rank,
+                history: history,
+              ),
             ),
           ),
           Padding(
@@ -151,8 +157,11 @@ class _Cover extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                       alignment: Alignment.center,
-                      child: const Icon(Icons.notifications_outlined,
-                          color: Colors.white, size: 17),
+                      child: const Icon(
+                        Icons.notifications_outlined,
+                        color: Colors.white,
+                        size: 17,
+                      ),
                     ),
                   ],
                 ),
@@ -184,7 +193,9 @@ class _Cover extends StatelessWidget {
                           child: Text(
                             me.initials,
                             style: AppTextStyles.numeric(
-                                size: 34, color: Colors.white),
+                              size: 34,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                         if (me.jerseys.isNotEmpty)
@@ -209,7 +220,9 @@ class _Cover extends StatelessWidget {
                             Text(
                               me.name,
                               style: AppTextStyles.h2.copyWith(
-                                  fontSize: 24, color: Colors.white),
+                                fontSize: 24,
+                                color: Colors.white,
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
@@ -250,17 +263,19 @@ class _DotPatternPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-// ─── Big ELO card ─────────────────────────────────────────────────────────
+// ─── Big Score card ───────────────────────────────────────────────────────
 
-class _EloCard extends StatelessWidget {
+class _ScoreCard extends StatelessWidget {
+  final int score;
+  final int gain;
   final int elo;
-  final int trend;
   final int rank;
   final List<int> history;
 
-  const _EloCard({
+  const _ScoreCard({
+    required this.score,
+    required this.gain,
     required this.elo,
-    required this.trend,
     required this.rank,
     required this.history,
   });
@@ -268,94 +283,120 @@ class _EloCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
+      padding: const EdgeInsets.symmetric(vertical: 18),
       decoration: BoxDecoration(
         color: AppColors.bgCard,
         borderRadius: BorderRadius.circular(22),
       ),
+      clipBehavior: Clip.hardEdge,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'ELO · CLASSÉ $rankᵉ',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.2,
-                        color: AppColors.textMuted,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'SCORE · CLASSÉ $rankᵉ',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.2,
+                          color: AppColors.textMuted,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          '$elo',
+                      const SizedBox(height: 4),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '$score',
+                            style: AppTextStyles.numeric(
+                              size: 48,
+                              letterSpacing: -1.8,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: TrendChip(value: gain),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          'ELO $elo',
                           style: AppTextStyles.numeric(
-                              size: 48, letterSpacing: -1.8),
+                            size: 11,
+                            weight: FontWeight.w500,
+                            color: AppColors.textFaint,
+                            letterSpacing: 0,
+                          ),
                         ),
-                        const SizedBox(width: 10),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: TrendChip(value: trend),
-                        ),
-                      ],
+                      ),
+                    ],
+                  ),
+                ),
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textPrimary,
+                    side: const BorderSide(color: AppColors.outline),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(99),
                     ),
-                  ],
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Partage à venir')),
+                    );
+                  },
+                  child: const Text('Partager'),
                 ),
-              ),
-              OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.textPrimary,
-                  side: const BorderSide(color: AppColors.outline),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(99)),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  textStyle: const TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w600),
-                ),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Partage à venir')),
-                  );
-                },
-                child: const Text('Partager'),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 12),
           EloSparkline(data: history, height: 70),
           const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '1er avril',
-                style: AppTextStyles.numeric(
-                  size: 11,
-                  weight: FontWeight.w500,
-                  color: AppColors.textMuted,
-                  letterSpacing: 0,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '1er avril',
+                  style: AppTextStyles.numeric(
+                    size: 11,
+                    weight: FontWeight.w500,
+                    color: AppColors.textMuted,
+                    letterSpacing: 0,
+                  ),
                 ),
-              ),
-              Text(
-                'Aujourd\'hui',
-                style: AppTextStyles.numeric(
-                  size: 11,
-                  weight: FontWeight.w500,
-                  color: AppColors.textMuted,
-                  letterSpacing: 0,
+                Text(
+                  'Aujourd\'hui',
+                  style: AppTextStyles.numeric(
+                    size: 11,
+                    weight: FontWeight.w500,
+                    color: AppColors.textMuted,
+                    letterSpacing: 0,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -443,7 +484,10 @@ class _MiniStat extends StatelessWidget {
           Text(
             big,
             style: AppTextStyles.numeric(
-                size: 26, color: accent, letterSpacing: -0.8),
+              size: 26,
+              color: accent,
+              letterSpacing: -0.8,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
@@ -487,7 +531,7 @@ class _MyJerseysCard extends StatelessWidget {
     }
 
     final yellow = repo.jersey(JerseyKind.yellow);
-    final pointsToYellow = me.elo - yellow.value.toInt();
+    final pointsToYellow = yellow.value.toInt() - me.performance;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -520,9 +564,7 @@ class _MyJerseysCard extends StatelessWidget {
               padding: const EdgeInsets.only(left: 14),
               decoration: BoxDecoration(
                 border: Border(
-                  left: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.08),
-                  ),
+                  left: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
                 ),
               ),
               child: RichText(
@@ -540,10 +582,9 @@ class _MyJerseysCard extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const TextSpan(text: '. Plus que '),
+                    const TextSpan(text: '. Encore '),
                     TextSpan(
-                      text:
-                          '${pointsToYellow >= 0 ? '+' : ''}$pointsToYellow pts',
+                      text: '$pointsToYellow pts',
                       style: const TextStyle(
                         color: AppColors.accentYellow,
                         fontWeight: FontWeight.w700,
@@ -614,8 +655,10 @@ class _NemesisCard extends StatelessWidget {
                     ),
                     child: Text(
                       player.initials,
-                      style:
-                          AppTextStyles.numeric(size: 13, color: Colors.white),
+                      style: AppTextStyles.numeric(
+                        size: 13,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -673,14 +716,13 @@ class _SettingsList extends StatelessWidget {
         onTap: () => _todo(context, 'Paramètres du compte'),
       ),
       _SettingsEntry(
-        label: 'Règlement & ELO',
-        onTap: () => _todo(context, 'Règlement & ELO'),
+        label: 'Règlement & score',
+        onTap: () => _todo(context, 'Règlement & score'),
       ),
       _SettingsEntry(
         label: 'Se déconnecter',
         color: AppColors.accentRed,
-        onTap: () =>
-            context.read<AuthBloc>().add(const AuthSignOutRequested()),
+        onTap: () => context.read<AuthBloc>().add(const AuthSignOutRequested()),
       ),
     ];
 
@@ -696,14 +738,18 @@ class _SettingsList extends StatelessWidget {
             InkWell(
               onTap: entries[i].onTap,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   border: i == entries.length - 1
                       ? null
                       : const Border(
                           bottom: BorderSide(
-                              color: AppColors.divider, width: 0.5),
+                            color: AppColors.divider,
+                            width: 0.5,
+                          ),
                         ),
                 ),
                 child: Row(
@@ -735,9 +781,9 @@ class _SettingsList extends StatelessWidget {
   }
 
   void _todo(BuildContext context, String label) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('« $label » à venir')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('« $label » à venir')));
   }
 }
 
@@ -746,9 +792,5 @@ class _SettingsEntry {
   final VoidCallback onTap;
   final Color? color;
 
-  const _SettingsEntry({
-    required this.label,
-    required this.onTap,
-    this.color,
-  });
+  const _SettingsEntry({required this.label, required this.onTap, this.color});
 }

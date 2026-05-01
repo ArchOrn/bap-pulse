@@ -52,7 +52,7 @@ class ScoreSentScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                '${opponent.firstName} va recevoir une notification pour valider le match. L\'ELO sera mis à jour dès validation.',
+                '${opponent.firstName} va recevoir une notification pour valider le match. Le score sera mis à jour dès validation.',
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodyLarge
                     .copyWith(color: AppColors.textMuted, height: 1.5),

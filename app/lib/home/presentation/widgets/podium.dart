@@ -71,7 +71,7 @@ class _PodiumColumn extends StatelessWidget {
         ),
         const SizedBox(height: 2),
         Text(
-          player.elo.toString(),
+          '${player.performance} pts',
           style: AppTextStyles.numeric(
             size: 11,
             weight: FontWeight.w600,

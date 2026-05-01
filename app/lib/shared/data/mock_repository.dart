@@ -17,73 +17,97 @@ class MockRepository {
 
   final List<Player> _players = const [
     Player(
-      id: 'u1', name: 'Thomas L.', initials: 'TL', elo: 1842, trend: 34,
+      id: 'u1', name: 'Thomas L.', initials: 'TL',
+      elo: 1842, trend: 34,
+      performance: 320, perfGain: 52,
       matchesMonth: 14, winsMonth: 11, winsVsBetter: 4, streak: 4,
       category: PlayerCategory.sh, club: 'BAP', joined: '2023',
       color: Color(0xFFFF7A59), jerseys: [JerseyKind.yellow],
     ),
     Player(
-      id: 'u2', name: 'Camille R.', initials: 'CR', elo: 1921, trend: -12,
+      id: 'u2', name: 'Camille R.', initials: 'CR',
+      elo: 1921, trend: -12,
+      performance: 380, perfGain: 18,
       matchesMonth: 12, winsMonth: 9, winsVsBetter: 2, streak: 2,
       category: PlayerCategory.sd, club: 'BAP', joined: '2021',
       color: Color(0xFF5E60CE), jerseys: [JerseyKind.polka],
     ),
     Player(
-      id: 'u3', name: 'Hugo M.', initials: 'HM', elo: 2034, trend: 18,
+      id: 'u3', name: 'Hugo M.', initials: 'HM',
+      elo: 2034, trend: 18,
+      performance: 480, perfGain: 90,
       matchesMonth: 18, winsMonth: 15, winsVsBetter: 6, streak: 7,
       category: PlayerCategory.sh, club: 'BAP', joined: '2019',
       color: Color(0xFF0A84FF), jerseys: [JerseyKind.yellow, JerseyKind.green],
     ),
     Player(
-      id: 'u4', name: 'Léa B.', initials: 'LB', elo: 1756, trend: 52,
+      id: 'u4', name: 'Léa B.', initials: 'LB',
+      elo: 1756, trend: 52,
+      performance: 290, perfGain: 75,
       matchesMonth: 21, winsMonth: 14, winsVsBetter: 5, streak: 3,
       category: PlayerCategory.sd, club: 'BAP', joined: '2024',
       color: Color(0xFF2FB974), jerseys: [JerseyKind.fight],
     ),
     Player(
-      id: 'u5', name: 'Mehdi A.', initials: 'MA', elo: 1688, trend: 8,
+      id: 'u5', name: 'Mehdi A.', initials: 'MA',
+      elo: 1688, trend: 8,
+      performance: 175, perfGain: 25,
       matchesMonth: 9, winsMonth: 5, winsVsBetter: 1, streak: 0,
       category: PlayerCategory.sh, club: 'BAP', joined: '2022',
       color: Color(0xFFE63946),
     ),
     Player(
-      id: 'u6', name: 'Julie P.', initials: 'JP', elo: 1902, trend: 6,
+      id: 'u6', name: 'Julie P.', initials: 'JP',
+      elo: 1902, trend: 6,
+      performance: 340, perfGain: 20,
       matchesMonth: 11, winsMonth: 8, winsVsBetter: 3, streak: 1,
       category: PlayerCategory.sd, club: 'BAP', joined: '2020',
       color: Color(0xFFFFB703),
     ),
     Player(
-      id: 'u7', name: 'Antoine D.', initials: 'AD', elo: 1574, trend: -22,
+      id: 'u7', name: 'Antoine D.', initials: 'AD',
+      elo: 1574, trend: -22,
+      performance: 110, perfGain: 5,
       matchesMonth: 8, winsMonth: 3, winsVsBetter: 0, streak: 0,
       category: PlayerCategory.sh, club: 'BAP', joined: '2023',
       color: Color(0xFF8338EC),
     ),
     Player(
-      id: 'u8', name: 'Sarah K.', initials: 'SK', elo: 1821, trend: 14,
+      id: 'u8', name: 'Sarah K.', initials: 'SK',
+      elo: 1821, trend: 14,
+      performance: 280, perfGain: 30,
       matchesMonth: 13, winsMonth: 9, winsVsBetter: 2, streak: 2,
       category: PlayerCategory.sd, club: 'BAP', joined: '2022',
       color: Color(0xFFFB5607),
     ),
     Player(
-      id: 'u9', name: 'Paul V.', initials: 'PV', elo: 1711, trend: -4,
+      id: 'u9', name: 'Paul V.', initials: 'PV',
+      elo: 1711, trend: -4,
+      performance: 195, perfGain: 10,
       matchesMonth: 7, winsMonth: 4, winsVsBetter: 1, streak: 1,
       category: PlayerCategory.sh, club: 'BAP', joined: '2024',
       color: Color(0xFF3A86FF),
     ),
     Player(
-      id: 'u10', name: 'Emma T.', initials: 'ET', elo: 1645, trend: 28,
+      id: 'u10', name: 'Emma T.', initials: 'ET',
+      elo: 1645, trend: 28,
+      performance: 240, perfGain: 60,
       matchesMonth: 16, winsMonth: 10, winsVsBetter: 3, streak: 5,
       category: PlayerCategory.sd, club: 'BAP', joined: '2023',
       color: Color(0xFFF72585),
     ),
     Player(
-      id: 'u11', name: 'Nicolas G.', initials: 'NG', elo: 1988, trend: -18,
+      id: 'u11', name: 'Nicolas G.', initials: 'NG',
+      elo: 1988, trend: -18,
+      performance: 360, perfGain: 12,
       matchesMonth: 10, winsMonth: 6, winsVsBetter: 2, streak: 0,
       category: PlayerCategory.sh, club: 'BAP', joined: '2018',
       color: Color(0xFF0077B6),
     ),
     Player(
-      id: 'u12', name: 'Inès F.', initials: 'IF', elo: 1534, trend: 44,
+      id: 'u12', name: 'Inès F.', initials: 'IF',
+      elo: 1534, trend: 44,
+      performance: 220, perfGain: 85,
       matchesMonth: 17, winsMonth: 12, winsVsBetter: 4, streak: 6,
       category: PlayerCategory.sd, club: 'BAP', joined: '2024',
       color: Color(0xFF06A77D),
@@ -160,13 +184,13 @@ class MockRepository {
       name: 'Maillot Jaune',
       tagline: 'Leader du classement',
       description:
-          'Porté par le 1er du classement ELO du club. Se gagne et se perd à chaque match joué.',
+          'Porté par le 1er du score de performance du club. Se gagne et se perd à chaque match joué.',
       color: Color(0xFFFFD60A),
       textColor: Color(0xFF0B0F14),
-      criterion: 'ELO',
+      criterion: 'Performance',
       holderId: 'u3',
-      unit: 'pts ELO',
-      value: 2034,
+      unit: 'pts',
+      value: 480,
     ),
     Jersey(
       kind: JerseyKind.polka,
@@ -231,14 +255,23 @@ class MockRepository {
   Jersey jersey(JerseyKind kind) =>
       _jerseys.firstWhere((j) => j.kind == kind);
 
-  /// Players sorted by ELO desc.
-  List<Player> get leaderboard {
+  /// Players sorted by performance score desc — the **default public**
+  /// classement (the maillot jaune leaderboard).
+  List<Player> get byPerformance {
+    final list = [..._players]
+      ..sort((a, b) => b.performance.compareTo(a.performance));
+    return list;
+  }
+
+  /// Players sorted by hidden ELO desc — internal/algorithmic use only,
+  /// never displayed in the UI.
+  List<Player> get byElo {
     final list = [..._players]..sort((a, b) => b.elo.compareTo(a.elo));
     return list;
   }
 
-  int rankOf(String playerId) =>
-      leaderboard.indexWhere((p) => p.id == playerId) + 1;
+  int perfRankOf(String playerId) =>
+      byPerformance.indexWhere((p) => p.id == playerId) + 1;
 
   List<GameMatch> matchesOf(String playerId) =>
       _matches.where((m) => m.involves(playerId)).toList();
@@ -257,14 +290,21 @@ class MockRepository {
     return null;
   }
 
-  /// Mocked ELO history for the current user (13 points, used by sparkline).
-  List<int> eloHistory(String playerId) =>
-      [1780, 1785, 1772, 1790, 1802, 1795, 1810, 1806, 1820, 1815, 1826, 1834, 1842];
+  /// Mocked performance history for the current user (13 points, used by
+  /// the profile sparkline). Non-decreasing — ends at the player's current
+  /// performance score.
+  List<int> perfHistory(String playerId) {
+    final p = byId(playerId);
+    final end = p.performance;
+    // Distribute points across 13 days, mostly increasing with some plateaus.
+    final fractions = [0.10, 0.18, 0.22, 0.22, 0.32, 0.32, 0.42, 0.50, 0.60, 0.70, 0.80, 0.90, 1.0];
+    return fractions.map((f) => (end * f).round()).toList();
+  }
 
-  /// Hall of Fame — past yellow-jersey holders.
-  List<({String month, Player holder, int elo})> hallOfFame() => [
-        (month: 'Mars 2026', holder: byId('u11'), elo: 2012),
-        (month: 'Février 2026', holder: byId('u3'), elo: 1998),
-        (month: 'Janvier 2026', holder: byId('u2'), elo: 1974),
+  /// Hall of Fame — past yellow-jersey holders (months ended, perf reset).
+  List<({String month, Player holder, int score})> hallOfFame() => [
+        (month: 'Mars 2026', holder: byId('u11'), score: 510),
+        (month: 'Février 2026', holder: byId('u3'), score: 470),
+        (month: 'Janvier 2026', holder: byId('u2'), score: 425),
       ];
 }

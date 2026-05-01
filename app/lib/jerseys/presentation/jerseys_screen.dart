@@ -118,7 +118,7 @@ class JerseysScreen extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            '${r.elo}',
+                            '${r.score}',
                             style: AppTextStyles.numeric(
                               size: 14,
                               weight: FontWeight.w700,

@@ -294,7 +294,7 @@ class _ScoreValidateScreenState extends State<ScoreValidateScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
-                'En validant, l\'ELO des deux joueurs sera mis à jour.',
+                'En validant, le score des deux joueurs sera mis à jour.',
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodySmall,
               ),
@@ -309,7 +309,9 @@ class _ScoreValidateScreenState extends State<ScoreValidateScreen> {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
-                  '✓  Match validé — ${iWon ? '+' : '-'}${m.eloChange} ELO pour toi',
+                  iWon
+                      ? '✓  Match validé — +${m.eloChange} pts pour toi'
+                      : '✓  Match validé',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: AppColors.accentGreen,

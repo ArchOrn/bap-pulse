@@ -23,8 +23,19 @@ class Player extends Equatable {
   final String id;
   final String name;
   final String initials;
+
+  // ── Hidden — internal algo only, never displayed in the UI ───────────
   final int elo;
-  final int trend; // signed delta over the current month
+  final int trend; // signed ELO delta this month — hidden
+
+  // ── Surface stats — what users actually see ──────────────────────────
+  /// Score de performance (current period). Can only go up within the
+  /// period; resets monthly.
+  final int performance;
+
+  /// Performance gain over the last 7 days (always ≥ 0).
+  final int perfGain;
+
   final int matchesMonth;
   final int winsMonth;
   final int winsVsBetter;
@@ -41,6 +52,8 @@ class Player extends Equatable {
     required this.initials,
     required this.elo,
     required this.trend,
+    required this.performance,
+    required this.perfGain,
     required this.matchesMonth,
     required this.winsMonth,
     required this.winsVsBetter,
@@ -65,6 +78,8 @@ class Player extends Equatable {
         name,
         elo,
         trend,
+        performance,
+        perfGain,
         matchesMonth,
         winsMonth,
         winsVsBetter,

@@ -5,7 +5,7 @@ import 'package:bap_pulse/core/theme/text_styles.dart';
 import 'package:bap_pulse/core/widgets/player_avatar.dart';
 import 'package:bap_pulse/shared/models/player.dart';
 
-/// One side of a head-to-head display — avatar, name, ELO, and an optional
+/// One side of a head-to-head display — avatar, name, score, and an optional
 /// "VAINQUEUR" pill. Loser side renders at 75% opacity.
 class PlayerSide extends StatelessWidget {
   final Player player;
@@ -36,11 +36,20 @@ class PlayerSide extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            'ELO ${player.elo}',
+            '${player.performance} pts',
             style: AppTextStyles.numeric(
               size: 11,
               weight: FontWeight.w500,
               color: AppColors.textMuted,
+              letterSpacing: 0,
+            ),
+          ),
+          Text(
+            'ELO ${player.elo}',
+            style: AppTextStyles.numeric(
+              size: 10,
+              weight: FontWeight.w500,
+              color: AppColors.textFaint,
               letterSpacing: 0,
             ),
           ),

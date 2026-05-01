@@ -101,7 +101,7 @@ class _OpponentPicker extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    'ELO ${players[i].elo} · ${players[i].category.short}',
+                                    '${players[i].performance} pts · ELO ${players[i].elo} · ${players[i].category.short}',
                                     style: AppTextStyles.bodySmall,
                                   ),
                                 ],
@@ -170,8 +170,12 @@ class _ScoreInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final newMyElo = iWon ? me.elo + 14 : me.elo - 12;
-    final newOppElo = iWon ? opponent.elo - 14 : opponent.elo + 12;
+    // Performance gains — winner picks up points, loser stays put
+    // (perf can only go up).
+    final myGain = iWon ? 14 : 0;
+    final oppGain = iWon ? 0 : 14;
+    final newMyScore = me.performance + myGain;
+    final newOppScore = opponent.performance + oppGain;
 
     return Scaffold(
       backgroundColor: AppColors.bgScaffold,
@@ -331,7 +335,7 @@ class _ScoreInput extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'APERÇU ELO (APRÈS VALIDATION)',
+                          'APERÇU SCORE (APRÈS VALIDATION)',
                           style: TextStyle(
                             color: AppColors.primary,
                             fontSize: 11,
@@ -343,17 +347,17 @@ class _ScoreInput extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            _EloPreview(
+                            _ScorePreview(
                               label: 'Toi',
-                              from: me.elo,
-                              to: newMyElo,
-                              up: iWon,
+                              from: me.performance,
+                              to: newMyScore,
+                              gain: myGain,
                             ),
-                            _EloPreview(
+                            _ScorePreview(
                               label: opponent.firstName,
-                              from: opponent.elo,
-                              to: newOppElo,
-                              up: !iWon,
+                              from: opponent.performance,
+                              to: newOppScore,
+                              gain: oppGain,
                             ),
                           ],
                         ),
@@ -395,7 +399,7 @@ class _ScoreInput extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Ton adversaire devra valider pour que l\'ELO soit mis à jour.',
+                      'Ton adversaire devra valider pour que le score soit mis à jour.',
                       style: AppTextStyles.bodySmall,
                       textAlign: TextAlign.center,
                     ),
@@ -509,17 +513,17 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-class _EloPreview extends StatelessWidget {
+class _ScorePreview extends StatelessWidget {
   final String label;
   final int from;
   final int to;
-  final bool up;
+  final int gain;
 
-  const _EloPreview({
+  const _ScorePreview({
     required this.label,
     required this.from,
     required this.to,
-    required this.up,
+    required this.gain,
   });
 
   @override
@@ -537,9 +541,19 @@ class _EloPreview extends StatelessWidget {
             text: '$to',
             style: TextStyle(
               fontWeight: FontWeight.w700,
-              color: up ? AppColors.accentGreen : AppColors.accentRed,
+              color: gain > 0
+                  ? AppColors.accentGreen
+                  : AppColors.textMuted,
             ),
           ),
+          if (gain > 0)
+            TextSpan(
+              text: ' (+$gain)',
+              style: const TextStyle(
+                color: AppColors.accentGreen,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
         ],
       ),
     );

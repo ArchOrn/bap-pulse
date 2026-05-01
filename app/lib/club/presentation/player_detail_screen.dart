@@ -18,7 +18,7 @@ class PlayerDetailScreen extends StatelessWidget {
     final repo = MockRepository.instance;
     final p = repo.byId(playerId);
     final me = repo.currentUser;
-    final rank = repo.rankOf(p.id);
+    final rank = repo.perfRankOf(p.id);
     final h2h = repo.headToHead(me.id, p.id);
     final myWins = h2h.where((m) => m.winnerId == me.id).length;
     final theirWins = h2h.length - myWins;
@@ -141,7 +141,7 @@ class PlayerDetailScreen extends StatelessWidget {
             ),
           ),
 
-          // ELO + stats
+          // Score + stats
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
             child: Container(
@@ -160,7 +160,7 @@ class PlayerDetailScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'ELO',
+                              'SCORE',
                               style: AppTextStyles.label,
                             ),
                             const SizedBox(height: 4),
@@ -168,16 +168,28 @@ class PlayerDetailScreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  '${p.elo}',
+                                  '${p.performance}',
                                   style: AppTextStyles.numeric(
                                       size: 36, letterSpacing: -1),
                                 ),
                                 const SizedBox(width: 10),
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 6),
-                                  child: TrendChip(value: p.trend),
+                                  child: TrendChip(value: p.perfGain),
                                 ),
                               ],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                'ELO ${p.elo}',
+                                style: AppTextStyles.numeric(
+                                  size: 11,
+                                  weight: FontWeight.w500,
+                                  color: AppColors.textFaint,
+                                  letterSpacing: 0,
+                                ),
+                              ),
                             ),
                           ],
                         ),

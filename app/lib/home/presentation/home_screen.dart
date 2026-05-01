@@ -16,8 +16,8 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = MockRepository.instance;
     final me = repo.currentUser;
-    final rank = repo.rankOf(me.id);
-    final podium = repo.leaderboard.take(3).toList();
+    final rank = repo.perfRankOf(me.id);
+    final podium = repo.byPerformance.take(3).toList();
 
     return Scaffold(
       backgroundColor: AppColors.bgScaffold,
