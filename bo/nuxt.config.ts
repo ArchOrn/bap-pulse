@@ -45,5 +45,15 @@ export default defineNuxtConfig({
         braceStyle: '1tbs'
       }
     }
+  },
+
+  // BAP Pulse uses Space Grotesk for display and Inter for body — same as the
+  // Flutter app. @nuxt/fonts also auto-detects font-family declarations in CSS,
+  // but declaring them here pins the weights we actually ship.
+  fonts: {
+    families: [
+      { name: 'Space Grotesk', provider: 'google', weights: [400, 500, 700] },
+      { name: 'Inter', provider: 'google', weights: [400, 500, 600, 700] }
+    ]
   }
 })

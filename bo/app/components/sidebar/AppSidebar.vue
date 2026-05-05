@@ -7,19 +7,18 @@
   >
     <template #header>
       <div
-        class="flex items-center gap-2 min-w-0 px-2"
+        class="flex items-center gap-2.5 min-w-0 px-2"
         :class="collapsed ? 'justify-center w-full' : 'w-full'"
       >
-        <img
-          src="/logo.svg"
-          alt="BAP Pulse"
-          class="w-6 h-6 shrink-0 dark:invert"
-        >
+        <BapPulseLogo
+          :size="28"
+          color="text-sage-500"
+        />
         <div
           v-if="!collapsed"
           class="min-w-0"
         >
-          <p class="font-semibold text-sm leading-tight truncate">
+          <p class="font-display text-sm font-bold tracking-tight leading-tight truncate">
             BAP Pulse
           </p>
           <p class="text-xs text-neutral-500 leading-tight">

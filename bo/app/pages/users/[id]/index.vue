@@ -40,11 +40,17 @@ const breadcrumbs = computed(() => [
   { label: user.value ? fullName(user.value) || user.value.email : '…' }
 ])
 
+const genderLabel = (g: User['gender']) => g === 'FEMALE' ? 'Femme' : g === 'MALE' ? 'Homme' : '—'
+
 const infoItems = computed(() => {
   if (!user.value) return []
   return [
     { label: 'Email', value: user.value.email, icon: 'i-lucide-mail' },
-    { label: 'ELO', value: String(user.value.elo), icon: 'i-lucide-trophy' },
+    { label: 'Genre', value: genderLabel(user.value.gender), icon: 'i-lucide-user' },
+    { label: 'Classement FFBAD', value: user.value.ffbad_rank ?? '—', icon: 'i-lucide-award' },
+    { label: 'ELO simple', value: String(user.value.elo_singles), icon: 'i-lucide-trophy' },
+    { label: 'ELO double', value: String(user.value.elo_doubles), icon: 'i-lucide-trophy' },
+    { label: 'ELO mixte', value: String(user.value.elo_mixed), icon: 'i-lucide-trophy' },
     { label: 'Rôle', value: isAdmin.value ? 'Administrateur' : 'Joueur', icon: 'i-lucide-shield' },
     { label: 'Inscrit le', value: new Date(user.value.created_at).toLocaleDateString('fr-FR'), icon: 'i-lucide-calendar' }
   ]

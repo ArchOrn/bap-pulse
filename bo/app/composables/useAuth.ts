@@ -1,8 +1,6 @@
 import {
   signInWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  GoogleAuthProvider,
-  signInWithPopup
+  signOut as firebaseSignOut
 } from 'firebase/auth'
 import type { User, UserCredential } from 'firebase/auth'
 
@@ -48,16 +46,10 @@ export function useAuth() {
     await syncAfterLogin(cred)
   }
 
-  const signInWithGoogle = async () => {
-    const provider = new GoogleAuthProvider()
-    const cred = await signInWithPopup($firebaseAuth, provider)
-    await syncAfterLogin(cred)
-  }
-
   const signOut = async () => {
     await firebaseSignOut($firebaseAuth)
     await navigateTo('/login')
   }
 
-  return { user, token, isAdmin, signIn, signInWithGoogle, signOut }
+  return { user, token, isAdmin, signIn, signOut }
 }

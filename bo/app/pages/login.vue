@@ -2,7 +2,7 @@
 definePageMeta({ layout: 'empty' })
 useHead({ title: 'Connexion — BAP Pulse' })
 
-const { signIn, signInWithGoogle } = useAuth()
+const { signIn } = useAuth()
 
 const email = ref('')
 const password = ref('')
@@ -30,63 +30,54 @@ const handleSubmit = async () => {
     loading.value = false
   }
 }
-
-const handleGoogle = async () => {
-  error.value = null
-  loading.value = true
-  try {
-    await signInWithGoogle()
-    await navigateTo('/')
-  } catch (e: unknown) {
-    const code = (e as { code?: string })?.code
-    if (code === 'auth/not-admin') {
-      error.value = 'Accès refusé. Ce back-office est réservé aux administrateurs.'
-    } else {
-      error.value = 'Connexion Google annulée ou échouée.'
-    }
-  } finally {
-    loading.value = false
-  }
-}
 </script>
 
 <template>
   <div class="min-h-screen flex">
-    <!-- Left panel: dark, badminton-themed -->
-    <div class="hidden lg:flex lg:w-1/2 bg-neutral-100 dark:bg-zinc-950 court-pattern flex-col items-center justify-center p-12 relative">
-      <!-- Subtle radial glow behind logo -->
+    <!-- Left panel: BAP Pulse hero with logo watermark + sage gradient.
+         Mirrors the Flutter auth screen vibe (dark green → near-black gradient,
+         giant faded PulseLogo as a watermark in the corner). -->
+    <div class="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12 relative overflow-hidden bg-[#0b0f14]">
+      <!-- Diagonal gradient (top-right → bottom-left) -->
+      <div class="absolute inset-0 bg-gradient-to-bl from-[#13201a] via-[#0b0f14] to-[#06090c] pointer-events-none" />
+
+      <!-- Off-canvas watermark logo, sage tinted at 5% opacity -->
+      <BapPulseLogo
+        :size="540"
+        color="text-sage-500"
+        class="absolute -top-32 -right-24 opacity-[0.06] pointer-events-none"
+      />
+
+      <!-- Subtle radial glow behind the foreground content -->
       <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div class="w-96 h-96 rounded-full bg-emerald-500/5 blur-3xl" />
+        <div class="w-96 h-96 rounded-full bg-sage-500/10 blur-3xl" />
       </div>
 
       <div class="relative z-10 text-center space-y-6 max-w-xs">
-        <!-- Logo -->
-        <img
-          src="/logo.svg"
-          alt="BAP Pulse"
-          class="w-16 h-16 mx-auto rounded-2xl dark:invert"
-        >
+        <BapPulseLogo
+          :size="72"
+          color="text-sage-500"
+          class="mx-auto"
+        />
 
-        <!-- Title -->
         <div class="space-y-2">
-          <h1 class="text-3xl font-bold tracking-tight">
+          <h1 class="font-display text-4xl font-bold tracking-tight text-white">
             BAP Pulse
           </h1>
-          <p class="text-neutral-500 text-sm">
+          <p class="text-sage-500/80 text-sm font-medium tracking-wide uppercase">
             Bad A Paname — Back-office
           </p>
         </div>
 
-        <!-- Tagline -->
-        <p class="text-neutral-400 dark:text-neutral-500 text-sm leading-relaxed">
+        <p class="text-white/55 text-sm leading-relaxed">
           Gère les joueurs, les matchs et le classement du club de badminton.
         </p>
 
-        <!-- Decoration: court lines indicator -->
+        <!-- Decoration: court lines indicator, sage tinted -->
         <div class="flex items-center justify-center gap-1.5 pt-4">
-          <div class="h-px w-8 bg-emerald-500/30" />
-          <div class="w-1.5 h-1.5 rounded-full bg-emerald-500/50" />
-          <div class="h-px w-8 bg-emerald-500/30" />
+          <div class="h-px w-8 bg-sage-500/30" />
+          <div class="w-1.5 h-1.5 rounded-full bg-sage-500/70" />
+          <div class="h-px w-8 bg-sage-500/30" />
         </div>
       </div>
     </div>
@@ -95,12 +86,12 @@ const handleGoogle = async () => {
     <div class="flex-1 flex flex-col items-center justify-center p-8 bg-default">
       <!-- Mobile logo (visible only on small screens) -->
       <div class="lg:hidden text-center mb-8 space-y-2">
-        <img
-          src="/logo.svg"
-          alt="BAP Pulse"
-          class="w-12 h-12 mx-auto rounded-xl dark:invert"
-        >
-        <p class="text-2xl font-bold tracking-tight">
+        <BapPulseLogo
+          :size="56"
+          color="text-sage-500"
+          class="mx-auto"
+        />
+        <p class="font-display text-2xl font-bold tracking-tight">
           BAP Pulse
         </p>
         <p class="text-sm text-muted">
@@ -110,7 +101,7 @@ const handleGoogle = async () => {
 
       <div class="w-full max-w-sm space-y-6">
         <div class="space-y-1">
-          <h2 class="text-xl font-bold">
+          <h2 class="font-display text-2xl font-bold tracking-tight">
             Connexion
           </h2>
           <p class="text-sm text-muted">
@@ -161,26 +152,6 @@ const handleGoogle = async () => {
             Se connecter
           </UButton>
         </form>
-
-        <div class="relative flex items-center gap-3">
-          <div class="flex-1 border-t border-default" />
-          <span class="text-xs text-muted">ou</span>
-          <div class="flex-1 border-t border-default" />
-        </div>
-
-        <UButton
-          variant="outline"
-          color="neutral"
-          class="w-full justify-center gap-2"
-          :loading="loading"
-          @click="handleGoogle"
-        >
-          <UIcon
-            name="i-simple-icons-google"
-            class="size-4"
-          />
-          Continuer avec Google
-        </UButton>
       </div>
     </div>
   </div>

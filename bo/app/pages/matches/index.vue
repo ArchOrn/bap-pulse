@@ -105,10 +105,11 @@ const createForm = reactive({
 const isDoubles = computed(() => createForm.match_type === 'DOUBLES' || createForm.match_type === 'MIXED')
 
 const needsSet3 = computed(() => {
-  const s = createForm.sets
-  if (s.length < 2) return false
-  const w1 = (s[0].team1 > s[0].team2 ? 1 : 0) + (s[1].team1 > s[1].team2 ? 1 : 0)
-  const w2 = (s[0].team2 > s[0].team1 ? 1 : 0) + (s[1].team2 > s[1].team1 ? 1 : 0)
+  const a = createForm.sets[0]
+  const b = createForm.sets[1]
+  if (!a || !b) return false
+  const w1 = (a.team1 > a.team2 ? 1 : 0) + (b.team1 > b.team2 ? 1 : 0)
+  const w2 = (a.team2 > a.team1 ? 1 : 0) + (b.team2 > b.team1 ? 1 : 0)
   return w1 === 1 && w2 === 1
 })
 
@@ -120,9 +121,19 @@ watch(needsSet3, (needs) => {
   }
 })
 
+// Show the ELO that matters for the selected match type, so the user picks
+// roughly-balanced players for the right tableau.
+const eloForMatch = (u: User) => {
+  switch (createForm.match_type) {
+    case 'DOUBLES': return u.elo_doubles
+    case 'MIXED': return u.elo_mixed
+    default: return u.elo_singles
+  }
+}
+
 const playerOptions = computed(() =>
   (users.value ?? []).map(u => ({
-    label: `${fullName(u)} (${u.elo})`,
+    label: `${fullName(u)} (${eloForMatch(u)})`,
     value: u.id
   }))
 )

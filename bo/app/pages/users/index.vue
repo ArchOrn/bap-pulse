@@ -13,7 +13,10 @@ const fullName = (u: User) => [u.first_name, u.last_name].filter(Boolean).join('
 const columns = [
   { accessorKey: 'name', header: 'Nom' },
   { accessorKey: 'email', header: 'Email' },
-  { accessorKey: 'elo', header: 'ELO' },
+  { accessorKey: 'ffbad_rank', header: 'FFBAD' },
+  { accessorKey: 'elo_singles', header: 'ELO S' },
+  { accessorKey: 'elo_doubles', header: 'ELO D' },
+  { accessorKey: 'elo_mixed', header: 'ELO M' },
   { accessorKey: 'role', header: 'Rôle' },
   { accessorKey: 'created_at', header: 'Inscrit le' },
   { accessorKey: 'actions', header: '' }
@@ -23,6 +26,7 @@ const rows = computed(() =>
   (users.value ?? []).map(u => ({
     ...u,
     name: fullName(u),
+    ffbad_rank: u.ffbad_rank ?? '—',
     created_at: new Date(u.created_at).toLocaleDateString('fr-FR')
   }))
 )

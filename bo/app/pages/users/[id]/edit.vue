@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import type { Gender, FfbadRank } from '~~/shared/types/api'
+import { FFBAD_RANKS } from '~~/shared/types/api'
+
 const route = useRoute()
 const userId = route.params.id as string
 
@@ -12,7 +15,39 @@ const { data: user, status } = await useFetch<User>(`${baseURL}/users/${userId}`
 
 const fullName = (u: User) => [u.first_name, u.last_name].filter(Boolean).join(' ')
 
-const form = reactive({ first_name: '', last_name: '', email: '' })
+interface FormState {
+  first_name: string
+  last_name: string
+  email: string
+  gender: Gender | ''
+  ffbad_rank: FfbadRank | ''
+}
+
+const form = reactive<FormState>({
+  first_name: '',
+  last_name: '',
+  email: '',
+  gender: '',
+  ffbad_rank: ''
+})
+
+const genderOptions = [
+  { value: '', label: 'Non renseigné' },
+  { value: 'MALE', label: 'Homme' },
+  { value: 'FEMALE', label: 'Femme' }
+]
+
+const ffbadOptions = [
+  { value: '', label: 'Non renseigné' },
+  ...FFBAD_RANKS.map(r => ({ value: r, label: r }))
+]
+
+const hasPlayedMatch = computed(() => {
+  if (!user.value) return true
+  return user.value.elo_singles !== user.value.elo_doubles
+    || user.value.elo_singles !== user.value.elo_mixed
+})
+
 const loading = ref(false)
 const error = ref<string | null>(null)
 const success = ref(false)
@@ -22,6 +57,8 @@ watch(user, (u) => {
     form.first_name = u.first_name
     form.last_name = u.last_name
     form.email = u.email
+    form.gender = u.gender ?? ''
+    form.ffbad_rank = u.ffbad_rank ?? ''
   }
 }, { immediate: true })
 
@@ -30,11 +67,12 @@ const handleSubmit = async () => {
   success.value = false
   loading.value = true
   try {
-    await $fetch(`${baseURL}/users/${userId}`, {
+    const updated = await $fetch<User>(`${baseURL}/users/${userId}`, {
       method: 'PUT',
       headers: authHeaders(),
       body: form
     })
+    user.value = updated
     success.value = true
   } catch (e: unknown) {
     const msg = (e as { data?: { error?: string } })?.data?.error
@@ -122,6 +160,35 @@ const breadcrumbs = computed(() => [
               class="w-full"
             />
           </UFormField>
+
+          <p class="text-sm font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide pt-2">
+            Profil sportif
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <UFormField label="Genre">
+              <USelect
+                v-model="form.gender"
+                :items="genderOptions"
+                value-key="value"
+                size="xl"
+                class="w-full"
+              />
+            </UFormField>
+
+            <UFormField
+              label="Classement FFBAD"
+              :hint="hasPlayedMatch ? 'Modifiable mais n\'affecte plus l\'ELO (matchs déjà joués)' : 'Ré-initialise les ELO si modifié avant le 1er match'"
+            >
+              <USelect
+                v-model="form.ffbad_rank"
+                :items="ffbadOptions"
+                value-key="value"
+                size="xl"
+                class="w-full"
+              />
+            </UFormField>
+          </div>
 
           <div class="flex items-center gap-3 pt-2">
             <UButton

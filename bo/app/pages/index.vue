@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import type { ApiUser, EloRanking } from '~~/shared/types/api'
+
 const { baseURL } = useApi()
 
-const { data: rankings, status } = await useFetch<UserRanking[]>(`${baseURL}/rankings`)
+const { data: rankings, status } = await useFetch<EloRanking[]>(`${baseURL}/rankings/elo?tableau=SINGLES`)
 
 const fullName = (u: ApiUser) => [u.first_name, u.last_name].filter(Boolean).join(' ')
 
@@ -12,13 +14,13 @@ const stats = computed(() => [
     icon: 'i-lucide-users'
   },
   {
-    label: 'Meilleur ELO',
-    value: rankings.value?.[0]?.User.elo ?? '—',
+    label: 'Meilleur ELO simple',
+    value: rankings.value?.[0]?.elo ?? '—',
     icon: 'i-lucide-trophy'
   },
   {
     label: 'Leader',
-    value: rankings.value?.[0] ? fullName(rankings.value[0].User) : '—',
+    value: rankings.value?.[0] ? fullName(rankings.value[0].user) : '—',
     icon: 'i-lucide-crown'
   }
 ])
@@ -26,14 +28,14 @@ const stats = computed(() => [
 const topColumns = [
   { accessorKey: 'rank', header: '#' },
   { accessorKey: 'name', header: 'Joueur' },
-  { accessorKey: 'elo', header: 'ELO' }
+  { accessorKey: 'elo', header: 'ELO simple' }
 ]
 
 const topRows = computed(() =>
   (rankings.value ?? []).slice(0, 5).map(r => ({
-    rank: r.Rank,
-    name: fullName(r.User),
-    elo: r.User.elo
+    rank: r.rank,
+    name: fullName(r.user),
+    elo: r.elo
   }))
 )
 </script>
@@ -76,7 +78,7 @@ const topRows = computed(() =>
     <AppCard>
       <template #header>
         <p class="font-semibold text-sm">
-          Top 5 joueurs
+          Top 5 — ELO simple
         </p>
       </template>
 

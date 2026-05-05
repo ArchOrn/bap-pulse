@@ -1,37 +1,91 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
-@theme static {
-  --font-sans: 'Public Sans', sans-serif;
+/* -----------------------------------------------------------------------------
+ * BAP Pulse design tokens — mirrored from /app (Flutter) so the BO and the
+ * mobile/web app feel like one product.
+ *
+ * - Brand accent: sage green (#8AC0A0). Anchored at the 500 shade so Nuxt UI's
+ *   `bg-primary-500` / `text-primary-500` resolve to the on-brand color.
+ * - Surfaces follow the dark-mode palette of the Flutter app
+ *   (lib/core/theme/colors.dart). Light mode keeps Nuxt UI defaults so the BO
+ *   stays usable in daylight, but the brand voice (sage + Space Grotesk) is
+ *   consistent across themes.
+ * --------------------------------------------------------------------------- */
 
-  --color-black-haze-50: #fafafa;
-  --color-black-haze-100: #f7f7f7;
-  --color-black-haze-200: #e6e6e6;
-  --color-black-haze-300: #d6d6d6;
-  --color-black-haze-400: #a5a5a5;
-  --color-black-haze-500: #767676;
-  --color-black-haze-600: #575757;
-  --color-black-haze-700: #434343;
-  --color-black-haze-800: #292929;
-  --color-black-haze-900: #1a1a1a;
-  --color-black-haze-950: #0a0a0a;
+@theme static {
+  /* Body / display fonts — `font-family: 'Inter'` and `'Space Grotesk'` make
+   * @nuxt/fonts auto-load the Google Fonts payloads. */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+
+  /* Sage primary — wired up in app.config.ts (`primary: 'sage'`). */
+  --color-sage-50:  #f4f9f6;
+  --color-sage-100: #e3f1e8;
+  --color-sage-200: #c8e2d2;
+  --color-sage-300: #a5cbb6;
+  --color-sage-400: #8fc4a5;
+  --color-sage-500: #8ac0a0;
+  --color-sage-600: #6fa88a;
+  --color-sage-700: #578770;
+  --color-sage-800: #476c5c;
+  --color-sage-900: #3a574b;
+  --color-sage-950: #1d2f28;
+
+  /* BAP Pulse dark surfaces — exposed as `bg-bap-card` etc. via Tailwind v4. */
+  --color-bap-scaffold: #0b0f14;
+  --color-bap-card:     #14181f;
+  --color-bap-elevated: #1b2028;
+  --color-bap-input:    #15231c;
+  --color-bap-frame:    #06090c;
+  --color-bap-outline:  #24372f;
+
+  /* Semantic accents — constant across accent swaps (Flutter app convention). */
+  --color-bap-win:    #2fb974;
+  --color-bap-defeat: #e63946;
+  --color-bap-streak: #ff7a59;
+  --color-bap-leader: #ffd60a;
+  --color-bap-amber:  #ff9f0a;
+  --color-bap-trend:  #2fffa0;
 }
 
+/* Nuxt UI uses --ui-primary / --ui-bg as semantic surface tokens. Re-bind them
+ * to the sage palette + BAP Pulse scaffold so cards, buttons, etc. inherit the
+ * new brand without per-component overrides. */
 :root {
-  --ui-primary: var(--color-black-haze-950);
-  --ui-bg: var(--color-black-haze-50);
+  --ui-primary: var(--color-sage-500);
 }
 
 .dark {
-  --ui-primary: var(--color-black-haze-50);
-  --ui-border: var(--color-neutral-800);
-  --ui-bg: var(--color-black-haze-950);
+  --ui-primary: var(--color-sage-400);
+  --ui-bg: var(--color-bap-scaffold);
+  --ui-bg-elevated: var(--color-bap-elevated);
+  --ui-bg-muted: var(--color-bap-card);
 }
 
-/* Badminton court grid pattern — used on the login page */
-.court-pattern {
-  background-image:
-    linear-gradient(rgba(16, 185, 129, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(16, 185, 129, 0.07) 1px, transparent 1px);
-  background-size: 48px 48px;
+/* Display headings use Space Grotesk with tighter tracking. */
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tabular numerics utility — aligns digits in tables, ELO, scores. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tintable BAP Pulse mark via CSS mask-image — set width/height + a text
+ * color (e.g. `text-sage-500`) and the SVG silhouette inherits it. Mirrors the
+ * Flutter app's PulseLogo + ColorFilter pattern. */
+.bap-pulse-mark {
+  -webkit-mask: url('/brand/bap-pulse-logo.svg') no-repeat center / contain;
+          mask: url('/brand/bap-pulse-logo.svg') no-repeat center / contain;
+  background-color: currentColor;
+}
+
+.bap-wordmark {
+  -webkit-mask: url('/brand/bap-logo.svg') no-repeat center / contain;
+          mask: url('/brand/bap-logo.svg') no-repeat center / contain;
+  background-color: currentColor;
 }
