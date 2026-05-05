@@ -101,6 +101,55 @@ func (q *Queries) GetMatchByID(ctx context.Context, id pgtype.UUID) (Match, erro
 	return i, err
 }
 
+const getMatchesInPeriod = `-- name: GetMatchesInPeriod :many
+SELECT id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, played_at, validated, set1_team1, set1_team2, set2_team1, set2_team2, set3_team1, set3_team2 FROM matches
+WHERE match_type = $1
+  AND played_at >= $2
+  AND played_at <  $3
+ORDER BY played_at DESC
+`
+
+type GetMatchesInPeriodParams struct {
+	MatchType  MatchType          `json:"match_type"`
+	PlayedAt   pgtype.Timestamptz `json:"played_at"`
+	PlayedAt_2 pgtype.Timestamptz `json:"played_at_2"`
+}
+
+func (q *Queries) GetMatchesInPeriod(ctx context.Context, arg GetMatchesInPeriodParams) ([]Match, error) {
+	rows, err := q.db.Query(ctx, getMatchesInPeriod, arg.MatchType, arg.PlayedAt, arg.PlayedAt_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Match{}
+	for rows.Next() {
+		var i Match
+		if err := rows.Scan(
+			&i.ID,
+			&i.MatchType,
+			&i.Team1Player1ID,
+			&i.Team1Player2ID,
+			&i.Team2Player1ID,
+			&i.Team2Player2ID,
+			&i.PlayedAt,
+			&i.Validated,
+			&i.Set1Team1,
+			&i.Set1Team2,
+			&i.Set2Team1,
+			&i.Set2Team2,
+			&i.Set3Team1,
+			&i.Set3Team2,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getPlayerMatches = `-- name: GetPlayerMatches :many
 SELECT id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, played_at, validated, set1_team1, set1_team2, set2_team1, set2_team2, set3_team1, set3_team2 FROM matches
 WHERE team1_player1_id = $1 OR team1_player2_id = $1

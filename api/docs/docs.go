@@ -249,7 +249,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Creates a match, recalculates ELO ratings, and records history. Singles: provide team1_player1_id and team2_player1_id only. Doubles/Mixed: provide all 4 player IDs.",
+                "description": "Creates a match with set scores (best of 3, 21 points per set), recalculates ELO ratings, and records history.",
                 "consumes": [
                     "application/json"
                 ],
@@ -362,21 +362,287 @@ const docTemplate = `{
         },
         "/rankings": {
             "get": {
-                "description": "Returns all users sorted by descending ELO with their rank position.",
+                "description": "Use /rankings/elo?tableau=... for new clients.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "rankings"
                 ],
-                "summary": "ELO leaderboard",
+                "summary": "ELO leaderboard (legacy — defaults to SINGLES)",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/services.UserRanking"
+                                "$ref": "#/definitions/services.EloRanking"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/rankings/elo": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rankings"
+                ],
+                "summary": "ELO leaderboard for a tableau",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "SINGLES (default) | DOUBLES | MIXED",
+                        "name": "tableau",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/services.EloRanking"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/rankings/giant-killer": {
+            "get": {
+                "description": "Wins against an opponent whose ELO at match time exceeded the player's by at least UpsetThreshold.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rankings"
+                ],
+                "summary": "Giant-killer ranking",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "SINGLES (default) | DOUBLES | MIXED",
+                        "name": "tableau",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "YYYY-MM (default: current month)",
+                        "name": "period",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/services.GiantKillerRanking"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/rankings/league": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rankings"
+                ],
+                "summary": "League ranking (wins / losses / sets)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "SINGLES (default) | DOUBLES | MIXED",
+                        "name": "tableau",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "YYYY-MM (default: current month)",
+                        "name": "period",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/services.LeagueRanking"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/rankings/matches-played": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rankings"
+                ],
+                "summary": "Matches-played ranking",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "SINGLES (default) | DOUBLES | MIXED",
+                        "name": "tableau",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "YYYY-MM (default: current month)",
+                        "name": "period",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/services.MatchesPlayedRanking"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/rankings/performance": {
+            "get": {
+                "description": "Sum of performance points awarded during the period for the tableau.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rankings"
+                ],
+                "summary": "Performance ranking (yellow jersey)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "SINGLES (default) | DOUBLES | MIXED",
+                        "name": "tableau",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "YYYY-MM (default: current month)",
+                        "name": "period",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/services.PerformanceRanking"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     },
@@ -475,7 +741,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Only the authenticated user can update their own profile.",
+                "description": "Users can only update their own profile. Admins can update any profile.",
                 "consumes": [
                     "application/json"
                 ],
@@ -546,7 +812,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Only the authenticated user can delete their own account.",
+                "description": "Users can only delete their own account. Admins can delete any account.",
                 "produces": [
                     "application/json"
                 ],
@@ -602,11 +868,23 @@ const docTemplate = `{
                 "played_at": {
                     "$ref": "#/definitions/pgtype.Timestamptz"
                 },
-                "score_team1": {
+                "set1_team1": {
                     "type": "integer"
                 },
-                "score_team2": {
+                "set1_team2": {
                     "type": "integer"
+                },
+                "set2_team1": {
+                    "type": "integer"
+                },
+                "set2_team2": {
+                    "type": "integer"
+                },
+                "set3_team1": {
+                    "$ref": "#/definitions/pgtype.Int4"
+                },
+                "set3_team2": {
+                    "$ref": "#/definitions/pgtype.Int4"
                 },
                 "team1_player1_id": {
                     "type": "string"
@@ -644,14 +922,26 @@ const docTemplate = `{
                 "created_at": {
                     "$ref": "#/definitions/pgtype.Timestamptz"
                 },
-                "elo": {
+                "elo_doubles": {
+                    "type": "integer"
+                },
+                "elo_mixed": {
+                    "type": "integer"
+                },
+                "elo_singles": {
                     "type": "integer"
                 },
                 "email": {
                     "type": "string"
                 },
+                "ffbad_rank": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
                 "first_name": {
                     "type": "string"
+                },
+                "gender": {
+                    "$ref": "#/definitions/pgtype.Text"
                 },
                 "id": {
                     "type": "string"
@@ -671,11 +961,12 @@ const docTemplate = `{
                     "description": "SINGLES | DOUBLES | MIXED",
                     "type": "string"
                 },
-                "score_team1": {
-                    "type": "integer"
-                },
-                "score_team2": {
-                    "type": "integer"
+                "sets": {
+                    "description": "2 or 3 sets",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.setScore"
+                    }
                 },
                 "team1_player1_id": {
                     "description": "always required",
@@ -728,10 +1019,29 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.setScore": {
+            "type": "object",
+            "properties": {
+                "team1": {
+                    "type": "integer"
+                },
+                "team2": {
+                    "type": "integer"
+                }
+            }
+        },
         "handlers.syncRequest": {
             "type": "object",
             "properties": {
+                "ffbad_rank": {
+                    "description": "optional, NC | P12 | ... | N1",
+                    "type": "string"
+                },
                 "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "description": "optional, MALE | FEMALE",
                     "type": "string"
                 },
                 "last_name": {
@@ -745,7 +1055,15 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "ffbad_rank": {
+                    "description": "\"\" | NC | P12 | ... | N1",
+                    "type": "string"
+                },
                 "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "description": "\"\" | MALE | FEMALE",
                     "type": "string"
                 },
                 "last_name": {
@@ -766,6 +1084,18 @@ const docTemplate = `{
                 "Finite",
                 "NegativeInfinity"
             ]
+        },
+        "pgtype.Int4": {
+            "type": "object",
+            "properties": {
+                "int32": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
         },
         "pgtype.Text": {
             "type": "object",
@@ -792,9 +1122,83 @@ const docTemplate = `{
                 }
             }
         },
-        "services.UserRanking": {
+        "services.EloRanking": {
             "type": "object",
             "properties": {
+                "elo": {
+                    "type": "integer"
+                },
+                "rank": {
+                    "type": "integer"
+                },
+                "tableau": {
+                    "$ref": "#/definitions/db.MatchType"
+                },
+                "user": {
+                    "$ref": "#/definitions/db.User"
+                }
+            }
+        },
+        "services.GiantKillerRanking": {
+            "type": "object",
+            "properties": {
+                "rank": {
+                    "type": "integer"
+                },
+                "upset_wins": {
+                    "type": "integer"
+                },
+                "user": {
+                    "$ref": "#/definitions/db.User"
+                }
+            }
+        },
+        "services.LeagueRanking": {
+            "type": "object",
+            "properties": {
+                "losses": {
+                    "type": "integer"
+                },
+                "rank": {
+                    "type": "integer"
+                },
+                "sets_diff": {
+                    "type": "integer"
+                },
+                "sets_lost": {
+                    "type": "integer"
+                },
+                "sets_won": {
+                    "type": "integer"
+                },
+                "user": {
+                    "$ref": "#/definitions/db.User"
+                },
+                "wins": {
+                    "type": "integer"
+                }
+            }
+        },
+        "services.MatchesPlayedRanking": {
+            "type": "object",
+            "properties": {
+                "matches_played": {
+                    "type": "integer"
+                },
+                "rank": {
+                    "type": "integer"
+                },
+                "user": {
+                    "$ref": "#/definitions/db.User"
+                }
+            }
+        },
+        "services.PerformanceRanking": {
+            "type": "object",
+            "properties": {
+                "points": {
+                    "type": "integer"
+                },
                 "rank": {
                     "type": "integer"
                 },

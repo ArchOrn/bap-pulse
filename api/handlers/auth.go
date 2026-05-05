@@ -5,11 +5,14 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"bap-pulse/db"
+	"bap-pulse/services"
 )
 
 type syncRequest struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
+	Gender    string `json:"gender"`     // optional, MALE | FEMALE
+	FfbadRank string `json:"ffbad_rank"` // optional, NC | P12 | ... | N1
 }
 
 // Sync godoc
@@ -44,11 +47,17 @@ func Sync(pool *pgxpool.Pool) fiber.Handler {
 		var req syncRequest
 		c.BodyParser(&req) //nolint:errcheck — empty body is valid
 
+		initial := int32(services.InitialEloFor(req.FfbadRank, req.Gender))
 		user, err = q.CreateUser(c.Context(), db.CreateUserParams{
-			ID:        firebaseUID,
-			FirstName: req.FirstName,
-			LastName:  req.LastName,
-			Email:     firebaseEmail,
+			ID:         firebaseUID,
+			FirstName:  req.FirstName,
+			LastName:   req.LastName,
+			Email:      firebaseEmail,
+			Gender:     optionalText(req.Gender),
+			FfbadRank:  optionalText(req.FfbadRank),
+			EloSingles: initial,
+			EloDoubles: initial,
+			EloMixed:   initial,
 		})
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

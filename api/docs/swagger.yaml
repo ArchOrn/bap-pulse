@@ -8,10 +8,18 @@ definitions:
         $ref: '#/definitions/db.MatchType'
       played_at:
         $ref: '#/definitions/pgtype.Timestamptz'
-      score_team1:
+      set1_team1:
         type: integer
-      score_team2:
+      set1_team2:
         type: integer
+      set2_team1:
+        type: integer
+      set2_team2:
+        type: integer
+      set3_team1:
+        $ref: '#/definitions/pgtype.Int4'
+      set3_team2:
+        $ref: '#/definitions/pgtype.Int4'
       team1_player1_id:
         type: string
       team1_player2_id:
@@ -37,12 +45,20 @@ definitions:
     properties:
       created_at:
         $ref: '#/definitions/pgtype.Timestamptz'
-      elo:
+      elo_doubles:
+        type: integer
+      elo_mixed:
+        type: integer
+      elo_singles:
         type: integer
       email:
         type: string
+      ffbad_rank:
+        $ref: '#/definitions/pgtype.Text'
       first_name:
         type: string
+      gender:
+        $ref: '#/definitions/pgtype.Text'
       id:
         type: string
       last_name:
@@ -55,10 +71,11 @@ definitions:
       match_type:
         description: SINGLES | DOUBLES | MIXED
         type: string
-      score_team1:
-        type: integer
-      score_team2:
-        type: integer
+      sets:
+        description: 2 or 3 sets
+        items:
+          $ref: '#/definitions/handlers.setScore'
+        type: array
       team1_player1_id:
         description: always required
         type: string
@@ -93,9 +110,22 @@ definitions:
       admin:
         type: boolean
     type: object
+  handlers.setScore:
+    properties:
+      team1:
+        type: integer
+      team2:
+        type: integer
+    type: object
   handlers.syncRequest:
     properties:
+      ffbad_rank:
+        description: optional, NC | P12 | ... | N1
+        type: string
       first_name:
+        type: string
+      gender:
+        description: optional, MALE | FEMALE
         type: string
       last_name:
         type: string
@@ -104,7 +134,13 @@ definitions:
     properties:
       email:
         type: string
+      ffbad_rank:
+        description: '"" | NC | P12 | ... | N1'
+        type: string
       first_name:
+        type: string
+      gender:
+        description: '"" | MALE | FEMALE'
         type: string
       last_name:
         type: string
@@ -120,6 +156,14 @@ definitions:
     - Infinity
     - Finite
     - NegativeInfinity
+  pgtype.Int4:
+    properties:
+      int32:
+        format: int32
+        type: integer
+      valid:
+        type: boolean
+    type: object
   pgtype.Text:
     properties:
       string:
@@ -136,8 +180,56 @@ definitions:
       valid:
         type: boolean
     type: object
-  services.UserRanking:
+  services.EloRanking:
     properties:
+      elo:
+        type: integer
+      rank:
+        type: integer
+      tableau:
+        $ref: '#/definitions/db.MatchType'
+      user:
+        $ref: '#/definitions/db.User'
+    type: object
+  services.GiantKillerRanking:
+    properties:
+      rank:
+        type: integer
+      upset_wins:
+        type: integer
+      user:
+        $ref: '#/definitions/db.User'
+    type: object
+  services.LeagueRanking:
+    properties:
+      losses:
+        type: integer
+      rank:
+        type: integer
+      sets_diff:
+        type: integer
+      sets_lost:
+        type: integer
+      sets_won:
+        type: integer
+      user:
+        $ref: '#/definitions/db.User'
+      wins:
+        type: integer
+    type: object
+  services.MatchesPlayedRanking:
+    properties:
+      matches_played:
+        type: integer
+      rank:
+        type: integer
+      user:
+        $ref: '#/definitions/db.User'
+    type: object
+  services.PerformanceRanking:
+    properties:
+      points:
+        type: integer
       rank:
         type: integer
       user:
@@ -301,9 +393,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: 'Creates a match, recalculates ELO ratings, and records history.
-        Singles: provide team1_player1_id and team2_player1_id only. Doubles/Mixed:
-        provide all 4 player IDs.'
+      description: Creates a match with set scores (best of 3, 21 points per set),
+        recalculates ELO ratings, and records history.
       parameters:
       - description: Match details
         in: body
@@ -376,7 +467,7 @@ paths:
       - matches
   /rankings:
     get:
-      description: Returns all users sorted by descending ELO with their rank position.
+      description: Use /rankings/elo?tableau=... for new clients.
       produces:
       - application/json
       responses:
@@ -384,7 +475,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/services.UserRanking'
+              $ref: '#/definitions/services.EloRanking'
             type: array
         "500":
           description: Internal Server Error
@@ -392,7 +483,181 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: ELO leaderboard
+      summary: ELO leaderboard (legacy — defaults to SINGLES)
+      tags:
+      - rankings
+  /rankings/elo:
+    get:
+      parameters:
+      - description: SINGLES (default) | DOUBLES | MIXED
+        in: query
+        name: tableau
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/services.EloRanking'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: ELO leaderboard for a tableau
+      tags:
+      - rankings
+  /rankings/giant-killer:
+    get:
+      description: Wins against an opponent whose ELO at match time exceeded the player's
+        by at least UpsetThreshold.
+      parameters:
+      - description: SINGLES (default) | DOUBLES | MIXED
+        in: query
+        name: tableau
+        type: string
+      - description: 'YYYY-MM (default: current month)'
+        in: query
+        name: period
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/services.GiantKillerRanking'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Giant-killer ranking
+      tags:
+      - rankings
+  /rankings/league:
+    get:
+      parameters:
+      - description: SINGLES (default) | DOUBLES | MIXED
+        in: query
+        name: tableau
+        type: string
+      - description: 'YYYY-MM (default: current month)'
+        in: query
+        name: period
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/services.LeagueRanking'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: League ranking (wins / losses / sets)
+      tags:
+      - rankings
+  /rankings/matches-played:
+    get:
+      parameters:
+      - description: SINGLES (default) | DOUBLES | MIXED
+        in: query
+        name: tableau
+        type: string
+      - description: 'YYYY-MM (default: current month)'
+        in: query
+        name: period
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/services.MatchesPlayedRanking'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Matches-played ranking
+      tags:
+      - rankings
+  /rankings/performance:
+    get:
+      description: Sum of performance points awarded during the period for the tableau.
+      parameters:
+      - description: SINGLES (default) | DOUBLES | MIXED
+        in: query
+        name: tableau
+        type: string
+      - description: 'YYYY-MM (default: current month)'
+        in: query
+        name: period
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/services.PerformanceRanking'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Performance ranking (yellow jersey)
       tags:
       - rankings
   /users:
@@ -419,7 +684,8 @@ paths:
       - users
   /users/{id}:
     delete:
-      description: Only the authenticated user can delete their own account.
+      description: Users can only delete their own account. Admins can delete any
+        account.
       parameters:
       - description: User ID (Firebase UID)
         in: path
@@ -476,7 +742,8 @@ paths:
     put:
       consumes:
       - application/json
-      description: Only the authenticated user can update their own profile.
+      description: Users can only update their own profile. Admins can update any
+        profile.
       parameters:
       - description: User ID (Firebase UID)
         in: path

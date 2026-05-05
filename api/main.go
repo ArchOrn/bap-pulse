@@ -116,6 +116,11 @@ func main() {
 		return c.JSON(fiber.Map{"status": "ok"})
 	})
 	app.Get("/rankings", handlers.GetRankings(pool))
+	app.Get("/rankings/elo", handlers.GetEloRanking(pool))
+	app.Get("/rankings/performance", handlers.GetPerformanceRanking(pool))
+	app.Get("/rankings/league", handlers.GetLeagueRanking(pool))
+	app.Get("/rankings/matches-played", handlers.GetMatchesPlayedRanking(pool))
+	app.Get("/rankings/giant-killer", handlers.GetGiantKillerRanking(pool))
 
 	// --- Swagger UI (dev only) ---
 	swaggerHandler := func(c *fiber.Ctx) error {

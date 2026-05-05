@@ -6,7 +6,17 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"bap-pulse/db"
+	"bap-pulse/services"
 )
+
+// optionalText converts an optional JSON string into a pgtype.Text. Empty
+// strings are stored as NULL so the DB CHECK constraint isn't triggered.
+func optionalText(s string) pgtype.Text {
+	if s == "" {
+		return pgtype.Text{}
+	}
+	return pgtype.Text{String: s, Valid: true}
+}
 
 // GetUsers godoc
 //
@@ -53,6 +63,8 @@ type updateUserRequest struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Email     string `json:"email"`
+	Gender    string `json:"gender"`     // "" | MALE | FEMALE
+	FfbadRank string `json:"ffbad_rank"` // "" | NC | P12 | ... | N1
 }
 
 // UpdateUser godoc
@@ -96,10 +108,32 @@ func UpdateUser(pool *pgxpool.Pool) fiber.Handler {
 			FirstName: req.FirstName,
 			LastName:  req.LastName,
 			Email:     req.Email,
+			Gender:    optionalText(req.Gender),
+			FfbadRank: optionalText(req.FfbadRank),
 		})
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal server error"})
 		}
+
+		// If the user has not played any match yet and they (or an admin) just
+		// set their FFBAD/gender, recompute the starting ELO across all
+		// tableaux. Once a single match is recorded we keep the actual ratings
+		// — tweaks to FFBAD/gender then become informational only.
+		if req.FfbadRank != "" || req.Gender != "" {
+			played, err := q.GetUserEloHistory(c.Context(), targetUID)
+			if err == nil && len(played) == 0 {
+				initial := int32(services.InitialEloFor(req.FfbadRank, req.Gender))
+				if u2, err := q.UpdateUserInitialElo(c.Context(), db.UpdateUserInitialEloParams{
+					ID:         targetUID,
+					EloSingles: initial,
+					EloDoubles: initial,
+					EloMixed:   initial,
+				}); err == nil {
+					user = u2
+				}
+			}
+		}
+
 		return c.JSON(user)
 	}
 }

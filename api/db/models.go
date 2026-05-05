@@ -55,12 +55,13 @@ func (ns NullMatchType) Value() (driver.Value, error) {
 }
 
 type EloHistory struct {
-	ID        pgtype.UUID        `json:"id"`
-	PlayerID  string             `json:"player_id"`
-	EloBefore int32              `json:"elo_before"`
-	EloAfter  int32              `json:"elo_after"`
-	MatchID   pgtype.UUID        `json:"match_id"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	ID                pgtype.UUID        `json:"id"`
+	PlayerID          string             `json:"player_id"`
+	EloBefore         int32              `json:"elo_before"`
+	EloAfter          int32              `json:"elo_after"`
+	MatchID           pgtype.UUID        `json:"match_id"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	PerformancePoints int32              `json:"performance_points"`
 }
 
 type Match struct {
@@ -81,11 +82,15 @@ type Match struct {
 }
 
 type User struct {
-	ID        string             `json:"id"`
-	Email     string             `json:"email"`
-	Elo       int32              `json:"elo"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	Role      string             `json:"role"`
-	FirstName string             `json:"first_name"`
-	LastName  string             `json:"last_name"`
+	ID         string             `json:"id"`
+	Email      string             `json:"email"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	Role       string             `json:"role"`
+	FirstName  string             `json:"first_name"`
+	LastName   string             `json:"last_name"`
+	Gender     pgtype.Text        `json:"gender"`
+	FfbadRank  pgtype.Text        `json:"ffbad_rank"`
+	EloSingles int32              `json:"elo_singles"`
+	EloDoubles int32              `json:"elo_doubles"`
+	EloMixed   int32              `json:"elo_mixed"`
 }

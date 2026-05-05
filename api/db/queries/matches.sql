@@ -24,6 +24,13 @@ WHERE team1_player1_id = $1 OR team1_player2_id = $1
    OR team2_player1_id = $1 OR team2_player2_id = $1
 ORDER BY played_at DESC;
 
+-- name: GetMatchesInPeriod :many
+SELECT * FROM matches
+WHERE match_type = $1
+  AND played_at >= $2
+  AND played_at <  $3
+ORDER BY played_at DESC;
+
 -- name: ValidateMatch :one
 UPDATE matches
 SET validated = true

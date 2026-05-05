@@ -11,17 +11,39 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countMatchesPlayedByPlayerInTableau = `-- name: CountMatchesPlayedByPlayerInTableau :one
+SELECT COUNT(*)::INT AS total
+FROM elo_history eh
+JOIN matches m ON m.id = eh.match_id
+WHERE eh.player_id = $1
+  AND m.match_type = $2
+`
+
+type CountMatchesPlayedByPlayerInTableauParams struct {
+	PlayerID  string    `json:"player_id"`
+	MatchType MatchType `json:"match_type"`
+}
+
+// Counts matches the player has already played in this tableau (used for K-factor).
+func (q *Queries) CountMatchesPlayedByPlayerInTableau(ctx context.Context, arg CountMatchesPlayedByPlayerInTableauParams) (int32, error) {
+	row := q.db.QueryRow(ctx, countMatchesPlayedByPlayerInTableau, arg.PlayerID, arg.MatchType)
+	var total int32
+	err := row.Scan(&total)
+	return total, err
+}
+
 const createEloHistory = `-- name: CreateEloHistory :one
-INSERT INTO elo_history (player_id, elo_before, elo_after, match_id)
-VALUES ($1, $2, $3, $4)
-RETURNING id, player_id, elo_before, elo_after, match_id, created_at
+INSERT INTO elo_history (player_id, elo_before, elo_after, match_id, performance_points)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, player_id, elo_before, elo_after, match_id, created_at, performance_points
 `
 
 type CreateEloHistoryParams struct {
-	PlayerID  string      `json:"player_id"`
-	EloBefore int32       `json:"elo_before"`
-	EloAfter  int32       `json:"elo_after"`
-	MatchID   pgtype.UUID `json:"match_id"`
+	PlayerID          string      `json:"player_id"`
+	EloBefore         int32       `json:"elo_before"`
+	EloAfter          int32       `json:"elo_after"`
+	MatchID           pgtype.UUID `json:"match_id"`
+	PerformancePoints int32       `json:"performance_points"`
 }
 
 func (q *Queries) CreateEloHistory(ctx context.Context, arg CreateEloHistoryParams) (EloHistory, error) {
@@ -30,6 +52,7 @@ func (q *Queries) CreateEloHistory(ctx context.Context, arg CreateEloHistoryPara
 		arg.EloBefore,
 		arg.EloAfter,
 		arg.MatchID,
+		arg.PerformancePoints,
 	)
 	var i EloHistory
 	err := row.Scan(
@@ -39,12 +62,46 @@ func (q *Queries) CreateEloHistory(ctx context.Context, arg CreateEloHistoryPara
 		&i.EloAfter,
 		&i.MatchID,
 		&i.CreatedAt,
+		&i.PerformancePoints,
 	)
 	return i, err
 }
 
+const getMatchEloBefore = `-- name: GetMatchEloBefore :many
+SELECT player_id, elo_before
+FROM elo_history
+WHERE match_id = $1
+`
+
+type GetMatchEloBeforeRow struct {
+	PlayerID  string `json:"player_id"`
+	EloBefore int32  `json:"elo_before"`
+}
+
+// For a given match, returns each player's ELO BEFORE the match.
+// Used to compute giant-killer wins (compare opponent ELO at match time).
+func (q *Queries) GetMatchEloBefore(ctx context.Context, matchID pgtype.UUID) ([]GetMatchEloBeforeRow, error) {
+	rows, err := q.db.Query(ctx, getMatchEloBefore, matchID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetMatchEloBeforeRow{}
+	for rows.Next() {
+		var i GetMatchEloBeforeRow
+		if err := rows.Scan(&i.PlayerID, &i.EloBefore); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getMatchEloHistory = `-- name: GetMatchEloHistory :many
-SELECT id, player_id, elo_before, elo_after, match_id, created_at FROM elo_history
+SELECT id, player_id, elo_before, elo_after, match_id, created_at, performance_points FROM elo_history
 WHERE match_id = $1
 `
 
@@ -64,6 +121,7 @@ func (q *Queries) GetMatchEloHistory(ctx context.Context, matchID pgtype.UUID) (
 			&i.EloAfter,
 			&i.MatchID,
 			&i.CreatedAt,
+			&i.PerformancePoints,
 		); err != nil {
 			return nil, err
 		}
@@ -76,7 +134,7 @@ func (q *Queries) GetMatchEloHistory(ctx context.Context, matchID pgtype.UUID) (
 }
 
 const getUserEloHistory = `-- name: GetUserEloHistory :many
-SELECT id, player_id, elo_before, elo_after, match_id, created_at FROM elo_history
+SELECT id, player_id, elo_before, elo_after, match_id, created_at, performance_points FROM elo_history
 WHERE player_id = $1
 ORDER BY created_at DESC
 `
@@ -97,7 +155,49 @@ func (q *Queries) GetUserEloHistory(ctx context.Context, playerID string) ([]Elo
 			&i.EloAfter,
 			&i.MatchID,
 			&i.CreatedAt,
+			&i.PerformancePoints,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const sumPerformancePointsByPlayer = `-- name: SumPerformancePointsByPlayer :many
+SELECT eh.player_id, SUM(eh.performance_points)::INT AS points
+FROM elo_history eh
+JOIN matches m ON m.id = eh.match_id
+WHERE m.match_type = $1
+  AND eh.created_at >= $2
+  AND eh.created_at <  $3
+GROUP BY eh.player_id
+`
+
+type SumPerformancePointsByPlayerParams struct {
+	MatchType   MatchType          `json:"match_type"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	CreatedAt_2 pgtype.Timestamptz `json:"created_at_2"`
+}
+
+type SumPerformancePointsByPlayerRow struct {
+	PlayerID string `json:"player_id"`
+	Points   int32  `json:"points"`
+}
+
+func (q *Queries) SumPerformancePointsByPlayer(ctx context.Context, arg SumPerformancePointsByPlayerParams) ([]SumPerformancePointsByPlayerRow, error) {
+	rows, err := q.db.Query(ctx, sumPerformancePointsByPlayer, arg.MatchType, arg.CreatedAt, arg.CreatedAt_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SumPerformancePointsByPlayerRow{}
+	for rows.Next() {
+		var i SumPerformancePointsByPlayerRow
+		if err := rows.Scan(&i.PlayerID, &i.Points); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

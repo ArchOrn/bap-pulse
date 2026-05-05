@@ -11,20 +11,31 @@ import (
 )
 
 type Querier interface {
+	// Counts matches the player has already played in this tableau (used for K-factor).
+	CountMatchesPlayedByPlayerInTableau(ctx context.Context, arg CountMatchesPlayedByPlayerInTableauParams) (int32, error)
 	CreateEloHistory(ctx context.Context, arg CreateEloHistoryParams) (EloHistory, error)
 	CreateMatch(ctx context.Context, arg CreateMatchParams) (Match, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteUser(ctx context.Context, id string) error
 	GetMatchByID(ctx context.Context, id pgtype.UUID) (Match, error)
+	// For a given match, returns each player's ELO BEFORE the match.
+	// Used to compute giant-killer wins (compare opponent ELO at match time).
+	GetMatchEloBefore(ctx context.Context, matchID pgtype.UUID) ([]GetMatchEloBeforeRow, error)
 	GetMatchEloHistory(ctx context.Context, matchID pgtype.UUID) ([]EloHistory, error)
+	GetMatchesInPeriod(ctx context.Context, arg GetMatchesInPeriodParams) ([]Match, error)
 	GetPlayerMatches(ctx context.Context, team1Player1ID string) ([]Match, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id string) (User, error)
 	GetUserEloHistory(ctx context.Context, playerID string) ([]EloHistory, error)
 	ListMatches(ctx context.Context) ([]Match, error)
 	ListUsers(ctx context.Context) ([]User, error)
+	SumPerformancePointsByPlayer(ctx context.Context, arg SumPerformancePointsByPlayerParams) ([]SumPerformancePointsByPlayerRow, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
-	UpdateUserElo(ctx context.Context, arg UpdateUserEloParams) (User, error)
+	UpdateUserEloDoubles(ctx context.Context, arg UpdateUserEloDoublesParams) (User, error)
+	UpdateUserEloMixed(ctx context.Context, arg UpdateUserEloMixedParams) (User, error)
+	UpdateUserEloSingles(ctx context.Context, arg UpdateUserEloSinglesParams) (User, error)
+	// Used when a user updates their FFBAD/gender BEFORE having played any match.
+	UpdateUserInitialElo(ctx context.Context, arg UpdateUserInitialEloParams) (User, error)
 	UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) (User, error)
 	ValidateMatch(ctx context.Context, id pgtype.UUID) (Match, error)
 }

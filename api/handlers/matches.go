@@ -240,7 +240,7 @@ func CreateMatch(pool *pgxpool.Pool) fiber.Handler {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create match"})
 		}
 
-		eloChanges, err := applyEloChanges(c, q, match.ID, req, p1, p2, p3, p4, isDoubles)
+		eloChanges, err := applyEloChanges(c, q, match.ID, db.MatchType(req.MatchType), req, p1, p2, p3, p4, isDoubles)
 		if err != nil {
 			return err
 		}
@@ -252,82 +252,171 @@ func CreateMatch(pool *pgxpool.Pool) fiber.Handler {
 	}
 }
 
-// applyEloChanges computes and persists new ELO ratings for all users in the match.
+// applyEloChanges computes and persists ELO + performance-points changes for
+// the players involved in the match. The ELO column updated depends on the
+// match's tableau (singles/doubles/mixed); the K-factor is per-player based on
+// their match count in that tableau.
 func applyEloChanges(
 	c *fiber.Ctx,
 	q *db.Queries,
 	matchID pgtype.UUID,
+	matchType db.MatchType,
 	req createMatchRequest,
 	p1, p2, p3, p4 db.User,
 	isDoubles bool,
 ) (fiber.Map, error) {
-	w1, w2 := setsWon(req.Sets)
-	team1Wins := w1 > w2
-	team2Wins := w2 > w1
+	setsT1, setsT2 := setsWon(req.Sets)
 
-	type eloChange struct {
-		Before int32
-		After  int32
+	// ELO column to read & update for this tableau.
+	eloOf := func(u db.User) int32 { return services.EloFor(u, matchType) }
+
+	// Match count for K-factor — counts what the player has played BEFORE this
+	// match (the new elo_history rows are inserted after we compute deltas).
+	matchCount := func(playerID string) (int, error) {
+		v, err := q.CountMatchesPlayedByPlayerInTableau(
+			c.Context(),
+			db.CountMatchesPlayedByPlayerInTableauParams{
+				PlayerID:  playerID,
+				MatchType: matchType,
+			},
+		)
+		if err != nil {
+			return 0, err
+		}
+		return int(v), nil
 	}
 
-	changes := make(map[string]eloChange)
+	type playerOutcome struct {
+		player db.User
+		eloBefore int32
+		eloAfter  int32
+		perfPoints int32
+	}
+
+	outcomes := make([]playerOutcome, 0, 4)
 
 	if isDoubles {
-		avgTeam1 := services.TeamAverageElo(int(p1.Elo), int(p2.Elo))
-		avgTeam2 := services.TeamAverageElo(int(p3.Elo), int(p4.Elo))
-
-		var deltaTeam1, deltaTeam2 int
-		if team1Wins {
-			deltaTeam1, deltaTeam2 = services.CalculateTeamEloDelta(avgTeam1, avgTeam2)
-		} else if team2Wins {
-			deltaTeam2, deltaTeam1 = services.CalculateTeamEloDelta(avgTeam2, avgTeam1)
+		t1p1Matches, err := matchCount(p1.ID)
+		if err != nil {
+			return nil, c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to read match count"})
+		}
+		t1p2Matches, err := matchCount(p2.ID)
+		if err != nil {
+			return nil, c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to read match count"})
+		}
+		t2p1Matches, err := matchCount(p3.ID)
+		if err != nil {
+			return nil, c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to read match count"})
+		}
+		t2p2Matches, err := matchCount(p4.ID)
+		if err != nil {
+			return nil, c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to read match count"})
 		}
 
-		for _, entry := range []struct {
-			player db.User
-			delta  int
+		avgT1 := services.TeamAverageElo(int(eloOf(p1)), int(eloOf(p2)))
+		avgT2 := services.TeamAverageElo(int(eloOf(p3)), int(eloOf(p4)))
+
+		d1, d2, d3, d4 := services.CalculateTeamEloDeltas(
+			avgT1, avgT2, setsT1, setsT2,
+			t1p1Matches, t1p2Matches, t2p1Matches, t2p2Matches,
+		)
+
+		// Performance points: team-average vs opponent-team-average; both
+		// teammates receive the same award.
+		perfT1 := int32(services.CalculatePerformancePoints(avgT1, avgT2, setsT1, setsT2))
+		perfT2 := int32(services.CalculatePerformancePoints(avgT2, avgT1, setsT2, setsT1))
+
+		for _, e := range []struct {
+			user  db.User
+			delta int
+			perf  int32
 		}{
-			{p1, deltaTeam1}, {p2, deltaTeam1},
-			{p3, deltaTeam2}, {p4, deltaTeam2},
+			{p1, d1, perfT1}, {p2, d2, perfT1},
+			{p3, d3, perfT2}, {p4, d4, perfT2},
 		} {
-			newElo := int32(int(entry.player.Elo) + entry.delta)
-			changes[entry.player.ID] = eloChange{Before: entry.player.Elo, After: newElo}
+			before := eloOf(e.user)
+			outcomes = append(outcomes, playerOutcome{
+				player:     e.user,
+				eloBefore:  before,
+				eloAfter:   before + int32(e.delta),
+				perfPoints: e.perf,
+			})
 		}
 	} else {
-		var newEloP1, newEloP3 int
-		if team1Wins {
-			newEloP1, newEloP3 = services.CalculateMatchElo(int(p1.Elo), int(p3.Elo))
-		} else if team2Wins {
-			newEloP3, newEloP1 = services.CalculateMatchElo(int(p3.Elo), int(p1.Elo))
-		} else {
-			newEloP1, newEloP3 = int(p1.Elo), int(p3.Elo)
+		p1Matches, err := matchCount(p1.ID)
+		if err != nil {
+			return nil, c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to read match count"})
 		}
-		changes[p1.ID] = eloChange{Before: p1.Elo, After: int32(newEloP1)}
-		changes[p3.ID] = eloChange{Before: p3.Elo, After: int32(newEloP3)}
+		p3Matches, err := matchCount(p3.ID)
+		if err != nil {
+			return nil, c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to read match count"})
+		}
+
+		eloP1Before := eloOf(p1)
+		eloP3Before := eloOf(p3)
+
+		d1, d3 := services.CalculateEloDelta(
+			int(eloP1Before), int(eloP3Before),
+			setsT1, setsT2,
+			p1Matches, p3Matches,
+		)
+
+		perfP1 := int32(services.CalculatePerformancePoints(int(eloP1Before), int(eloP3Before), setsT1, setsT2))
+		perfP3 := int32(services.CalculatePerformancePoints(int(eloP3Before), int(eloP1Before), setsT2, setsT1))
+
+		outcomes = append(outcomes,
+			playerOutcome{player: p1, eloBefore: eloP1Before, eloAfter: eloP1Before + int32(d1), perfPoints: perfP1},
+			playerOutcome{player: p3, eloBefore: eloP3Before, eloAfter: eloP3Before + int32(d3), perfPoints: perfP3},
+		)
 	}
 
-	// Persist new ELOs and record history for each user.
-	for playerID, ch := range changes {
-		if _, err := q.UpdateUserElo(c.Context(), db.UpdateUserEloParams{
-			ID:  playerID,
-			Elo: ch.After,
-		}); err != nil {
+	// Persist: update the right ELO column and record the history row.
+	for _, o := range outcomes {
+		if err := updateEloByTableau(c, q, o.player.ID, matchType, o.eloAfter); err != nil {
 			return nil, c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update ELO"})
 		}
 		if _, err := q.CreateEloHistory(c.Context(), db.CreateEloHistoryParams{
-			PlayerID:  playerID,
-			EloBefore: ch.Before,
-			EloAfter:  ch.After,
-			MatchID:   matchID,
+			PlayerID:          o.player.ID,
+			EloBefore:         o.eloBefore,
+			EloAfter:          o.eloAfter,
+			MatchID:           matchID,
+			PerformancePoints: o.perfPoints,
 		}); err != nil {
 			return nil, c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to record ELO history"})
 		}
 	}
 
-	// Build the ELO response map.
 	result := fiber.Map{}
-	for id, ch := range changes {
-		result[id] = fiber.Map{"before": ch.Before, "after": ch.After}
+	for _, o := range outcomes {
+		result[o.player.ID] = fiber.Map{
+			"before":             o.eloBefore,
+			"after":              o.eloAfter,
+			"performance_points": o.perfPoints,
+		}
 	}
 	return result, nil
+}
+
+// updateEloByTableau dispatches to the right per-tableau ELO update query.
+func updateEloByTableau(c *fiber.Ctx, q *db.Queries, userID string, matchType db.MatchType, newElo int32) error {
+	switch matchType {
+	case db.MatchTypeDOUBLES:
+		_, err := q.UpdateUserEloDoubles(c.Context(), db.UpdateUserEloDoublesParams{
+			ID:         userID,
+			EloDoubles: newElo,
+		})
+		return err
+	case db.MatchTypeMIXED:
+		_, err := q.UpdateUserEloMixed(c.Context(), db.UpdateUserEloMixedParams{
+			ID:       userID,
+			EloMixed: newElo,
+		})
+		return err
+	default:
+		_, err := q.UpdateUserEloSingles(c.Context(), db.UpdateUserEloSinglesParams{
+			ID:         userID,
+			EloSingles: newElo,
+		})
+		return err
+	}
 }
