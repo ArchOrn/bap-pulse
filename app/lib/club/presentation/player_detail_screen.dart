@@ -1,431 +1,431 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 
+import 'package:bap_pulse/core/api/api_client.dart';
+import 'package:bap_pulse/core/theme/avatar_color.dart';
 import 'package:bap_pulse/core/theme/colors.dart';
 import 'package:bap_pulse/core/theme/text_styles.dart';
 import 'package:bap_pulse/core/widgets/jersey_badge.dart';
 import 'package:bap_pulse/core/widgets/primary_button.dart';
 import 'package:bap_pulse/core/widgets/trend_chip.dart';
-import 'package:bap_pulse/shared/data/mock_repository.dart';
+import 'package:bap_pulse/profile/data/profile_api.dart';
+import 'package:bap_pulse/profile/data/profile_models.dart';
+import 'package:bap_pulse/shared/models/jersey.dart';
 import 'package:bap_pulse/shared/models/player.dart';
 
-class PlayerDetailScreen extends StatelessWidget {
+class PlayerDetailScreen extends StatefulWidget {
   final String playerId;
   const PlayerDetailScreen({super.key, required this.playerId});
 
   @override
-  Widget build(BuildContext context) {
-    final repo = MockRepository.instance;
-    final p = repo.byId(playerId);
-    final me = repo.currentUser;
-    final rank = repo.perfRankOf(p.id);
-    final h2h = repo.headToHead(me.id, p.id);
-    final myWins = h2h.where((m) => m.winnerId == me.id).length;
-    final theirWins = h2h.length - myWins;
+  State<PlayerDetailScreen> createState() => _PlayerDetailScreenState();
+}
 
+class _PlayerDetailScreenState extends State<PlayerDetailScreen> {
+  late Future<UserProfile> _future;
+  final _api = ProfileApi();
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _api.fetch(widget.playerId);
+  }
+
+  void _retry() {
+    setState(() => _future = _api.fetch(widget.playerId));
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgScaffold,
-      body: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          // Cover
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  p.color.withValues(alpha: 0.95),
-                  p.color.withValues(alpha: 0.55),
-                  AppColors.bgScaffold,
-                ],
-                stops: const [0.0, 0.55, 1.0],
-              ),
-            ),
-            padding: EdgeInsets.fromLTRB(
-              16,
-              MediaQuery.of(context).padding.top + 12,
-              16,
-              16,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => context.pop(),
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.arrow_back,
-                            color: Colors.white, size: 18),
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '#$rank du club',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(width: 36),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Container(
-                      width: 82,
-                      height: 82,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: p.color,
-                        border: Border.all(color: Colors.white, width: 3),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.25),
-                            blurRadius: 14,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        p.initials,
-                        style: AppTextStyles.numeric(size: 32, color: Colors.white),
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(p.name, style: AppTextStyles.h2.copyWith(fontSize: 24, color: Colors.white)),
-                            const SizedBox(height: 2),
-                            Text(
-                              '${p.category.long} · depuis ${p.joined}',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.8),
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // Challenge CTA
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
-            child: PrimaryButton(
-              label: 'Défier ${p.firstName}',
-              icon: Icons.sports_kabaddi_rounded,
-              onPressed: () =>
-                  context.push('/score/new?opponent=${p.id}'),
-            ),
-          ),
-
-          // Score + stats
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.bgCard,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'SCORE',
-                              style: AppTextStyles.label,
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  '${p.performance}',
-                                  style: AppTextStyles.numeric(
-                                      size: 36, letterSpacing: -1),
-                                ),
-                                const SizedBox(width: 10),
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 6),
-                                  child: TrendChip(value: p.perfGain),
-                                ),
-                              ],
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Text(
-                                'ELO ${p.elo}',
-                                style: AppTextStyles.numeric(
-                                  size: 11,
-                                  weight: FontWeight.w500,
-                                  color: AppColors.textFaint,
-                                  letterSpacing: 0,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (p.jerseys.isNotEmpty)
-                        JerseyBadge(kind: p.jerseys.first, size: 46),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.only(top: 14),
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        top: BorderSide(
-                            color: AppColors.dividerStrong, width: 0.5),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _MiniCell(
-                            big: '${p.winsMonth}',
-                            small: '/${p.matchesMonth}',
-                            label: 'Ce mois',
-                          ),
-                        ),
-                        Expanded(
-                          child: _MiniCell(
-                            big: '${(p.winRate * 100).round()}%',
-                            label: 'Victoires',
-                          ),
-                        ),
-                        Expanded(
-                          child: _MiniCell(
-                            big: '${p.streak}',
-                            label: 'Série',
-                            color: AppColors.accentOrange,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Head-to-head
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: Text('Face à face', style: AppTextStyles.h4),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.bgCard,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Text(
-                              'TOI',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textMuted,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '$myWins',
-                              style: AppTextStyles.numeric(
-                                size: 32,
-                                color: myWins >= theirWins
-                                    ? AppColors.accentGreen
-                                    : AppColors.textPrimary,
-                                letterSpacing: -0.8,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Text('—',
-                          style: AppTextStyles.numeric(
-                              size: 14, color: AppColors.textMuted)),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Text(
-                              p.firstName.toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textMuted,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '$theirWins',
-                              style: AppTextStyles.numeric(
-                                size: 32,
-                                color: theirWins > myWins
-                                    ? AppColors.accentRed
-                                    : AppColors.textPrimary,
-                                letterSpacing: -0.8,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (h2h.isNotEmpty) ...[
-                    const SizedBox(height: 14),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        for (final m in h2h.take(5)) ...[
-                          Container(
-                            width: 26,
-                            height: 26,
-                            margin: const EdgeInsets.symmetric(horizontal: 3),
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: m.winnerId == me.id
-                                  ? AppColors.accentGreen
-                                  : AppColors.accentRed,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              m.winnerId == me.id ? 'V' : 'D',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-
-          // Last matches of player
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: Text('Ses derniers matchs', style: AppTextStyles.h4),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.bgCard,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              clipBehavior: Clip.hardEdge,
-              child: Column(
-                children: [
-                  for (final m in repo.matchesOf(p.id).take(4)) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 12),
-                      decoration: const BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                              color: AppColors.divider, width: 0.5),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 3,
-                            height: 28,
-                            decoration: BoxDecoration(
-                              color: m.winnerId == p.id
-                                  ? AppColors.accentGreen
-                                  : AppColors.accentRed,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: RichText(
-                              text: TextSpan(
-                                style: const TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 14,
-                                ),
-                                children: [
-                                  const TextSpan(text: 'vs '),
-                                  TextSpan(
-                                    text: repo
-                                        .byId(m.opponentOf(p.id))
-                                        .name,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w700),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Text(
-                            m.date,
-                            style: AppTextStyles.numeric(
-                              size: 12,
-                              weight: FontWeight.w500,
-                              color: AppColors.textMuted,
-                              letterSpacing: 0,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ],
+      body: FutureBuilder<UserProfile>(
+        future: _future,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return _PlayerDetailLoading(playerId: widget.playerId);
+          }
+          if (snapshot.hasError) {
+            final err = snapshot.error;
+            final message = err is ApiException
+                ? err.message
+                : 'Impossible de charger ce joueur.';
+            return _PlayerDetailError(message: message, onRetry: _retry);
+          }
+          return _PlayerDetailBody(
+            playerId: widget.playerId,
+            profile: snapshot.data!,
+          );
+        },
       ),
     );
   }
 }
+
+// ── Body ────────────────────────────────────────────────────────────────────
+
+class _PlayerDetailBody extends StatelessWidget {
+  final String playerId;
+  final UserProfile profile;
+
+  const _PlayerDetailBody({
+    required this.playerId,
+    required this.profile,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final user = profile.user;
+    final color = avatarColorFor(user.id);
+    final category = PlayerCategoryX.fromGender(user.gender);
+    final firstJersey = profile.jerseys.isNotEmpty
+        ? JerseyKindX.fromSlug(profile.jerseys.first)
+        : null;
+    final myUid = FirebaseAuth.instance.currentUser?.uid;
+    final isSelf = myUid == playerId;
+    final winRate = profile.statsMonth.matches == 0
+        ? 0.0
+        : profile.statsMonth.wins / profile.statsMonth.matches;
+
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        // Cover
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                color.withValues(alpha: 0.95),
+                color.withValues(alpha: 0.55),
+                AppColors.bgScaffold,
+              ],
+              stops: const [0.0, 0.55, 1.0],
+            ),
+          ),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            MediaQuery.of(context).padding.top + 12,
+            16,
+            16,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.arrow_back,
+                          color: Colors.white, size: 18),
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '#${profile.performance.rank} du club',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(width: 36),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    width: 82,
+                    height: 82,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: color,
+                      border: Border.all(color: Colors.white, width: 3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.25),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      user.initials,
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user.fullName,
+                            style: AppTextStyles.h2.copyWith(
+                              fontSize: 24,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            user.joinedYear > 0
+                                ? '${category.long} · depuis ${user.joinedYear}'
+                                : category.long,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.8),
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // Challenge CTA — hidden when the user is viewing themselves
+        if (!isSelf)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+            child: PrimaryButton(
+              label: 'Défier ${user.firstName}',
+              icon: Icons.sports_kabaddi_rounded,
+              onPressed: () =>
+                  context.push('/score/new?opponent=$playerId'),
+            ),
+          ),
+
+        // Score + stats
+        Padding(
+          padding: EdgeInsets.fromLTRB(16, isSelf ? 14 : 8, 16, 0),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.bgCard,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('SCORE', style: AppTextStyles.label),
+                          const SizedBox(height: 4),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '${profile.performance.score}',
+                                style: AppTextStyles.numeric(
+                                    size: 36, letterSpacing: -1),
+                              ),
+                              const SizedBox(width: 10),
+                              if (profile.performance.gain7d > 0)
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.only(bottom: 6),
+                                  child: TrendChip(
+                                      value: profile.performance.gain7d),
+                                ),
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              'ELO ${profile.elo}',
+                              style: AppTextStyles.numeric(
+                                size: 11,
+                                weight: FontWeight.w500,
+                                color: AppColors.textFaint,
+                                letterSpacing: 0,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (firstJersey != null)
+                      JerseyBadge(kind: firstJersey, size: 46),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.only(top: 14),
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      top: BorderSide(
+                          color: AppColors.dividerStrong, width: 0.5),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _MiniCell(
+                          big: '${profile.statsMonth.wins}',
+                          small: '/${profile.statsMonth.matches}',
+                          label: 'Ce mois',
+                        ),
+                      ),
+                      Expanded(
+                        child: _MiniCell(
+                          big: '${(winRate * 100).round()}%',
+                          label: 'Victoires',
+                        ),
+                      ),
+                      Expanded(
+                        child: _MiniCell(
+                          big: '${profile.statsMonth.streak}',
+                          label: 'Série',
+                          color: AppColors.accentOrange,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+}
+
+// ── Loading & Error ─────────────────────────────────────────────────────────
+
+class _PlayerDetailLoading extends StatelessWidget {
+  final String playerId;
+  const _PlayerDetailLoading({required this.playerId});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = avatarColorFor(playerId);
+    return Stack(
+      children: [
+        Container(
+          height: 220,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                color.withValues(alpha: 0.95),
+                color.withValues(alpha: 0.55),
+                AppColors.bgScaffold,
+              ],
+              stops: const [0.0, 0.55, 1.0],
+            ),
+          ),
+        ),
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: GestureDetector(
+              onTap: () => context.pop(),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: const Icon(Icons.arrow_back,
+                    color: Colors.white, size: 18),
+              ),
+            ),
+          ),
+        ),
+        const Center(child: CircularProgressIndicator()),
+      ],
+    );
+  }
+}
+
+class _PlayerDetailError extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+  const _PlayerDetailError({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GestureDetector(
+              onTap: () => context.pop(),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.bgCard,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: const Icon(Icons.arrow_back,
+                    color: AppColors.textPrimary, size: 18),
+              ),
+            ),
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.bodyMedium
+                          .copyWith(color: AppColors.textMuted),
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: onRetry,
+                      child: const Text('Réessayer'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Stats mini cell ─────────────────────────────────────────────────────────
 
 class _MiniCell extends StatelessWidget {
   final String big;
@@ -449,9 +449,11 @@ class _MiniCell extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(big,
-                style: AppTextStyles.numeric(
-                    size: 22, color: color, letterSpacing: -0.5)),
+            Text(
+              big,
+              style: AppTextStyles.numeric(
+                  size: 22, color: color, letterSpacing: -0.5),
+            ),
             if (small != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 3),

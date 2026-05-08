@@ -2,7 +2,7 @@
 -include .env
 export
 
-.PHONY: run build migrate-up migrate-down sqlc swagger tidy seed-news
+.PHONY: run build migrate-up migrate-down sqlc swagger tidy seed seed-players seed-matches seed-news
 
 # Start the server in development mode
 run:
@@ -35,3 +35,15 @@ tidy:
 # Insert demo news rows into the local DB (idempotent).
 seed-news:
 	psql "$(DATABASE_URL)" -f db/seeds/demo_news.sql
+
+# Insert ~16 fake players (idempotent).
+seed-players:
+	psql "$(DATABASE_URL)" -f db/seeds/demo_players.sql
+
+# Insert ~40 fake SINGLES matches + elo_history (idempotent).
+# Depends on seed-players: matches FK back to fake_player_001..016.
+seed-matches: seed-players
+	psql "$(DATABASE_URL)" -f db/seeds/demo_matches.sql
+
+# Run all seeds in dependency order.
+seed: seed-players seed-matches seed-news
