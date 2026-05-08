@@ -2,95 +2,126 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:bap_pulse/core/theme/avatar_color.dart';
 import 'package:bap_pulse/core/theme/colors.dart';
 import 'package:bap_pulse/core/theme/text_styles.dart';
 import 'package:bap_pulse/core/widgets/jersey_badge.dart';
 import 'package:bap_pulse/core/widgets/trend_chip.dart';
 import 'package:bap_pulse/auth/bloc/auth_bloc.dart';
+import 'package:bap_pulse/profile/bloc/profile_bloc.dart';
+import 'package:bap_pulse/profile/data/profile_models.dart';
 import 'package:bap_pulse/profile/presentation/widgets/elo_sparkline.dart';
-import 'package:bap_pulse/shared/data/mock_repository.dart';
 import 'package:bap_pulse/shared/models/jersey.dart';
 import 'package:bap_pulse/shared/models/player.dart';
 
-/// Profile — Variant A.
-/// Stats-heavy: cover avec gradient + avatar bordé blanc, gros card Score
-/// avec sparkline, grille 2×2 de stats colorées, maillots, face-à-face,
-/// réglages.
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final repo = MockRepository.instance;
-    final me = repo.currentUser;
-    final rank = repo.perfRankOf(me.id);
-    final history = repo.perfHistory(me.id);
-
     return Scaffold(
       backgroundColor: AppColors.bgScaffold,
-      body: ListView(
+      body: BlocBuilder<ProfileBloc, ProfileState>(
+        builder: (context, state) {
+          return switch (state) {
+            ProfileInitial() || ProfileLoading() => const _ProfileLoading(),
+            ProfileError(:final message) => _ProfileError(message: message),
+            ProfileLoaded(:final profile) => _ProfileBody(profile: profile),
+          };
+        },
+      ),
+    );
+  }
+}
+
+class _ProfileLoading extends StatelessWidget {
+  const _ProfileLoading();
+  @override
+  Widget build(BuildContext context) =>
+      const Center(child: CircularProgressIndicator());
+}
+
+class _ProfileError extends StatelessWidget {
+  final String message;
+  const _ProfileError({required this.message});
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(message,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodyMedium
+                    .copyWith(color: AppColors.textMuted)),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: () => context
+                  .read<ProfileBloc>()
+                  .add(const ProfileRefreshRequested()),
+              child: const Text('Réessayer'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileBody extends StatelessWidget {
+  final UserProfile profile;
+  const _ProfileBody({required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    final history =
+        profile.perfHistory.map((p) => p.value).toList(growable: false);
+    return RefreshIndicator(
+      onRefresh: () async => context
+          .read<ProfileBloc>()
+          .add(const ProfileRefreshRequested()),
+      child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          _Cover(me: me),
-          // Big Score card overlapping the cover bottom
+          _Cover(profile: profile),
           Transform.translate(
             offset: const Offset(0, -4),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: _ScoreCard(
-                score: me.performance,
-                gain: me.perfGain,
-                elo: me.elo,
-                rank: rank,
+                score: profile.performance.score,
+                gain: profile.performance.gain7d,
+                elo: profile.elo,
+                rank: profile.performance.rank,
                 history: history,
               ),
             ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: _StatGrid(me: me),
+            child: _StatGrid(stats: profile.statsMonth),
           ),
-          // Maillots
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: Text('Mes maillots', style: AppTextStyles.h4),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-            child: _MyJerseysCard(me: me),
+            child: _MyJerseysCard(profile: profile),
           ),
-          // Face à face
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: Text('Face à face', style: AppTextStyles.h4),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _NemesisCard(
-                    title: 'Bête noire',
-                    color: AppColors.accentRed,
-                    player: repo.byId('u3'),
-                    record: '0V / 4D',
-                    onTap: () => context.push('/club/player/u3'),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _NemesisCard(
-                    title: 'Victime favorite',
-                    color: AppColors.accentGreen,
-                    player: repo.byId('u5'),
-                    record: '5V / 0D',
-                    onTap: () => context.push('/club/player/u5'),
-                  ),
-                ),
-              ],
+          if (profile.headToHead.nemesis != null ||
+              profile.headToHead.favoriteVictim != null) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: Text('Face à face', style: AppTextStyles.h4),
             ),
-          ),
-          // Settings
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+              child: _HeadToHeadRow(headToHead: profile.headToHead),
+            ),
+          ],
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
             child: _SettingsList(),
@@ -104,12 +135,19 @@ class ProfileScreen extends StatelessWidget {
 // ─── Cover ────────────────────────────────────────────────────────────────
 
 class _Cover extends StatelessWidget {
-  final Player me;
-  const _Cover({required this.me});
+  final UserProfile profile;
+  const _Cover({required this.profile});
 
   @override
   Widget build(BuildContext context) {
     final topInset = MediaQuery.of(context).padding.top;
+    final user = profile.user;
+    final category = PlayerCategoryX.fromGender(user.gender);
+    final color = avatarColorFor(user.id);
+    final firstJersey = profile.jerseys.isNotEmpty
+        ? JerseyKindX.fromSlug(profile.jerseys.first)
+        : null;
+
     return Container(
       padding: EdgeInsets.only(top: topInset + 16, bottom: 22),
       decoration: BoxDecoration(
@@ -180,7 +218,7 @@ class _Cover extends StatelessWidget {
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: me.color,
+                            color: color,
                             border: Border.all(color: Colors.white, width: 3),
                             boxShadow: [
                               BoxShadow(
@@ -191,19 +229,19 @@ class _Cover extends StatelessWidget {
                             ],
                           ),
                           child: Text(
-                            me.initials,
+                            user.initials,
                             style: AppTextStyles.numeric(
                               size: 34,
                               color: Colors.white,
                             ),
                           ),
                         ),
-                        if (me.jerseys.isNotEmpty)
+                        if (firstJersey != null)
                           Positioned(
                             right: -4,
                             bottom: -4,
                             child: JerseyBadge(
-                              kind: me.jerseys.first,
+                              kind: firstJersey,
                               size: 34,
                               variant: JerseyVariant.disc,
                             ),
@@ -218,7 +256,7 @@ class _Cover extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              me.name,
+                              user.fullName,
                               style: AppTextStyles.h2.copyWith(
                                 fontSize: 24,
                                 color: Colors.white,
@@ -226,7 +264,7 @@ class _Cover extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
-                              '${me.category.long} · BAP · depuis ${me.joined}',
+                              _subtitle(category, user.joinedYear),
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 13,
@@ -244,6 +282,11 @@ class _Cover extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _subtitle(PlayerCategory category, int joinedYear) {
+    final base = '${category.long} · BAP';
+    return joinedYear > 0 ? '$base · depuis $joinedYear' : base;
   }
 }
 
@@ -378,7 +421,7 @@ class _ScoreCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '1er avril',
+                  _firstOfMonthLabel(),
                   style: AppTextStyles.numeric(
                     size: 11,
                     weight: FontWeight.w500,
@@ -402,24 +445,36 @@ class _ScoreCard extends StatelessWidget {
       ),
     );
   }
+
+  static const _monthsFr = [
+    'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
+  ];
+
+  String _firstOfMonthLabel() {
+    final now = DateTime.now();
+    return '1er ${_monthsFr[now.month - 1]}';
+  }
 }
 
 // ─── Stat grid 2×2 ────────────────────────────────────────────────────────
 
 class _StatGrid extends StatelessWidget {
-  final Player me;
-  const _StatGrid({required this.me});
+  final ProfileStatsMonth stats;
+  const _StatGrid({required this.stats});
 
   @override
   Widget build(BuildContext context) {
-    final winRate = (me.winRate * 100).round();
+    final winRate = stats.matches == 0
+        ? 0
+        : ((stats.wins / stats.matches) * 100).round();
     return Column(
       children: [
         Row(
           children: [
             Expanded(
               child: _MiniStat(
-                big: '${me.winsMonth}/${me.matchesMonth}',
+                big: '${stats.wins}/${stats.matches}',
                 label: 'Matchs ce mois',
                 accent: AppColors.primary,
               ),
@@ -439,7 +494,7 @@ class _StatGrid extends StatelessWidget {
           children: [
             Expanded(
               child: _MiniStat(
-                big: '${me.winsVsBetter}',
+                big: '${stats.upsetWins}',
                 label: 'Victoires vs +fort',
                 accent: AppColors.accentRed,
               ),
@@ -447,7 +502,7 @@ class _StatGrid extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: _MiniStat(
-                big: '${me.streak}',
+                big: '${stats.streak}',
                 label: 'Série en cours',
                 accent: AppColors.accentOrange,
               ),
@@ -507,14 +562,17 @@ class _MiniStat extends StatelessWidget {
 // ─── My jerseys card ──────────────────────────────────────────────────────
 
 class _MyJerseysCard extends StatelessWidget {
-  final Player me;
-  const _MyJerseysCard({required this.me});
+  final UserProfile profile;
+  const _MyJerseysCard({required this.profile});
 
   @override
   Widget build(BuildContext context) {
-    final repo = MockRepository.instance;
+    final kinds = profile.jerseys
+        .map(JerseyKindX.fromSlug)
+        .whereType<JerseyKind>()
+        .toList(growable: false);
 
-    if (me.jerseys.isEmpty) {
+    if (kinds.isEmpty) {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
         decoration: BoxDecoration(
@@ -530,8 +588,10 @@ class _MyJerseysCard extends StatelessWidget {
       );
     }
 
-    final yellow = repo.jersey(JerseyKind.yellow);
-    final pointsToYellow = yellow.value.toInt() - me.performance;
+    final pointsToYellow =
+        profile.yellowJerseyThreshold - profile.performance.score;
+    final hasYellow = kinds.contains(JerseyKind.yellow);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -540,7 +600,7 @@ class _MyJerseysCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          for (final k in me.jerseys)
+          for (final k in kinds)
             Padding(
               padding: const EdgeInsets.only(right: 12),
               child: Column(
@@ -548,7 +608,7 @@ class _MyJerseysCard extends StatelessWidget {
                   JerseyBadge(kind: k, size: 56),
                   const SizedBox(height: 6),
                   Text(
-                    repo.jersey(k).name.replaceFirst('Maillot ', ''),
+                    k.shortLabel,
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -567,33 +627,33 @@ class _MyJerseysCard extends StatelessWidget {
                   left: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
                 ),
               ),
-              child: RichText(
-                text: TextSpan(
-                  style: AppTextStyles.bodySmall.copyWith(
-                    fontSize: 12,
-                    height: 1.5,
-                  ),
-                  children: [
-                    const TextSpan(text: 'Porté depuis '),
-                    const TextSpan(
-                      text: '4 jours',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
+              child: hasYellow
+                  ? Text(
+                      'Tu portes le maillot jaune. Continue à creuser l\'écart 💛',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        fontSize: 12,
+                        height: 1.5,
+                      ),
+                    )
+                  : RichText(
+                      text: TextSpan(
+                        style: AppTextStyles.bodySmall.copyWith(
+                          fontSize: 12,
+                          height: 1.5,
+                        ),
+                        children: [
+                          const TextSpan(text: 'Encore '),
+                          TextSpan(
+                            text: '$pointsToYellow pts',
+                            style: const TextStyle(
+                              color: AppColors.accentYellow,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const TextSpan(text: ' pour le maillot jaune.'),
+                        ],
                       ),
                     ),
-                    const TextSpan(text: '. Encore '),
-                    TextSpan(
-                      text: '$pointsToYellow pts',
-                      style: const TextStyle(
-                        color: AppColors.accentYellow,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const TextSpan(text: ' pour le maillot jaune.'),
-                  ],
-                ),
-              ),
             ),
           ),
         ],
@@ -602,30 +662,57 @@ class _MyJerseysCard extends StatelessWidget {
   }
 }
 
-// ─── Nemesis card ─────────────────────────────────────────────────────────
+// ─── Head-to-head row ─────────────────────────────────────────────────────
+
+class _HeadToHeadRow extends StatelessWidget {
+  final ProfileHeadToHead headToHead;
+  const _HeadToHeadRow({required this.headToHead});
+
+  @override
+  Widget build(BuildContext context) {
+    final cards = <Widget>[];
+    if (headToHead.nemesis != null) {
+      cards.add(Expanded(
+        child: _NemesisCard(
+          title: 'Bête noire',
+          color: AppColors.accentRed,
+          opponent: headToHead.nemesis!,
+        ),
+      ));
+    }
+    if (headToHead.favoriteVictim != null) {
+      if (cards.isNotEmpty) cards.add(const SizedBox(width: 10));
+      cards.add(Expanded(
+        child: _NemesisCard(
+          title: 'Victime favorite',
+          color: AppColors.accentGreen,
+          opponent: headToHead.favoriteVictim!,
+        ),
+      ));
+    }
+    return Row(children: cards);
+  }
+}
 
 class _NemesisCard extends StatelessWidget {
   final String title;
   final Color color;
-  final Player player;
-  final String record;
-  final VoidCallback onTap;
+  final ProfileOpponent opponent;
 
   const _NemesisCard({
     required this.title,
     required this.color,
-    required this.player,
-    required this.record,
-    required this.onTap,
+    required this.opponent,
   });
 
   @override
   Widget build(BuildContext context) {
+    final user = opponent.user;
     return Material(
       color: AppColors.bgCard,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
-        onTap: onTap,
+        onTap: () => context.push('/club/player/${user.id}'),
         borderRadius: BorderRadius.circular(14),
         child: Padding(
           padding: const EdgeInsets.all(14),
@@ -651,10 +738,10 @@ class _NemesisCard extends StatelessWidget {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: player.color,
+                      color: avatarColorFor(user.id),
                     ),
                     child: Text(
-                      player.initials,
+                      user.initials,
                       style: AppTextStyles.numeric(
                         size: 13,
                         color: Colors.white,
@@ -667,7 +754,7 @@ class _NemesisCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          player.name,
+                          user.fullName,
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -676,7 +763,7 @@ class _NemesisCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
-                          record,
+                          '${opponent.wins}V / ${opponent.losses}D',
                           style: AppTextStyles.numeric(
                             size: 12,
                             weight: FontWeight.w500,

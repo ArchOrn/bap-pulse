@@ -180,3 +180,27 @@ func parseUUID(s string) (pgtype.UUID, error) {
 	err := id.Scan(s)
 	return id, err
 }
+
+// GetUserProfile godoc
+//
+//	@Summary		Aggregated profile payload for the mobile profile screen
+//	@Description	Singles-only for the MVP. Returns ELO, monthly perf score + rank, 7-day perf gain, monthly stats (matches/wins/losses/upsets/streak), held jerseys, yellow-jersey threshold, daily perf-history sparkline, and head-to-head (nemesis + favorite victim).
+//	@Tags			users
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			id	path		string	true	"User ID (Firebase UID)"
+//	@Success		200	{object}	services.UserProfile
+//	@Failure		404	{object}	map[string]string
+//	@Failure		500	{object}	map[string]string
+//	@Router			/users/{id}/profile [get]
+func GetUserProfile(pool *pgxpool.Pool) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		q := db.New(pool)
+		profile, err := services.GetUserProfile(c.Context(), q, c.Params("id"), db.MatchTypeSINGLES)
+		if err != nil {
+			// GetUserByID returns an error when the row is missing; surface as 404.
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
+		}
+		return c.JSON(profile)
+	}
+}

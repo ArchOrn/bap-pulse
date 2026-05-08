@@ -67,6 +67,58 @@ func (q *Queries) CreateEloHistory(ctx context.Context, arg CreateEloHistoryPara
 	return i, err
 }
 
+const getDailyPerformancePointsByPlayer = `-- name: GetDailyPerformancePointsByPlayer :many
+SELECT date_trunc('day', eh.created_at)::DATE AS day,
+       SUM(eh.performance_points)::INT AS points
+FROM elo_history eh
+JOIN matches m ON m.id = eh.match_id
+WHERE eh.player_id = $1
+  AND m.match_type = $2
+  AND eh.created_at >= $3
+  AND eh.created_at <  $4
+GROUP BY day
+ORDER BY day
+`
+
+type GetDailyPerformancePointsByPlayerParams struct {
+	PlayerID    string             `json:"player_id"`
+	MatchType   MatchType          `json:"match_type"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	CreatedAt_2 pgtype.Timestamptz `json:"created_at_2"`
+}
+
+type GetDailyPerformancePointsByPlayerRow struct {
+	Day    pgtype.Date `json:"day"`
+	Points int32       `json:"points"`
+}
+
+// Daily perf points awarded to ONE player in [from, to). Empty days are absent;
+// callers fill gaps and cumulate as needed.
+func (q *Queries) GetDailyPerformancePointsByPlayer(ctx context.Context, arg GetDailyPerformancePointsByPlayerParams) ([]GetDailyPerformancePointsByPlayerRow, error) {
+	rows, err := q.db.Query(ctx, getDailyPerformancePointsByPlayer,
+		arg.PlayerID,
+		arg.MatchType,
+		arg.CreatedAt,
+		arg.CreatedAt_2,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetDailyPerformancePointsByPlayerRow{}
+	for rows.Next() {
+		var i GetDailyPerformancePointsByPlayerRow
+		if err := rows.Scan(&i.Day, &i.Points); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getMatchEloBefore = `-- name: GetMatchEloBefore :many
 SELECT player_id, elo_before
 FROM elo_history
@@ -206,4 +258,34 @@ func (q *Queries) SumPerformancePointsByPlayer(ctx context.Context, arg SumPerfo
 		return nil, err
 	}
 	return items, nil
+}
+
+const sumPerformancePointsByPlayerInRange = `-- name: SumPerformancePointsByPlayerInRange :one
+SELECT COALESCE(SUM(eh.performance_points), 0)::INT AS points
+FROM elo_history eh
+JOIN matches m ON m.id = eh.match_id
+WHERE eh.player_id = $1
+  AND m.match_type = $2
+  AND eh.created_at >= $3
+  AND eh.created_at <  $4
+`
+
+type SumPerformancePointsByPlayerInRangeParams struct {
+	PlayerID    string             `json:"player_id"`
+	MatchType   MatchType          `json:"match_type"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	CreatedAt_2 pgtype.Timestamptz `json:"created_at_2"`
+}
+
+// Sum of perf points awarded to ONE player in [from, to) for the given tableau.
+func (q *Queries) SumPerformancePointsByPlayerInRange(ctx context.Context, arg SumPerformancePointsByPlayerInRangeParams) (int32, error) {
+	row := q.db.QueryRow(ctx, sumPerformancePointsByPlayerInRange,
+		arg.PlayerID,
+		arg.MatchType,
+		arg.CreatedAt,
+		arg.CreatedAt_2,
+	)
+	var points int32
+	err := row.Scan(&points)
+	return points, err
 }

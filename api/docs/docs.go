@@ -1155,6 +1155,58 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/users/{id}/profile": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Singles-only for the MVP. Returns ELO, monthly perf score + rank, 7-day perf gain, monthly stats (matches/wins/losses/upsets/streak), held jerseys, yellow-jersey threshold, daily perf-history sparkline, and head-to-head (nemesis + favorite victim).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Aggregated profile payload for the mobile profile screen",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID (Firebase UID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/services.UserProfile"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1550,6 +1602,134 @@ const docTemplate = `{
                 },
                 "user": {
                     "$ref": "#/definitions/db.User"
+                }
+            }
+        },
+        "services.ProfileHeadToHead": {
+            "type": "object",
+            "properties": {
+                "favorite_victim": {
+                    "$ref": "#/definitions/services.ProfileOpponent"
+                },
+                "nemesis": {
+                    "$ref": "#/definitions/services.ProfileOpponent"
+                }
+            }
+        },
+        "services.ProfileHistoryPoint": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "integer"
+                }
+            }
+        },
+        "services.ProfileOpponent": {
+            "type": "object",
+            "properties": {
+                "losses": {
+                    "type": "integer"
+                },
+                "user": {
+                    "$ref": "#/definitions/services.ProfileUser"
+                },
+                "wins": {
+                    "type": "integer"
+                }
+            }
+        },
+        "services.ProfilePerformance": {
+            "type": "object",
+            "properties": {
+                "gain_7d": {
+                    "type": "integer"
+                },
+                "rank": {
+                    "type": "integer"
+                },
+                "score": {
+                    "type": "integer"
+                }
+            }
+        },
+        "services.ProfileStatsMonth": {
+            "type": "object",
+            "properties": {
+                "losses": {
+                    "type": "integer"
+                },
+                "matches": {
+                    "type": "integer"
+                },
+                "streak": {
+                    "type": "integer"
+                },
+                "upset_wins": {
+                    "type": "integer"
+                },
+                "wins": {
+                    "type": "integer"
+                }
+            }
+        },
+        "services.ProfileUser": {
+            "type": "object",
+            "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "joined_year": {
+                    "type": "integer"
+                },
+                "last_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "services.UserProfile": {
+            "type": "object",
+            "properties": {
+                "elo": {
+                    "type": "integer"
+                },
+                "head_to_head": {
+                    "$ref": "#/definitions/services.ProfileHeadToHead"
+                },
+                "jerseys": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "perf_history": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.ProfileHistoryPoint"
+                    }
+                },
+                "performance": {
+                    "$ref": "#/definitions/services.ProfilePerformance"
+                },
+                "stats_month": {
+                    "$ref": "#/definitions/services.ProfileStatsMonth"
+                },
+                "tableau": {
+                    "$ref": "#/definitions/db.MatchType"
+                },
+                "user": {
+                    "$ref": "#/definitions/services.ProfileUser"
+                },
+                "yellow_jersey_threshold": {
+                    "type": "integer"
                 }
             }
         }

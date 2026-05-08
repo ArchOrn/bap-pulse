@@ -143,6 +143,7 @@ func main() {
 	// --- Users ---
 	users := app.Group("/users")
 	users.Get("/", handlers.GetUsers(pool))
+	users.Get("/:id/profile", handlers.GetUserProfile(pool))
 	users.Get("/:id", handlers.GetUser(pool))
 	users.Put("/:id", handlers.UpdateUser(pool))
 	users.Delete("/:id", handlers.DeleteUser(pool))

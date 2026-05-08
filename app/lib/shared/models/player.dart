@@ -17,6 +17,11 @@ extension PlayerCategoryX on PlayerCategory {
         PlayerCategory.sh => 'Simple homme',
         PlayerCategory.sd => 'Simple dame',
       };
+
+  /// Maps the API's nullable gender ("MALE" / "FEMALE" / null) to a singles
+  /// category. Defaults to SH when unknown — matches the mock fallback.
+  static PlayerCategory fromGender(String? gender) =>
+      gender == 'FEMALE' ? PlayerCategory.sd : PlayerCategory.sh;
 }
 
 class Player extends Equatable {

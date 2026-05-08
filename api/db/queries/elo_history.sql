@@ -35,3 +35,27 @@ WHERE eh.player_id = $1
 SELECT player_id, elo_before
 FROM elo_history
 WHERE match_id = $1;
+
+-- name: SumPerformancePointsByPlayerInRange :one
+-- Sum of perf points awarded to ONE player in [from, to) for the given tableau.
+SELECT COALESCE(SUM(eh.performance_points), 0)::INT AS points
+FROM elo_history eh
+JOIN matches m ON m.id = eh.match_id
+WHERE eh.player_id = $1
+  AND m.match_type = $2
+  AND eh.created_at >= $3
+  AND eh.created_at <  $4;
+
+-- name: GetDailyPerformancePointsByPlayer :many
+-- Daily perf points awarded to ONE player in [from, to). Empty days are absent;
+-- callers fill gaps and cumulate as needed.
+SELECT date_trunc('day', eh.created_at)::DATE AS day,
+       SUM(eh.performance_points)::INT AS points
+FROM elo_history eh
+JOIN matches m ON m.id = eh.match_id
+WHERE eh.player_id = $1
+  AND m.match_type = $2
+  AND eh.created_at >= $3
+  AND eh.created_at <  $4
+GROUP BY day
+ORDER BY day;

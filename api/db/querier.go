@@ -19,6 +19,9 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteNews(ctx context.Context, id pgtype.UUID) error
 	DeleteUser(ctx context.Context, id string) error
+	// Daily perf points awarded to ONE player in [from, to). Empty days are absent;
+	// callers fill gaps and cumulate as needed.
+	GetDailyPerformancePointsByPlayer(ctx context.Context, arg GetDailyPerformancePointsByPlayerParams) ([]GetDailyPerformancePointsByPlayerRow, error)
 	GetMatchByID(ctx context.Context, id pgtype.UUID) (Match, error)
 	// For a given match, returns each player's ELO BEFORE the match.
 	// Used to compute giant-killer wins (compare opponent ELO at match time).
@@ -35,6 +38,8 @@ type Querier interface {
 	ListNews(ctx context.Context, arg ListNewsParams) ([]News, error)
 	ListUsers(ctx context.Context) ([]User, error)
 	SumPerformancePointsByPlayer(ctx context.Context, arg SumPerformancePointsByPlayerParams) ([]SumPerformancePointsByPlayerRow, error)
+	// Sum of perf points awarded to ONE player in [from, to) for the given tableau.
+	SumPerformancePointsByPlayerInRange(ctx context.Context, arg SumPerformancePointsByPlayerInRangeParams) (int32, error)
 	UpdateNews(ctx context.Context, arg UpdateNewsParams) (News, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 	UpdateUserEloDoubles(ctx context.Context, arg UpdateUserEloDoublesParams) (User, error)

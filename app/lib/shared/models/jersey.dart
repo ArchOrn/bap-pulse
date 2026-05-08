@@ -8,6 +8,27 @@ enum JerseyKind {
   fight,  // maillot du combatif — infatigable
 }
 
+extension JerseyKindX on JerseyKind {
+  /// Short label suitable for chip-sized UI (under the jersey badge). The full
+  /// name lives in `MockRepository.jersey(kind).name` for the mock mode.
+  String get shortLabel => switch (this) {
+        JerseyKind.yellow => 'Jaune',
+        JerseyKind.polka => 'à Pois',
+        JerseyKind.green => 'Vert',
+        JerseyKind.fight => 'du Combatif',
+      };
+
+  /// Maps the slug returned by the API (`yellow`, `polka`, `fight`, `green`)
+  /// back to a [JerseyKind]. Returns null for unknown slugs.
+  static JerseyKind? fromSlug(String value) => switch (value) {
+        'yellow' => JerseyKind.yellow,
+        'polka' => JerseyKind.polka,
+        'green' => JerseyKind.green,
+        'fight' => JerseyKind.fight,
+        _ => null,
+      };
+}
+
 class Jersey extends Equatable {
   final JerseyKind kind;
   final String name;
