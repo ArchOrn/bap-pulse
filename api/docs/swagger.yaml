@@ -41,6 +41,25 @@ definitions:
     - MatchTypeSINGLES
     - MatchTypeDOUBLES
     - MatchTypeMIXED
+  db.News:
+    properties:
+      body:
+        $ref: '#/definitions/pgtype.Text'
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      created_by:
+        $ref: '#/definitions/pgtype.Text'
+      emoji:
+        type: string
+      id:
+        type: string
+      match_id:
+        type: string
+      source:
+        type: string
+      title:
+        type: string
+    type: object
   db.User:
     properties:
       created_at:
@@ -104,6 +123,16 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/db.User'
+    type: object
+  handlers.newsRequest:
+    properties:
+      body:
+        description: optional
+        type: string
+      emoji:
+        type: string
+      title:
+        type: string
     type: object
   handlers.setRoleRequest:
     properties:
@@ -465,6 +494,200 @@ paths:
       summary: Get a match
       tags:
       - matches
+  /news:
+    get:
+      description: Latest first. Anyone authenticated can read.
+      parameters:
+      - description: Max items to return (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Pagination offset (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.News'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List news
+      tags:
+      - news
+    post:
+      consumes:
+      - application/json
+      description: Admin only. The created news has source = "MANUAL".
+      parameters:
+      - description: News payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.newsRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/db.News'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a manual news item
+      tags:
+      - news
+  /news/{id}:
+    delete:
+      description: Admin only.
+      parameters:
+      - description: News ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a news item
+      tags:
+      - news
+    get:
+      parameters:
+      - description: News ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.News'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a news item
+      tags:
+      - news
+    put:
+      consumes:
+      - application/json
+      description: Admin only. Updates emoji, title and body. Source and references
+        are immutable.
+      parameters:
+      - description: News ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: News payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.newsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.News'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a news item
+      tags:
+      - news
   /rankings:
     get:
       description: Use /rankings/elo?tableau=... for new clients.

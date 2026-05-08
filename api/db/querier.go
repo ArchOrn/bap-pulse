@@ -15,7 +15,9 @@ type Querier interface {
 	CountMatchesPlayedByPlayerInTableau(ctx context.Context, arg CountMatchesPlayedByPlayerInTableauParams) (int32, error)
 	CreateEloHistory(ctx context.Context, arg CreateEloHistoryParams) (EloHistory, error)
 	CreateMatch(ctx context.Context, arg CreateMatchParams) (Match, error)
+	CreateNews(ctx context.Context, arg CreateNewsParams) (News, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeleteNews(ctx context.Context, id pgtype.UUID) error
 	DeleteUser(ctx context.Context, id string) error
 	GetMatchByID(ctx context.Context, id pgtype.UUID) (Match, error)
 	// For a given match, returns each player's ELO BEFORE the match.
@@ -23,13 +25,17 @@ type Querier interface {
 	GetMatchEloBefore(ctx context.Context, matchID pgtype.UUID) ([]GetMatchEloBeforeRow, error)
 	GetMatchEloHistory(ctx context.Context, matchID pgtype.UUID) ([]EloHistory, error)
 	GetMatchesInPeriod(ctx context.Context, arg GetMatchesInPeriodParams) ([]Match, error)
+	GetNewsByID(ctx context.Context, id pgtype.UUID) (News, error)
 	GetPlayerMatches(ctx context.Context, team1Player1ID string) ([]Match, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id string) (User, error)
 	GetUserEloHistory(ctx context.Context, playerID string) ([]EloHistory, error)
+	ListLatestNews(ctx context.Context, limit int32) ([]News, error)
 	ListMatches(ctx context.Context) ([]Match, error)
+	ListNews(ctx context.Context, arg ListNewsParams) ([]News, error)
 	ListUsers(ctx context.Context) ([]User, error)
 	SumPerformancePointsByPlayer(ctx context.Context, arg SumPerformancePointsByPlayerParams) ([]SumPerformancePointsByPlayerRow, error)
+	UpdateNews(ctx context.Context, arg UpdateNewsParams) (News, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 	UpdateUserEloDoubles(ctx context.Context, arg UpdateUserEloDoublesParams) (User, error)
 	UpdateUserEloMixed(ctx context.Context, arg UpdateUserEloMixedParams) (User, error)

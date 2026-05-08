@@ -167,6 +167,11 @@ const navigationItems = computed(() => [
     icon: 'i-lucide-swords'
   },
   {
+    label: 'News',
+    to: '/news',
+    icon: 'i-lucide-newspaper'
+  },
+  {
     label: 'Classement',
     to: '/rankings',
     icon: 'i-lucide-trophy'

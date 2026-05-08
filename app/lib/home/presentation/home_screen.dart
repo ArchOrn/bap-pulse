@@ -7,10 +7,25 @@ import 'package:bap_pulse/home/presentation/widgets/podium.dart';
 import 'package:bap_pulse/home/presentation/widgets/pulse_feed.dart';
 import 'package:bap_pulse/home/presentation/widgets/quick_actions.dart';
 import 'package:bap_pulse/home/presentation/widgets/rank_header.dart';
+import 'package:bap_pulse/news/data/news.dart';
+import 'package:bap_pulse/news/data/news_repository.dart';
 import 'package:bap_pulse/shared/data/mock_repository.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  late Future<List<News>> _newsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _newsFuture = NewsRepository.instance.latest(limit: 5);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,11 +69,31 @@ class HomeScreen extends StatelessWidget {
           // Pulse feed
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: SectionTitle(title: 'Le pouls du club'),
+            child: SectionTitle(
+              title: 'Le pouls du club',
+              action: 'Voir tout →',
+              onAction: () => context.push('/news'),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-            child: PulseFeed(items: _feed),
+            child: FutureBuilder<List<News>>(
+              future: _newsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const _PulseFeedSkeleton();
+                }
+                if (snapshot.hasError) {
+                  return _PulseFeedError(
+                    onRetry: () => setState(() {
+                      _newsFuture =
+                          NewsRepository.instance.latest(limit: 5);
+                    }),
+                  );
+                }
+                return PulseFeed(items: snapshot.data ?? const []);
+              },
+            ),
           ),
           const SizedBox(height: 80),
         ],
@@ -67,42 +102,55 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-const _bold = TextStyle(fontWeight: FontWeight.w700, color: Colors.white);
+class _PulseFeedSkeleton extends StatelessWidget {
+  const _PulseFeedSkeleton();
 
-final _feed = <PulseFeedItem>[
-  PulseFeedItem(
-    emoji: '🔥',
-    spans: const [
-      TextSpan(text: 'Léa B.', style: _bold),
-      TextSpan(text: ' est en série de 3 victoires — prochain match vendredi.'),
-    ],
-    time: 'il y a 2h',
-  ),
-  PulseFeedItem(
-    emoji: '⚡️',
-    spans: const [
-      TextSpan(text: 'Hugo M.', style: _bold),
-      TextSpan(text: ' a battu '),
-      TextSpan(text: 'Nicolas G.', style: _bold),
-      TextSpan(text: ' 21-18 · 21-19 et reprend le maillot jaune.'),
-    ],
-    time: 'hier',
-  ),
-  PulseFeedItem(
-    emoji: '🎯',
-    spans: const [
-      TextSpan(text: 'Inès F.', style: _bold),
-      TextSpan(text: ' a battu 2 joueurs mieux classés ce week-end.'),
-    ],
-    time: '2 jours',
-  ),
-  PulseFeedItem(
-    emoji: '🏸',
-    spans: const [
-      TextSpan(text: 'Tournoi interne '),
-      TextSpan(text: '« Printemps »', style: _bold),
-      TextSpan(text: ' — inscriptions ouvertes.'),
-    ],
-    time: '3 jours',
-  ),
-];
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (var i = 0; i < 3; i++) ...[
+          Container(
+            height: 64,
+            decoration: BoxDecoration(
+              color: AppColors.bgCard,
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          if (i != 2) const SizedBox(height: 8),
+        ],
+      ],
+    );
+  }
+}
+
+class _PulseFeedError extends StatelessWidget {
+  final VoidCallback onRetry;
+  const _PulseFeedError({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.bgCard,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          const Expanded(
+            child: Text(
+              'Impossible de charger le fil.',
+              style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+            ),
+          ),
+          TextButton(
+            onPressed: onRetry,
+            child: const Text('Réessayer'),
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -2,7 +2,7 @@
 -include .env
 export
 
-.PHONY: run build migrate-up migrate-down sqlc swagger tidy
+.PHONY: run build migrate-up migrate-down sqlc swagger tidy seed-news
 
 # Start the server in development mode
 run:
@@ -31,3 +31,7 @@ swagger:
 # Install dependencies
 tidy:
 	go mod tidy
+
+# Insert demo news rows into the local DB (idempotent).
+seed-news:
+	psql "$(DATABASE_URL)" -f db/seeds/demo_news.sql

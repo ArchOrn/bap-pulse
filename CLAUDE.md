@@ -45,6 +45,8 @@ flutter run -d chrome         # Run web build (mobile-framed on desktop)
 flutter run -d <iPhone-UDID>  # Run on a specific iOS simulator
 ```
 
+To point at a non-local API: `flutter run --dart-define=API_BASE_URL=https://...`.
+
 iOS deployment target is **15.0** (required by current Firebase iOS pods). Bumping it lower will break `pod install`.
 
 ## Architecture

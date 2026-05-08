@@ -51,6 +51,21 @@ export interface Match {
 // Alias to avoid conflicts with firebase/auth's `User` type in plugins/composables.
 export type ApiUser = User
 
+// ---------- News ----------
+
+export type NewsSource = 'MANUAL' | 'AUTO_MATCH'
+
+export interface News {
+  id: string
+  emoji: string
+  title: string // Markdown
+  body: string | null // Markdown (multi-line)
+  source: NewsSource
+  match_id: string | null
+  created_by: string | null
+  created_at: string
+}
+
 // ---------- Rankings ----------
 //
 // All ranking entries share `rank` + `user`. The other fields are specific to

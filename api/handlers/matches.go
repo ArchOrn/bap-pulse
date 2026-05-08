@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -243,6 +244,12 @@ func CreateMatch(pool *pgxpool.Pool) fiber.Handler {
 		eloChanges, err := applyEloChanges(c, q, match.ID, db.MatchType(req.MatchType), req, p1, p2, p3, p4, isDoubles)
 		if err != nil {
 			return err
+		}
+
+		// Auto-generate a news item summarizing the match (best-effort: a failure
+		// here must not break the match-creation flow).
+		if err := services.GenerateMatchNews(c.Context(), q, match); err != nil {
+			log.Printf("news_generator: %v", err)
 		}
 
 		return c.Status(fiber.StatusCreated).JSON(fiber.Map{

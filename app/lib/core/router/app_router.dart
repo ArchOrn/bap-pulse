@@ -15,6 +15,8 @@ import 'package:bap_pulse/home/presentation/home_screen.dart';
 import 'package:bap_pulse/jerseys/presentation/history_screen.dart';
 import 'package:bap_pulse/jerseys/presentation/jerseys_screen.dart';
 import 'package:bap_pulse/leaderboard/presentation/leaderboard_screen.dart';
+import 'package:bap_pulse/news/presentation/news_detail_screen.dart';
+import 'package:bap_pulse/news/presentation/news_list_screen.dart';
 import 'package:bap_pulse/profile/presentation/profile_screen.dart';
 import 'package:bap_pulse/score/presentation/score_entry_screen.dart';
 import 'package:bap_pulse/score/presentation/score_validate_screen.dart';
@@ -109,6 +111,15 @@ GoRouter buildRouter(AuthBloc authBloc) {
         path: '/club/player/:id',
         builder: (_, state) =>
             PlayerDetailScreen(playerId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/news',
+        builder: (_, _) => const NewsListScreen(),
+      ),
+      GoRoute(
+        path: '/news/:id',
+        builder: (_, state) =>
+            NewsDetailScreen(newsId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/score/new',

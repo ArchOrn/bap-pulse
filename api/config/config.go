@@ -26,7 +26,9 @@ func Load() (*Config, error) {
 		DatabaseURL:             os.Getenv("DATABASE_URL"),
 		Port:                    getEnvOrDefault("PORT", "8080"),
 		FirebaseCredentialsFile: os.Getenv("FIREBASE_CREDENTIALS_FILE"),
-		CORSOrigins:             getEnvOrDefault("CORS_ORIGINS", "http://localhost:3000"),
+		// Permissive default for dev (Flutter web's port is non-deterministic).
+		// Always lock down via CORS_ORIGINS in prod.
+		CORSOrigins: getEnvOrDefault("CORS_ORIGINS", "*"),
 	}
 
 	if cfg.DatabaseURL == "" {

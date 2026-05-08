@@ -81,6 +81,17 @@ type Match struct {
 	Set3Team2      pgtype.Int4        `json:"set3_team2"`
 }
 
+type News struct {
+	ID        pgtype.UUID        `json:"id"`
+	Emoji     string             `json:"emoji"`
+	Title     string             `json:"title"`
+	Body      pgtype.Text        `json:"body"`
+	Source    string             `json:"source"`
+	MatchID   pgtype.UUID        `json:"match_id"`
+	CreatedBy pgtype.Text        `json:"created_by"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type User struct {
 	ID         string             `json:"id"`
 	Email      string             `json:"email"`

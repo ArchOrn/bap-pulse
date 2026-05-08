@@ -153,6 +153,14 @@ func main() {
 	matches.Post("/", handlers.CreateMatch(pool))
 	matches.Get("/:id", handlers.GetMatch(pool))
 
+	// --- News (read = any auth, write = admin only) ---
+	news := app.Group("/news")
+	news.Get("/", handlers.ListNews(pool))
+	news.Get("/:id", handlers.GetNews(pool))
+	news.Post("/", middleware.RequireAdmin(pool), handlers.CreateNews(pool))
+	news.Put("/:id", middleware.RequireAdmin(pool), handlers.UpdateNews(pool))
+	news.Delete("/:id", middleware.RequireAdmin(pool), handlers.DeleteNews(pool))
+
 	// --- Admin (requires role = 'admin' in DB) ---
 	admin := app.Group("/admin")
 	admin.Use(middleware.RequireAdmin(pool))
