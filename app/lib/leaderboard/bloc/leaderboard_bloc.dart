@@ -165,11 +165,14 @@ class LeaderboardBloc extends Bloc<LeaderboardEvent, LeaderboardState> {
   Future<void> _fetch(
     LeaderboardCriterion criterion,
     Emitter<LeaderboardState> emit,
-    Map<LeaderboardCriterion, List<LeaderboardEntry>> cache,
+    Map<LeaderboardCriterion, List<LeaderboardEntry>> _,
   ) async {
     try {
       final entries = await _api.fetch(criterion);
-      final next = Map.of(cache)..[criterion] = entries;
+      // Read state.cache (live) rather than the captured snapshot so that
+      // concurrent fetches (e.g. jerseys screen kicking off all 4 criteria
+      // at once) merge additively instead of last-writer-wins.
+      final next = Map.of(state.cache)..[criterion] = entries;
       emit(LeaderboardLoaded(
         criterion: criterion,
         entries: entries,
@@ -179,13 +182,13 @@ class LeaderboardBloc extends Bloc<LeaderboardEvent, LeaderboardState> {
       emit(LeaderboardError(
         criterion: criterion,
         message: e.message,
-        cache: cache,
+        cache: state.cache,
       ));
     } catch (_) {
       emit(LeaderboardError(
         criterion: criterion,
         message: 'Impossible de charger le classement.',
-        cache: cache,
+        cache: state.cache,
       ));
     }
   }
