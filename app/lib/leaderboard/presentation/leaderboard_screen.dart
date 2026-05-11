@@ -583,7 +583,8 @@ class _LeaderHero extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
                 children: [
                   Text(
                     '${leader.value}',
@@ -594,15 +595,12 @@ class _LeaderHero extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      meta.unit,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: meta.heroLabel,
-                      ),
+                  Text(
+                    meta.unit,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: meta.heroLabel,
                     ),
                   ),
                 ],

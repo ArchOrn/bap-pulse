@@ -35,7 +35,8 @@ class StatCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
             children: [
               if (icon != null) ...[
                 Icon(icon, size: 16, color: accent),
@@ -51,16 +52,13 @@ class StatCard extends StatelessWidget {
               ),
               if (small != null) ...[
                 const SizedBox(width: 2),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    small!,
-                    style: AppTextStyles.numeric(
-                      size: 13,
-                      weight: FontWeight.w600,
-                      color: AppColors.textMuted,
-                      letterSpacing: 0,
-                    ),
+                Text(
+                  small!,
+                  style: AppTextStyles.numeric(
+                    size: 13,
+                    weight: FontWeight.w600,
+                    color: AppColors.textMuted,
+                    letterSpacing: 0,
                   ),
                 ),
               ],
