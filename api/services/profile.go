@@ -124,7 +124,11 @@ func GetUserProfile(
 	}
 	tableauMatches := filterMatchesByTableau(playerMatches, tableau)
 
-	streak := computeStreak(tableauMatches, userID)
+	// Streak is rendered alongside monthly W/L/M in the UI, so scope it to
+	// the same window. Otherwise a lifetime win-streak can appear next to
+	// "0/0 this month" — confusing.
+	periodMatches := filterMatchesByPeriod(tableauMatches, monthStart, monthEnd)
+	streak := computeStreak(periodMatches, userID)
 	headToHead, err := computeHeadToHead(ctx, q, tableauMatches, userID)
 	if err != nil {
 		return nil, err
@@ -300,6 +304,22 @@ func filterMatchesByTableau(matches []db.Match, tableau db.MatchType) []db.Match
 	out := make([]db.Match, 0, len(matches))
 	for _, m := range matches {
 		if m.MatchType == tableau {
+			out = append(out, m)
+		}
+	}
+	return out
+}
+
+// filterMatchesByPeriod keeps only matches whose played_at falls in [from, to).
+// Order is preserved (so a DESC input stays DESC).
+func filterMatchesByPeriod(matches []db.Match, from, to time.Time) []db.Match {
+	out := make([]db.Match, 0, len(matches))
+	for _, m := range matches {
+		if !m.PlayedAt.Valid {
+			continue
+		}
+		t := m.PlayedAt.Time
+		if !t.Before(from) && t.Before(to) {
 			out = append(out, m)
 		}
 	}

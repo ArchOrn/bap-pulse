@@ -1156,6 +1156,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/{id}/matches": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns the user's SINGLES matches sorted DESC by played_at, reshaped from the user's perspective (sets as mine vs opp, signed ELO delta).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "List a user's match history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID (Firebase UID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/services.UserMatchHistoryEntry"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/users/{id}/profile": {
             "get": {
                 "security": [
@@ -1577,6 +1623,17 @@ const docTemplate = `{
                 }
             }
         },
+        "services.MatchSet": {
+            "type": "object",
+            "properties": {
+                "mine": {
+                    "type": "integer"
+                },
+                "opp": {
+                    "type": "integer"
+                }
+            }
+        },
         "services.MatchesPlayedRanking": {
             "type": "object",
             "properties": {
@@ -1692,6 +1749,41 @@ const docTemplate = `{
                 },
                 "last_name": {
                     "type": "string"
+                }
+            }
+        },
+        "services.UserMatchHistoryEntry": {
+            "type": "object",
+            "properties": {
+                "elo_change": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "opponent": {
+                    "$ref": "#/definitions/services.ProfileUser"
+                },
+                "perf_points": {
+                    "type": "integer"
+                },
+                "played_at": {
+                    "type": "string"
+                },
+                "sets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.MatchSet"
+                    }
+                },
+                "tableau": {
+                    "$ref": "#/definitions/db.MatchType"
+                },
+                "validated": {
+                    "type": "boolean"
+                },
+                "won_by_user": {
+                    "type": "boolean"
                 }
             }
         },

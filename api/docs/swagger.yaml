@@ -246,6 +246,13 @@ definitions:
       wins:
         type: integer
     type: object
+  services.MatchSet:
+    properties:
+      mine:
+        type: integer
+      opp:
+        type: integer
+    type: object
   services.MatchesPlayedRanking:
     properties:
       matches_played:
@@ -321,6 +328,29 @@ definitions:
         type: integer
       last_name:
         type: string
+    type: object
+  services.UserMatchHistoryEntry:
+    properties:
+      elo_change:
+        type: integer
+      id:
+        type: string
+      opponent:
+        $ref: '#/definitions/services.ProfileUser'
+      perf_points:
+        type: integer
+      played_at:
+        type: string
+      sets:
+        items:
+          $ref: '#/definitions/services.MatchSet'
+        type: array
+      tableau:
+        $ref: '#/definitions/db.MatchType'
+      validated:
+        type: boolean
+      won_by_user:
+        type: boolean
     type: object
   services.UserProfile:
     properties:
@@ -1090,6 +1120,36 @@ paths:
       security:
       - BearerAuth: []
       summary: Update user profile
+      tags:
+      - users
+  /users/{id}/matches:
+    get:
+      description: Returns the user's SINGLES matches sorted DESC by played_at, reshaped
+        from the user's perspective (sets as mine vs opp, signed ELO delta).
+      parameters:
+      - description: User ID (Firebase UID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/services.UserMatchHistoryEntry'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List a user's match history
       tags:
       - users
   /users/{id}/profile:

@@ -204,3 +204,25 @@ func GetUserProfile(pool *pgxpool.Pool) fiber.Handler {
 		return c.JSON(profile)
 	}
 }
+
+// GetUserMatches godoc
+//
+//	@Summary		List a user's match history
+//	@Description	Returns the user's SINGLES matches sorted DESC by played_at, reshaped from the user's perspective (sets as mine vs opp, signed ELO delta).
+//	@Tags			users
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			id	path		string	true	"User ID (Firebase UID)"
+//	@Success		200	{array}		services.UserMatchHistoryEntry
+//	@Failure		500	{object}	map[string]string
+//	@Router			/users/{id}/matches [get]
+func GetUserMatches(pool *pgxpool.Pool) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		q := db.New(pool)
+		matches, err := services.GetUserMatchHistory(c.Context(), q, c.Params("id"), db.MatchTypeSINGLES)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to load match history"})
+		}
+		return c.JSON(matches)
+	}
+}
