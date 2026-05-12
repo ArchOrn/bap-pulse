@@ -791,20 +791,12 @@ class _SettingsList extends StatelessWidget {
   Widget build(BuildContext context) {
     final entries = <_SettingsEntry>[
       _SettingsEntry(
-        label: 'Mes défis',
-        onTap: () => _todo(context, 'Mes défis'),
-      ),
-      _SettingsEntry(
         label: 'Historique complet',
         onTap: () => context.push('/history'),
       ),
       _SettingsEntry(
         label: 'Paramètres du compte',
-        onTap: () => _todo(context, 'Paramètres du compte'),
-      ),
-      _SettingsEntry(
-        label: 'Règlement & score',
-        onTap: () => _todo(context, 'Règlement & score'),
+        onTap: () => context.push('/settings'),
       ),
       _SettingsEntry(
         label: 'Se déconnecter',
@@ -865,12 +857,6 @@ class _SettingsList extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  void _todo(BuildContext context, String label) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('« $label » à venir')));
   }
 }
 

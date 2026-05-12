@@ -65,6 +65,7 @@ type updateUserRequest struct {
 	Email     string `json:"email"`
 	Gender    string `json:"gender"`     // "" | MALE | FEMALE
 	FfbadRank string `json:"ffbad_rank"` // "" | NC | P12 | ... | N1
+	Nickname  string `json:"nickname"`   // "" = clear
 }
 
 // UpdateUser godoc
@@ -110,6 +111,7 @@ func UpdateUser(pool *pgxpool.Pool) fiber.Handler {
 			Email:     req.Email,
 			Gender:    optionalText(req.Gender),
 			FfbadRank: optionalText(req.FfbadRank),
+			Nickname:  optionalText(req.Nickname),
 		})
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal server error"})

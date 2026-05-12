@@ -29,6 +29,7 @@ type ProfileUser struct {
 	ID         string `json:"id"`
 	FirstName  string `json:"first_name"`
 	LastName   string `json:"last_name"`
+	Nickname   string `json:"nickname,omitempty"`
 	Gender     string `json:"gender,omitempty"`
 	JoinedYear int    `json:"joined_year"`
 }
@@ -145,6 +146,10 @@ func GetUserProfile(
 	if user.Gender.Valid {
 		gender = user.Gender.String
 	}
+	nickname := ""
+	if user.Nickname.Valid {
+		nickname = user.Nickname.String
+	}
 	joinedYear := 0
 	if user.CreatedAt.Valid {
 		joinedYear = user.CreatedAt.Time.Year()
@@ -155,6 +160,7 @@ func GetUserProfile(
 			ID:         user.ID,
 			FirstName:  user.FirstName,
 			LastName:   user.LastName,
+			Nickname:   nickname,
 			Gender:     gender,
 			JoinedYear: joinedYear,
 		},
@@ -457,11 +463,16 @@ func computeHeadToHead(
 		if u.Gender.Valid {
 			gender = u.Gender.String
 		}
+		nickname := ""
+		if u.Nickname.Valid {
+			nickname = u.Nickname.String
+		}
 		return &ProfileOpponent{
 			User: ProfileUser{
 				ID:         u.ID,
 				FirstName:  u.FirstName,
 				LastName:   u.LastName,
+				Nickname:   nickname,
 				Gender:     gender,
 				JoinedYear: joined,
 			},

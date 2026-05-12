@@ -17,7 +17,11 @@ import 'package:bap_pulse/jerseys/presentation/jerseys_screen.dart';
 import 'package:bap_pulse/leaderboard/presentation/leaderboard_screen.dart';
 import 'package:bap_pulse/news/presentation/news_detail_screen.dart';
 import 'package:bap_pulse/news/presentation/news_list_screen.dart';
+import 'package:bap_pulse/profile/data/account.dart';
+import 'package:bap_pulse/profile/presentation/delete_account_screen.dart';
+import 'package:bap_pulse/profile/presentation/nickname_edit_screen.dart';
 import 'package:bap_pulse/profile/presentation/profile_screen.dart';
+import 'package:bap_pulse/profile/presentation/settings_screen.dart';
 import 'package:bap_pulse/score/presentation/score_entry_screen.dart';
 import 'package:bap_pulse/score/presentation/score_validate_screen.dart';
 import 'package:bap_pulse/shell/main_shell.dart';
@@ -140,6 +144,22 @@ GoRouter buildRouter(AuthBloc authBloc) {
       GoRoute(
         path: '/history',
         builder: (_, _) => const HistoryScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        pageBuilder: (_, _) => const MaterialPage(
+          fullscreenDialog: true,
+          child: SettingsScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/settings/nickname',
+        builder: (_, state) =>
+            NicknameEditScreen(account: state.extra as Account),
+      ),
+      GoRoute(
+        path: '/settings/delete-account',
+        builder: (_, _) => const DeleteAccountScreen(),
       ),
     ],
   );

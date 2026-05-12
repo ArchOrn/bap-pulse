@@ -90,6 +90,10 @@ func ListMembersWithStats(
 		if u.Gender.Valid {
 			gender = u.Gender.String
 		}
+		nickname := ""
+		if u.Nickname.Valid {
+			nickname = u.Nickname.String
+		}
 		joinedYear := 0
 		if u.CreatedAt.Valid {
 			joinedYear = u.CreatedAt.Time.Year()
@@ -100,6 +104,7 @@ func ListMembersWithStats(
 				ID:         u.ID,
 				FirstName:  u.FirstName,
 				LastName:   u.LastName,
+				Nickname:   nickname,
 				Gender:     gender,
 				JoinedYear: joinedYear,
 			},

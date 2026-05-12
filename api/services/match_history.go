@@ -86,10 +86,15 @@ func GetUserMatchHistory(
 		if u.Gender.Valid {
 			gender = u.Gender.String
 		}
+		nickname := ""
+		if u.Nickname.Valid {
+			nickname = u.Nickname.String
+		}
 		opponent := ProfileUser{
 			ID:         u.ID,
 			FirstName:  u.FirstName,
 			LastName:   u.LastName,
+			Nickname:   nickname,
 			Gender:     gender,
 			JoinedYear: joined,
 		}

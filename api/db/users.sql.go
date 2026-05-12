@@ -18,7 +18,7 @@ INSERT INTO users (
     elo_singles, elo_doubles, elo_mixed
 )
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-RETURNING id, email, created_at, role, first_name, last_name, gender, ffbad_rank, elo_singles, elo_doubles, elo_mixed
+RETURNING id, email, created_at, role, first_name, last_name, gender, ffbad_rank, elo_singles, elo_doubles, elo_mixed, nickname
 `
 
 type CreateUserParams struct {
@@ -58,6 +58,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.EloSingles,
 		&i.EloDoubles,
 		&i.EloMixed,
+		&i.Nickname,
 	)
 	return i, err
 }
@@ -73,7 +74,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id string) error {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, created_at, role, first_name, last_name, gender, ffbad_rank, elo_singles, elo_doubles, elo_mixed FROM users
+SELECT id, email, created_at, role, first_name, last_name, gender, ffbad_rank, elo_singles, elo_doubles, elo_mixed, nickname FROM users
 WHERE email = $1
 `
 
@@ -92,12 +93,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.EloSingles,
 		&i.EloDoubles,
 		&i.EloMixed,
+		&i.Nickname,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, email, created_at, role, first_name, last_name, gender, ffbad_rank, elo_singles, elo_doubles, elo_mixed FROM users
+SELECT id, email, created_at, role, first_name, last_name, gender, ffbad_rank, elo_singles, elo_doubles, elo_mixed, nickname FROM users
 WHERE id = $1
 `
 
@@ -116,12 +118,13 @@ func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
 		&i.EloSingles,
 		&i.EloDoubles,
 		&i.EloMixed,
+		&i.Nickname,
 	)
 	return i, err
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, email, created_at, role, first_name, last_name, gender, ffbad_rank, elo_singles, elo_doubles, elo_mixed FROM users
+SELECT id, email, created_at, role, first_name, last_name, gender, ffbad_rank, elo_singles, elo_doubles, elo_mixed, nickname FROM users
 ORDER BY elo_singles DESC, created_at ASC
 `
 
@@ -146,6 +149,7 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 			&i.EloSingles,
 			&i.EloDoubles,
 			&i.EloMixed,
+			&i.Nickname,
 		); err != nil {
 			return nil, err
 		}
@@ -163,9 +167,10 @@ SET first_name = $2,
     last_name  = $3,
     email      = $4,
     gender     = $5,
-    ffbad_rank = $6
+    ffbad_rank = $6,
+    nickname   = $7
 WHERE id = $1
-RETURNING id, email, created_at, role, first_name, last_name, gender, ffbad_rank, elo_singles, elo_doubles, elo_mixed
+RETURNING id, email, created_at, role, first_name, last_name, gender, ffbad_rank, elo_singles, elo_doubles, elo_mixed, nickname
 `
 
 type UpdateUserParams struct {
@@ -175,6 +180,7 @@ type UpdateUserParams struct {
 	Email     string      `json:"email"`
 	Gender    pgtype.Text `json:"gender"`
 	FfbadRank pgtype.Text `json:"ffbad_rank"`
+	Nickname  pgtype.Text `json:"nickname"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
@@ -185,6 +191,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		arg.Email,
 		arg.Gender,
 		arg.FfbadRank,
+		arg.Nickname,
 	)
 	var i User
 	err := row.Scan(
@@ -199,6 +206,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.EloSingles,
 		&i.EloDoubles,
 		&i.EloMixed,
+		&i.Nickname,
 	)
 	return i, err
 }
@@ -207,7 +215,7 @@ const updateUserEloDoubles = `-- name: UpdateUserEloDoubles :one
 UPDATE users
 SET elo_doubles = $2
 WHERE id = $1
-RETURNING id, email, created_at, role, first_name, last_name, gender, ffbad_rank, elo_singles, elo_doubles, elo_mixed
+RETURNING id, email, created_at, role, first_name, last_name, gender, ffbad_rank, elo_singles, elo_doubles, elo_mixed, nickname
 `
 
 type UpdateUserEloDoublesParams struct {
@@ -230,6 +238,7 @@ func (q *Queries) UpdateUserEloDoubles(ctx context.Context, arg UpdateUserEloDou
 		&i.EloSingles,
 		&i.EloDoubles,
 		&i.EloMixed,
+		&i.Nickname,
 	)
 	return i, err
 }
@@ -238,7 +247,7 @@ const updateUserEloMixed = `-- name: UpdateUserEloMixed :one
 UPDATE users
 SET elo_mixed = $2
 WHERE id = $1
-RETURNING id, email, created_at, role, first_name, last_name, gender, ffbad_rank, elo_singles, elo_doubles, elo_mixed
+RETURNING id, email, created_at, role, first_name, last_name, gender, ffbad_rank, elo_singles, elo_doubles, elo_mixed, nickname
 `
 
 type UpdateUserEloMixedParams struct {
@@ -261,6 +270,7 @@ func (q *Queries) UpdateUserEloMixed(ctx context.Context, arg UpdateUserEloMixed
 		&i.EloSingles,
 		&i.EloDoubles,
 		&i.EloMixed,
+		&i.Nickname,
 	)
 	return i, err
 }
@@ -269,7 +279,7 @@ const updateUserEloSingles = `-- name: UpdateUserEloSingles :one
 UPDATE users
 SET elo_singles = $2
 WHERE id = $1
-RETURNING id, email, created_at, role, first_name, last_name, gender, ffbad_rank, elo_singles, elo_doubles, elo_mixed
+RETURNING id, email, created_at, role, first_name, last_name, gender, ffbad_rank, elo_singles, elo_doubles, elo_mixed, nickname
 `
 
 type UpdateUserEloSinglesParams struct {
@@ -292,6 +302,7 @@ func (q *Queries) UpdateUserEloSingles(ctx context.Context, arg UpdateUserEloSin
 		&i.EloSingles,
 		&i.EloDoubles,
 		&i.EloMixed,
+		&i.Nickname,
 	)
 	return i, err
 }
@@ -302,7 +313,7 @@ SET elo_singles = $2,
     elo_doubles = $3,
     elo_mixed   = $4
 WHERE id = $1
-RETURNING id, email, created_at, role, first_name, last_name, gender, ffbad_rank, elo_singles, elo_doubles, elo_mixed
+RETURNING id, email, created_at, role, first_name, last_name, gender, ffbad_rank, elo_singles, elo_doubles, elo_mixed, nickname
 `
 
 type UpdateUserInitialEloParams struct {
@@ -333,6 +344,7 @@ func (q *Queries) UpdateUserInitialElo(ctx context.Context, arg UpdateUserInitia
 		&i.EloSingles,
 		&i.EloDoubles,
 		&i.EloMixed,
+		&i.Nickname,
 	)
 	return i, err
 }
@@ -341,7 +353,7 @@ const updateUserRole = `-- name: UpdateUserRole :one
 UPDATE users
 SET role = $2
 WHERE id = $1
-RETURNING id, email, created_at, role, first_name, last_name, gender, ffbad_rank, elo_singles, elo_doubles, elo_mixed
+RETURNING id, email, created_at, role, first_name, last_name, gender, ffbad_rank, elo_singles, elo_doubles, elo_mixed, nickname
 `
 
 type UpdateUserRoleParams struct {
@@ -364,6 +376,7 @@ func (q *Queries) UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) 
 		&i.EloSingles,
 		&i.EloDoubles,
 		&i.EloMixed,
+		&i.Nickname,
 	)
 	return i, err
 }

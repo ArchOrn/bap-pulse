@@ -49,6 +49,7 @@ class ProfileUser {
   final String id;
   final String firstName;
   final String lastName;
+  final String? nickname; // optional player-chosen handle
   final String? gender; // MALE | FEMALE | null
   final int joinedYear;
 
@@ -56,6 +57,7 @@ class ProfileUser {
     required this.id,
     required this.firstName,
     required this.lastName,
+    required this.nickname,
     required this.gender,
     required this.joinedYear,
   });
@@ -72,6 +74,7 @@ class ProfileUser {
         id: json['id'] as String,
         firstName: json['first_name'] as String,
         lastName: json['last_name'] as String,
+        nickname: json['nickname'] as String?,
         gender: json['gender'] as String?,
         joinedYear: (json['joined_year'] as num?)?.toInt() ?? 0,
       );

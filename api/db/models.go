@@ -104,4 +104,5 @@ type User struct {
 	EloSingles int32              `json:"elo_singles"`
 	EloDoubles int32              `json:"elo_doubles"`
 	EloMixed   int32              `json:"elo_mixed"`
+	Nickname   pgtype.Text        `json:"nickname"`
 }
