@@ -115,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: QuickActionsRow(
-              onChallenge: () => context.push('/club'),
+              onChallenge: () => context.go('/members'),
               onScore: () => context.push('/score/new'),
             ),
           ),

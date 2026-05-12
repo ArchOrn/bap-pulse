@@ -9,8 +9,8 @@ import 'package:bap_pulse/auth/presentation/forgot_password_screen.dart';
 import 'package:bap_pulse/auth/presentation/login_screen.dart';
 import 'package:bap_pulse/auth/presentation/register_screen.dart';
 import 'package:bap_pulse/auth/presentation/splash_screen.dart';
-import 'package:bap_pulse/club/presentation/club_screen.dart';
-import 'package:bap_pulse/club/presentation/player_detail_screen.dart';
+import 'package:bap_pulse/members/presentation/members_screen.dart';
+import 'package:bap_pulse/members/presentation/player_detail_screen.dart';
 import 'package:bap_pulse/home/presentation/home_screen.dart';
 import 'package:bap_pulse/jerseys/presentation/history_screen.dart';
 import 'package:bap_pulse/jerseys/presentation/jerseys_screen.dart';
@@ -91,9 +91,9 @@ GoRouter buildRouter(AuthBloc authBloc) {
                 const NoTransitionPage(child: LeaderboardScreen()),
           ),
           GoRoute(
-            path: '/club',
+            path: '/members',
             pageBuilder: (_, _) =>
-                const NoTransitionPage(child: ClubScreen()),
+                const NoTransitionPage(child: MembersScreen()),
           ),
           GoRoute(
             path: '/jerseys',
@@ -108,7 +108,7 @@ GoRouter buildRouter(AuthBloc authBloc) {
         ],
       ),
       GoRoute(
-        path: '/club/player/:id',
+        path: '/members/player/:id',
         builder: (_, state) =>
             PlayerDetailScreen(playerId: state.pathParameters['id']!),
       ),

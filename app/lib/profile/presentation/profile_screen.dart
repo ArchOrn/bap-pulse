@@ -712,7 +712,7 @@ class _NemesisCard extends StatelessWidget {
       color: AppColors.bgCard,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
-        onTap: () => context.push('/club/player/${user.id}'),
+        onTap: () => context.push('/members/player/${user.id}'),
         borderRadius: BorderRadius.circular(14),
         child: Padding(
           padding: const EdgeInsets.all(14),

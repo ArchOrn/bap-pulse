@@ -149,6 +149,9 @@ func main() {
 	users.Put("/:id", handlers.UpdateUser(pool))
 	users.Delete("/:id", handlers.DeleteUser(pool))
 
+	// --- Members (enriched roster for the mobile Membres screen) ---
+	app.Get("/members", handlers.ListMembers(pool))
+
 	// --- Matches ---
 	matches := app.Group("/matches")
 	matches.Get("/", handlers.GetMatches(pool))

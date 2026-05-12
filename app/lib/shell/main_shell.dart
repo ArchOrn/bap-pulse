@@ -10,7 +10,7 @@ class MainShell extends StatelessWidget {
   static const _routes = [
     '/home',
     '/leaderboard',
-    '/club',
+    '/members',
     '/jerseys',
     '/profile',
   ];
@@ -98,7 +98,7 @@ class _Tab {
 const _tabs = [
   _Tab('Accueil', Icons.home_outlined, Icons.home_rounded),
   _Tab('Classement', Icons.emoji_events_outlined, Icons.emoji_events_rounded),
-  _Tab('Club', Icons.groups_2_outlined, Icons.groups_2_rounded),
+  _Tab('Membres', Icons.groups_2_outlined, Icons.groups_2_rounded),
   _Tab('Maillots', Icons.sports_outlined, Icons.sports),
   _Tab('Moi', Icons.person_outline, Icons.person_rounded),
 ];

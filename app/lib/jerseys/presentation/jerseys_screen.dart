@@ -335,7 +335,7 @@ class _HolderRow extends StatelessWidget {
     }
 
     return GestureDetector(
-      onTap: () => context.push('/club/player/${holder!.id}'),
+      onTap: () => context.push('/members/player/${holder!.id}'),
       child: Container(
         padding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

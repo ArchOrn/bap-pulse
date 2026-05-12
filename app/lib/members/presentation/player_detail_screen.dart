@@ -140,7 +140,6 @@ class _PlayerDetailBody extends StatelessWidget {
                       fontSize: 13,
                     ),
                   ),
-                  const SizedBox(width: 36),
                 ],
               ),
               const SizedBox(height: 16),

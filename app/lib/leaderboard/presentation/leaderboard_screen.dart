@@ -241,7 +241,7 @@ class _LoadedBody extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
           child: GestureDetector(
-            onTap: () => context.push('/club/player/${leader.id}'),
+            onTap: () => context.push('/members/player/${leader.id}'),
             child: _LeaderHero(meta: meta, leader: leader),
           ),
         ),
@@ -263,7 +263,7 @@ class _LoadedBody extends StatelessWidget {
                     isMe: entries[i].id == myUid,
                     jerseyForLeader: null,
                     onTap: () =>
-                        context.push('/club/player/${entries[i].id}'),
+                        context.push('/members/player/${entries[i].id}'),
                   ),
               ],
             ),
