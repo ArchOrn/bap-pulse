@@ -16,42 +16,54 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  late Future<Account> _future;
   final _api = AccountApi();
+  Account? _account;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _future = _api.fetchMe();
+    _load();
   }
 
-  void _reload() {
-    setState(() => _future = _api.fetchMe());
+  Future<void> _load() async {
+    setState(() => _error = null);
+    try {
+      final account = await _api.fetchMe();
+      if (!mounted) return;
+      setState(() => _account = account);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _error = e.message);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _error = 'Impossible de charger ton compte.');
+    }
+  }
+
+  /// Called by the edit screen with the new Account returned by the PUT call.
+  /// Bypasses the GET round-trip so the new value lands instantly.
+  void _applyAccount(Account next) {
+    setState(() => _account = next);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgScaffold,
-      body: FutureBuilder<Account>(
-        future: _future,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const _SettingsLoading();
-          }
-          if (snapshot.hasError) {
-            final err = snapshot.error;
-            final message = err is ApiException
-                ? err.message
-                : 'Impossible de charger ton compte.';
-            return _SettingsError(message: message, onRetry: _reload);
-          }
-          return _SettingsBody(
-            account: snapshot.data!,
-            onNicknameChanged: _reload,
-          );
-        },
-      ),
+      body: Builder(builder: (context) {
+        if (_error != null) {
+          return _SettingsError(message: _error!, onRetry: _load);
+        }
+        final account = _account;
+        if (account == null) {
+          return const _SettingsLoading();
+        }
+        return _SettingsBody(
+          account: account,
+          onAccountUpdated: _applyAccount,
+        );
+      }),
     );
   }
 }
@@ -60,11 +72,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
 class _SettingsBody extends StatelessWidget {
   final Account account;
-  final VoidCallback onNicknameChanged;
+  final ValueChanged<Account> onAccountUpdated;
 
   const _SettingsBody({
     required this.account,
-    required this.onNicknameChanged,
+    required this.onAccountUpdated,
   });
 
   @override
@@ -119,11 +131,11 @@ class _SettingsBody extends StatelessWidget {
               trailingMuted: account.nickname == null ||
                   account.nickname!.isEmpty,
               onTap: () async {
-                final ok = await context.push<bool>(
+                final result = await context.push<Account>(
                   '/settings/nickname',
                   extra: account,
                 );
-                if (ok == true) onNicknameChanged();
+                if (result is Account) onAccountUpdated(result);
               },
             ),
           ),
@@ -151,7 +163,7 @@ class _SettingsBody extends StatelessWidget {
         const Padding(
           padding: EdgeInsets.fromLTRB(20, 6, 20, 0),
           child: Text(
-            'Ces informations sont gérées par un admin du club. Contacte-les pour les modifier.',
+            'Ces informations sont gérées par un administrateur. Contacte-les pour les modifier.',
             style: TextStyle(
               color: AppColors.textMuted,
               fontSize: 12,

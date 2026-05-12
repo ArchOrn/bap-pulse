@@ -53,9 +53,9 @@ class _NicknameEditScreenState extends State<NicknameEditScreen> {
     final raw = _ctrl.text.trim();
     final next = raw.isEmpty ? null : raw;
     try {
-      await _api.updateNickname(widget.account, next);
+      final updated = await _api.updateNickname(widget.account, next);
       if (!mounted) return;
-      context.pop(true);
+      context.pop(updated);
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
