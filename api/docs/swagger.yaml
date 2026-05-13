@@ -1,7 +1,59 @@
 basePath: /
 definitions:
+  db.Challenge:
+    properties:
+      court:
+        $ref: '#/definitions/pgtype.Text'
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      from_user_id:
+        type: string
+      id:
+        type: string
+      match_type:
+        $ref: '#/definitions/db.MatchType'
+      note:
+        $ref: '#/definitions/pgtype.Text'
+      proposed_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      responded_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      status:
+        $ref: '#/definitions/db.ChallengeStatus'
+      to_user_id:
+        type: string
+    type: object
+  db.ChallengeStatus:
+    enum:
+    - PENDING
+    - ACCEPTED
+    - DECLINED
+    - EXPIRED
+    - CANCELLED
+    type: string
+    x-enum-varnames:
+    - ChallengeStatusPENDING
+    - ChallengeStatusACCEPTED
+    - ChallengeStatusDECLINED
+    - ChallengeStatusEXPIRED
+    - ChallengeStatusCANCELLED
+  db.FcmToken:
+    properties:
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      last_seen_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      platform:
+        type: string
+      token:
+        type: string
+      user_id:
+        type: string
+    type: object
   db.Match:
     properties:
+      confirmed_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
       id:
         type: string
       match_type:
@@ -20,6 +72,10 @@ definitions:
         $ref: '#/definitions/pgtype.Int4'
       set3_team2:
         $ref: '#/definitions/pgtype.Int4'
+      status:
+        $ref: '#/definitions/db.MatchStatus'
+      submitted_by_id:
+        $ref: '#/definitions/pgtype.Text'
       team1_player1_id:
         type: string
       team1_player2_id:
@@ -28,9 +84,19 @@ definitions:
         type: string
       team2_player2_id:
         $ref: '#/definitions/pgtype.Text'
-      validated:
-        type: boolean
     type: object
+  db.MatchStatus:
+    enum:
+    - PENDING
+    - CONFIRMED
+    - CONTESTED
+    - CANCELLED
+    type: string
+    x-enum-varnames:
+    - MatchStatusPENDING
+    - MatchStatusCONFIRMED
+    - MatchStatusCONTESTED
+    - MatchStatusCANCELLED
   db.MatchType:
     enum:
     - SINGLES
@@ -60,6 +126,43 @@ definitions:
       title:
         type: string
     type: object
+  db.Notification:
+    properties:
+      body:
+        type: string
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      data:
+        items:
+          type: integer
+        type: array
+      id:
+        type: string
+      read_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      title:
+        type: string
+      type:
+        $ref: '#/definitions/db.NotificationType'
+      user_id:
+        type: string
+    type: object
+  db.NotificationType:
+    enum:
+    - CHALLENGE_RECEIVED
+    - CHALLENGE_ACCEPTED
+    - CHALLENGE_DECLINED
+    - MATCH_AWAITING_CONFIRMATION
+    - MATCH_CONFIRMED
+    - MATCH_CONTESTED
+    type: string
+    x-enum-varnames:
+    - NotificationTypeCHALLENGERECEIVED
+    - NotificationTypeCHALLENGEACCEPTED
+    - NotificationTypeCHALLENGEDECLINED
+    - NotificationTypeMATCHAWAITINGCONFIRMATION
+    - NotificationTypeMATCHCONFIRMED
+    - NotificationTypeMATCHCONTESTED
   db.User:
     properties:
       created_at:
@@ -82,7 +185,24 @@ definitions:
         type: string
       last_name:
         type: string
+      nickname:
+        $ref: '#/definitions/pgtype.Text'
       role:
+        type: string
+    type: object
+  handlers.createChallengeRequest:
+    properties:
+      court:
+        type: string
+      match_type:
+        description: optional; defaults to SINGLES (v1 only accepts SINGLES)
+        type: string
+      note:
+        type: string
+      proposed_at:
+        description: optional ISO-8601
+        type: string
+      to_user_id:
         type: string
     type: object
   handlers.createMatchRequest:
@@ -134,6 +254,14 @@ definitions:
       title:
         type: string
     type: object
+  handlers.registerFcmTokenRequest:
+    properties:
+      platform:
+        description: ios | android | web
+        type: string
+      token:
+        type: string
+    type: object
   handlers.setRoleRequest:
     properties:
       admin:
@@ -172,6 +300,9 @@ definitions:
         description: '"" | MALE | FEMALE'
         type: string
       last_name:
+        type: string
+      nickname:
+        description: '"" = clear'
         type: string
     type: object
   pgtype.InfinityModifier:
@@ -262,6 +393,41 @@ definitions:
       user:
         $ref: '#/definitions/db.User'
     type: object
+  services.MemberPerformance:
+    properties:
+      gain_7d:
+        type: integer
+      rank:
+        type: integer
+      score:
+        type: integer
+    type: object
+  services.MemberStatsMonth:
+    properties:
+      losses:
+        type: integer
+      matches:
+        type: integer
+      wins:
+        type: integer
+    type: object
+  services.MemberSummary:
+    properties:
+      elo:
+        type: integer
+      jerseys:
+        items:
+          type: string
+        type: array
+      performance:
+        $ref: '#/definitions/services.MemberPerformance'
+      stats_month:
+        $ref: '#/definitions/services.MemberStatsMonth'
+      tableau:
+        $ref: '#/definitions/db.MatchType'
+      user:
+        $ref: '#/definitions/services.ProfileUser'
+    type: object
   services.PerformanceRanking:
     properties:
       points:
@@ -328,6 +494,8 @@ definitions:
         type: integer
       last_name:
         type: string
+      nickname:
+        type: string
     type: object
   services.UserMatchHistoryEntry:
     properties:
@@ -345,10 +513,10 @@ definitions:
         items:
           $ref: '#/definitions/services.MatchSet'
         type: array
+      status:
+        type: string
       tableau:
         $ref: '#/definitions/db.MatchType'
-      validated:
-        type: boolean
       won_by_user:
         type: boolean
     type: object
@@ -510,8 +678,9 @@ paths:
       summary: Sync user profile
       tags:
       - auth
-  /matches:
+  /challenges:
     get:
+      description: Returns both received and sent challenges, most recent first.
       produces:
       - application/json
       responses:
@@ -519,7 +688,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/db.Match'
+              $ref: '#/definitions/db.Challenge'
             type: array
         "500":
           description: Internal Server Error
@@ -529,29 +698,28 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: List all matches
+      summary: List challenges involving the authenticated user
       tags:
-      - matches
+      - challenges
     post:
       consumes:
       - application/json
-      description: Creates a match with set scores (best of 3, 21 points per set),
-        recalculates ELO ratings, and records history.
+      description: v1 only supports SINGLES (one challenger, one challenged). The
+        recipient receives a push notification and can accept/decline.
       parameters:
-      - description: Match details
+      - description: Challenge payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/handlers.createMatchRequest'
+          $ref: '#/definitions/handlers.createChallengeRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/db.Challenge'
         "400":
           description: Bad Request
           schema:
@@ -572,7 +740,192 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Create a match
+      summary: Challenge another player
+      tags:
+      - challenges
+  /challenges/{id}/accept:
+    post:
+      parameters:
+      - description: Challenge ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Challenge'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Accept a challenge
+      tags:
+      - challenges
+  /challenges/{id}/cancel:
+    post:
+      parameters:
+      - description: Challenge ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Challenge'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Cancel a challenge you sent
+      tags:
+      - challenges
+  /challenges/{id}/decline:
+    post:
+      parameters:
+      - description: Challenge ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Challenge'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Decline a challenge
+      tags:
+      - challenges
+  /matches:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Match'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List confirmed matches
+      tags:
+      - matches
+    post:
+      consumes:
+      - application/json
+      description: Creates a PENDING match. ELO and performance points are NOT yet
+        applied — they will be on confirmation by the opposing team. The opposing
+        team is notified.
+      parameters:
+      - description: Match details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createMatchRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/db.Match'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Submit a match score for confirmation
       tags:
       - matches
   /matches/{id}:
@@ -607,6 +960,139 @@ paths:
       summary: Get a match
       tags:
       - matches
+  /matches/{id}/confirm:
+    post:
+      description: Applies ELO + performance points and emits the match-confirmed
+        news. Caller must be a member of the team opposite to the submitter.
+      parameters:
+      - description: Match ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Confirm a pending match score
+      tags:
+      - matches
+  /matches/{id}/contest:
+    post:
+      description: Marks the match CONTESTED. ELO is not applied. The submitter is
+        notified.
+      parameters:
+      - description: Match ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Match'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Contest a pending match score
+      tags:
+      - matches
+  /members:
+    get:
+      description: Returns the full membership, each enriched with monthly performance
+        (score, rank, 7-day gain), monthly W/L/M and currently held jerseys. Same
+        aggregation window/tableau as the /rankings/* family.
+      parameters:
+      - description: SINGLES (default) | DOUBLES | MIXED
+        in: query
+        name: tableau
+        type: string
+      - description: 'YYYY-MM (default: current month)'
+        in: query
+        name: period
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/services.MemberSummary'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Members roster with monthly stats and jerseys
+      tags:
+      - members
   /news:
     get:
       description: Latest first. Anyone authenticated can read.
@@ -801,6 +1287,109 @@ paths:
       summary: Update a news item
       tags:
       - news
+  /notifications:
+    get:
+      description: Paginated, most recent first. Includes both read and unread.
+      parameters:
+      - description: Max items to return (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Pagination offset (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Notification'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List notifications for the authenticated user
+      tags:
+      - notifications
+  /notifications/{id}/read:
+    post:
+      parameters:
+      - description: Notification ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Notification'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Mark a notification as read
+      tags:
+      - notifications
+  /notifications/read-all:
+    post:
+      responses:
+        "204":
+          description: No Content
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Mark all the caller's notifications as read
+      tags:
+      - notifications
+  /notifications/unread-count:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              format: int64
+              type: integer
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Count unread notifications for the authenticated user
+      tags:
+      - notifications
   /rankings:
     get:
       description: Use /rankings/elo?tableau=... for new clients.
@@ -1188,6 +1777,69 @@ paths:
       summary: Aggregated profile payload for the mobile profile screen
       tags:
       - users
+  /users/me/fcm-tokens:
+    post:
+      consumes:
+      - application/json
+      description: Upserts the token, binding it to the authenticated user. Called
+        by the mobile app at login and on FCM token refresh.
+      parameters:
+      - description: Token payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.registerFcmTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.FcmToken'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Register a device FCM token
+      tags:
+      - fcm
+  /users/me/fcm-tokens/{token}:
+    delete:
+      description: Called by the mobile app on logout. Only deletes the token if it
+        belongs to the authenticated user.
+      parameters:
+      - description: FCM token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Unregister a device FCM token
+      tags:
+      - fcm
 securityDefinitions:
   BearerAuth:
     description: 'Firebase ID Token — format: Bearer <token>'

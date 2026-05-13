@@ -19,11 +19,28 @@ REST API in Go (Fiber) for the BAP Pulse app — Bad A Paname badminton club.
 docker compose up -d
 ```
 
-| Service | Port | Description |
-|---|---|---|
-| PostgreSQL 17 | `5432` | Main database |
-| RustFS | `9000` | S3-compatible object storage |
-| RustFS console | `9001` | Web UI for storage |
+| Service | Description |
+|---|---|
+| PostgreSQL 17 | Main database |
+| RustFS | S3-compatible object storage |
+| RustFS console | Web UI for storage |
+
+### Two setups supported
+
+**OrbStack (default — no host port binding):**
+The base `docker-compose.yml` does **not** publish any ports. OrbStack resolves
+containers from the host via `<container-name>.orb.local`, so no port conflicts
+with other projects. Reach the services at:
+- Postgres → `bap-pulse-db.orb.local:5432`
+- RustFS → `bap-pulse-storage.orb.local:9000` (console: `:9001`)
+
+**Standard Docker (publish ports on `localhost`):**
+Copy the override example, then `docker compose up -d` will publish the ports:
+```bash
+cp docker-compose.override.yml.example docker-compose.override.yml
+```
+Services are then reachable at `localhost:5432`, `localhost:9000`, `localhost:9001`.
+Don't forget to update `DATABASE_URL` in `.env` accordingly (see `.env.example`).
 
 > **Note:** RustFS runs as UID 10001. If you get permission errors on the storage volume, run:
 > ```bash
@@ -61,7 +78,7 @@ make run
 | Variable | Description |
 |---|---|
 | `DATABASE_URL` | PostgreSQL connection string |
-| `PORT` | Port the API listens on (default: `3000`) |
+| `PORT` | Port the API listens on (default: `8080`) |
 | `FIREBASE_CREDENTIALS_FILE` | Path to Firebase service account JSON (local dev only — omit in prod) |
 
 In production on Cloud Run, Firebase uses ADC (Application Default Credentials) automatically.

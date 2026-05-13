@@ -202,6 +202,287 @@
                 }
             }
         },
+        "/challenges": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns both received and sent challenges, most recent first.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "challenges"
+                ],
+                "summary": "List challenges involving the authenticated user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.Challenge"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "v1 only supports SINGLES (one challenger, one challenged). The recipient receives a push notification and can accept/decline.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "challenges"
+                ],
+                "summary": "Challenge another player",
+                "parameters": [
+                    {
+                        "description": "Challenge payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.createChallengeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/db.Challenge"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/challenges/{id}/accept": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "challenges"
+                ],
+                "summary": "Accept a challenge",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Challenge ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.Challenge"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/challenges/{id}/cancel": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "challenges"
+                ],
+                "summary": "Cancel a challenge you sent",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Challenge ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.Challenge"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/challenges/{id}/decline": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "challenges"
+                ],
+                "summary": "Decline a challenge",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Challenge ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.Challenge"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/matches": {
             "get": {
                 "security": [
@@ -215,7 +496,7 @@
                 "tags": [
                     "matches"
                 ],
-                "summary": "List all matches",
+                "summary": "List confirmed matches",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -243,7 +524,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Creates a match with set scores (best of 3, 21 points per set), recalculates ELO ratings, and records history.",
+                "description": "Creates a PENDING match. ELO and performance points are NOT yet applied — they will be on confirmation by the opposing team. The opposing team is notified.",
                 "consumes": [
                     "application/json"
                 ],
@@ -253,7 +534,7 @@
                 "tags": [
                     "matches"
                 ],
-                "summary": "Create a match",
+                "summary": "Submit a match score for confirmation",
                 "parameters": [
                     {
                         "description": "Match details",
@@ -269,12 +550,20 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/db.Match"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -344,6 +633,207 @@
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/matches/{id}/confirm": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Applies ELO + performance points and emits the match-confirmed news. Caller must be a member of the team opposite to the submitter.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "matches"
+                ],
+                "summary": "Confirm a pending match score",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Match ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/matches/{id}/contest": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Marks the match CONTESTED. ELO is not applied. The submitter is notified.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "matches"
+                ],
+                "summary": "Contest a pending match score",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Match ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.Match"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/members": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns the full membership, each enriched with monthly performance (score, rank, 7-day gain), monthly W/L/M and currently held jerseys. Same aggregation window/tableau as the /rankings/* family.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "members"
+                ],
+                "summary": "Members roster with monthly stats and jerseys",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "SINGLES (default) | DOUBLES | MIXED",
+                        "name": "tableau",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "YYYY-MM (default: current month)",
+                        "name": "period",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/services.MemberSummary"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -646,6 +1136,172 @@
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Paginated, most recent first. Includes both read and unread.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "summary": "List notifications for the authenticated user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Max items to return (default 20, max 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Pagination offset (default 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.Notification"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/read-all": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "summary": "Mark all the caller's notifications as read",
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/unread-count": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "summary": "Count unread notifications for the authenticated user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer",
+                                "format": "int64"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/{id}/read": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "summary": "Mark a notification as read",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Notification ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.Notification"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -990,6 +1646,103 @@
                 }
             }
         },
+        "/users/me/fcm-tokens": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upserts the token, binding it to the authenticated user. Called by the mobile app at login and on FCM token refresh.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "fcm"
+                ],
+                "summary": "Register a device FCM token",
+                "parameters": [
+                    {
+                        "description": "Token payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.registerFcmTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.FcmToken"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me/fcm-tokens/{token}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Called by the mobile app on logout. Only deletes the token if it belongs to the authenticated user.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "fcm"
+                ],
+                "summary": "Unregister a device FCM token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "FCM token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/users/{id}": {
             "get": {
                 "security": [
@@ -1250,9 +2003,84 @@
         }
     },
     "definitions": {
+        "db.Challenge": {
+            "type": "object",
+            "properties": {
+                "court": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "from_user_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "match_type": {
+                    "$ref": "#/definitions/db.MatchType"
+                },
+                "note": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "proposed_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "responded_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "status": {
+                    "$ref": "#/definitions/db.ChallengeStatus"
+                },
+                "to_user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "db.ChallengeStatus": {
+            "type": "string",
+            "enum": [
+                "PENDING",
+                "ACCEPTED",
+                "DECLINED",
+                "EXPIRED",
+                "CANCELLED"
+            ],
+            "x-enum-varnames": [
+                "ChallengeStatusPENDING",
+                "ChallengeStatusACCEPTED",
+                "ChallengeStatusDECLINED",
+                "ChallengeStatusEXPIRED",
+                "ChallengeStatusCANCELLED"
+            ]
+        },
+        "db.FcmToken": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "last_seen_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "platform": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "db.Match": {
             "type": "object",
             "properties": {
+                "confirmed_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -1280,6 +2108,12 @@
                 "set3_team2": {
                     "$ref": "#/definitions/pgtype.Int4"
                 },
+                "status": {
+                    "$ref": "#/definitions/db.MatchStatus"
+                },
+                "submitted_by_id": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
                 "team1_player1_id": {
                     "type": "string"
                 },
@@ -1291,11 +2125,23 @@
                 },
                 "team2_player2_id": {
                     "$ref": "#/definitions/pgtype.Text"
-                },
-                "validated": {
-                    "type": "boolean"
                 }
             }
+        },
+        "db.MatchStatus": {
+            "type": "string",
+            "enum": [
+                "PENDING",
+                "CONFIRMED",
+                "CONTESTED",
+                "CANCELLED"
+            ],
+            "x-enum-varnames": [
+                "MatchStatusPENDING",
+                "MatchStatusCONFIRMED",
+                "MatchStatusCONTESTED",
+                "MatchStatusCANCELLED"
+            ]
         },
         "db.MatchType": {
             "type": "string",
@@ -1339,6 +2185,57 @@
                 }
             }
         },
+        "db.Notification": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "read_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/db.NotificationType"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "db.NotificationType": {
+            "type": "string",
+            "enum": [
+                "CHALLENGE_RECEIVED",
+                "CHALLENGE_ACCEPTED",
+                "CHALLENGE_DECLINED",
+                "MATCH_AWAITING_CONFIRMATION",
+                "MATCH_CONFIRMED",
+                "MATCH_CONTESTED"
+            ],
+            "x-enum-varnames": [
+                "NotificationTypeCHALLENGERECEIVED",
+                "NotificationTypeCHALLENGEACCEPTED",
+                "NotificationTypeCHALLENGEDECLINED",
+                "NotificationTypeMATCHAWAITINGCONFIRMATION",
+                "NotificationTypeMATCHCONFIRMED",
+                "NotificationTypeMATCHCONTESTED"
+            ]
+        },
         "db.User": {
             "type": "object",
             "properties": {
@@ -1372,7 +2269,32 @@
                 "last_name": {
                     "type": "string"
                 },
+                "nickname": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
                 "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.createChallengeRequest": {
+            "type": "object",
+            "properties": {
+                "court": {
+                    "type": "string"
+                },
+                "match_type": {
+                    "description": "optional; defaults to SINGLES (v1 only accepts SINGLES)",
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "proposed_at": {
+                    "description": "optional ISO-8601",
+                    "type": "string"
+                },
+                "to_user_id": {
                     "type": "string"
                 }
             }
@@ -1449,6 +2371,18 @@
                 }
             }
         },
+        "handlers.registerFcmTokenRequest": {
+            "type": "object",
+            "properties": {
+                "platform": {
+                    "description": "ios | android | web",
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.setRoleRequest": {
             "type": "object",
             "properties": {
@@ -1505,6 +2439,10 @@
                     "type": "string"
                 },
                 "last_name": {
+                    "type": "string"
+                },
+                "nickname": {
+                    "description": "\"\" = clear",
                     "type": "string"
                 }
             }
@@ -1642,6 +2580,60 @@
                 }
             }
         },
+        "services.MemberPerformance": {
+            "type": "object",
+            "properties": {
+                "gain_7d": {
+                    "type": "integer"
+                },
+                "rank": {
+                    "type": "integer"
+                },
+                "score": {
+                    "type": "integer"
+                }
+            }
+        },
+        "services.MemberStatsMonth": {
+            "type": "object",
+            "properties": {
+                "losses": {
+                    "type": "integer"
+                },
+                "matches": {
+                    "type": "integer"
+                },
+                "wins": {
+                    "type": "integer"
+                }
+            }
+        },
+        "services.MemberSummary": {
+            "type": "object",
+            "properties": {
+                "elo": {
+                    "type": "integer"
+                },
+                "jerseys": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "performance": {
+                    "$ref": "#/definitions/services.MemberPerformance"
+                },
+                "stats_month": {
+                    "$ref": "#/definitions/services.MemberStatsMonth"
+                },
+                "tableau": {
+                    "$ref": "#/definitions/db.MatchType"
+                },
+                "user": {
+                    "$ref": "#/definitions/services.ProfileUser"
+                }
+            }
+        },
         "services.PerformanceRanking": {
             "type": "object",
             "properties": {
@@ -1743,6 +2735,9 @@
                 },
                 "last_name": {
                     "type": "string"
+                },
+                "nickname": {
+                    "type": "string"
                 }
             }
         },
@@ -1770,11 +2765,11 @@
                         "$ref": "#/definitions/services.MatchSet"
                     }
                 },
+                "status": {
+                    "type": "string"
+                },
                 "tableau": {
                     "$ref": "#/definitions/db.MatchType"
-                },
-                "validated": {
-                    "type": "boolean"
                 },
                 "won_by_user": {
                     "type": "boolean"

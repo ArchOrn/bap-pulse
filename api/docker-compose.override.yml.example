@@ -1,0 +1,14 @@
+# Copy this file to docker-compose.override.yml if you are NOT using OrbStack.
+# Docker Compose merges it automatically and exposes the services on localhost.
+# OrbStack users don't need this — containers are reachable via
+# <container-name>.orb.local without exposing ports on the host.
+
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+
+  storage:
+    ports:
+      - "9000:9000"
+      - "9001:9001"

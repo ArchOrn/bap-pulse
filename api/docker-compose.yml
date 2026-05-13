@@ -9,8 +9,6 @@ services:
       POSTGRES_PASSWORD: "caOqvamDrZsUxOgyZxhXzsiPOwdfFiCQ"
     volumes:
       - ./.docker/db/data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
 
   storage:
     image: rustfs/rustfs:latest
@@ -24,6 +22,3 @@ services:
       RUSTFS_SECRET_KEY: "eeDrvchNZFeQuKrjvkjVYnaloKNyvFIK"
     volumes:
       - ./.docker/storage/data:/data
-    ports:
-      - "9000:9000"
-      - "9001:9001"
