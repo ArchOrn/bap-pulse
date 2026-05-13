@@ -1,6 +1,15 @@
 import 'package:equatable/equatable.dart';
 
-enum MatchStatus { pending, validated, contested }
+/// Mirrors `match_status` on the API (see migration 014).
+enum MatchStatus { pending, confirmed, contested, cancelled }
+
+MatchStatus parseMatchStatus(String raw) => switch (raw) {
+      'PENDING' => MatchStatus.pending,
+      'CONFIRMED' => MatchStatus.confirmed,
+      'CONTESTED' => MatchStatus.contested,
+      'CANCELLED' => MatchStatus.cancelled,
+      _ => MatchStatus.confirmed,
+    };
 
 class GameMatch extends Equatable {
   final String id;

@@ -40,6 +40,7 @@ class RankHeader extends StatelessWidget {
   final int streak;
   final bool isLoading;
   final VoidCallback? onBellTap;
+  final int unreadCount;
 
   const RankHeader({
     super.key,
@@ -53,6 +54,7 @@ class RankHeader extends StatelessWidget {
     required this.streak,
     this.isLoading = false,
     this.onBellTap,
+    this.unreadCount = 0,
   });
 
   @override
@@ -100,6 +102,7 @@ class RankHeader extends StatelessWidget {
                 day: now.day,
                 lastDay: lastDay,
                 onBellTap: onBellTap,
+                unreadCount: unreadCount,
               ),
               const SizedBox(height: 22),
               AnimatedSwitcher(
@@ -135,12 +138,14 @@ class _TitleRow extends StatelessWidget {
   final int day;
   final int lastDay;
   final VoidCallback? onBellTap;
+  final int unreadCount;
 
   const _TitleRow({
     required this.monthLabel,
     required this.day,
     required this.lastDay,
     required this.onBellTap,
+    required this.unreadCount,
   });
 
   @override
@@ -188,22 +193,35 @@ class _TitleRow extends StatelessWidget {
                   child: Icon(Icons.notifications_outlined,
                       color: Colors.white, size: 18),
                 ),
-                Positioned(
-                  top: 6,
-                  right: 6,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: AppColors.accentRed,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.bgScaffold,
-                        width: 2,
+                if (unreadCount > 0)
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: Container(
+                      constraints:
+                          const BoxConstraints(minWidth: 14, minHeight: 14),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: AppColors.accentRed,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: AppColors.bgScaffold,
+                          width: 2,
+                        ),
+                      ),
+                      child: Text(
+                        unreadCount > 9 ? '9+' : '$unreadCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          height: 1,
+                        ),
                       ),
                     ),
                   ),
-                ),
               ],
             ),
           ),

@@ -30,7 +30,7 @@ type UserMatchHistoryEntry struct {
 	EloChange  int32        `json:"elo_change"`
 	PerfPoints int32        `json:"perf_points"`
 	Sets       []MatchSet   `json:"sets"`
-	Validated  bool         `json:"validated"`
+	Status     string       `json:"status"`
 }
 
 type MatchSet struct {
@@ -144,7 +144,7 @@ func GetUserMatchHistory(
 			EloChange:  eloChange,
 			PerfPoints: perfPoints,
 			Sets:       sets,
-			Validated:  m.Validated,
+			Status:     string(m.Status),
 		})
 	}
 

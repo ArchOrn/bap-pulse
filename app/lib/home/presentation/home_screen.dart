@@ -12,6 +12,7 @@ import 'package:bap_pulse/leaderboard/bloc/leaderboard_bloc.dart';
 import 'package:bap_pulse/leaderboard/data/leaderboard_models.dart';
 import 'package:bap_pulse/news/data/news.dart';
 import 'package:bap_pulse/news/data/news_repository.dart';
+import 'package:bap_pulse/notifications/bloc/notifications_bloc.dart';
 import 'package:bap_pulse/profile/bloc/profile_bloc.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -44,36 +45,47 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: EdgeInsets.zero,
         children: [
           // Rank header — driven by ProfileBloc (current user) + the
-          // performance leaderboard cache (for total members count).
+          // performance leaderboard cache (for total members count). The
+          // unread-notifications badge is sourced from NotificationsBloc.
           BlocBuilder<ProfileBloc, ProfileState>(
             builder: (context, profileState) {
               return BlocBuilder<LeaderboardBloc, LeaderboardState>(
                 builder: (context, lbState) {
-                  final entries =
-                      lbState.cache[LeaderboardCriterion.performance];
-                  if (profileState is ProfileLoaded) {
-                    final p = profileState.profile;
-                    return RankHeader(
-                      rank: p.performance.rank,
-                      totalMembers: entries?.length ?? 0,
-                      weekDelta: 0, // no API data for week-over-week
-                      score: p.performance.score,
-                      perfGain: p.performance.gain7d,
-                      wins: p.statsMonth.wins,
-                      matches: p.statsMonth.matches,
-                      streak: p.statsMonth.streak,
-                    );
-                  }
-                  return const RankHeader(
-                    rank: 0,
-                    totalMembers: 0,
-                    weekDelta: 0,
-                    score: 0,
-                    perfGain: 0,
-                    wins: 0,
-                    matches: 0,
-                    streak: 0,
-                    isLoading: true,
+                  return BlocBuilder<NotificationsBloc, NotificationsState>(
+                    builder: (context, notifState) {
+                      final entries =
+                          lbState.cache[LeaderboardCriterion.performance];
+                      final unread = notifState.unreadCount;
+                      void onBellTap() => context.push('/notifications');
+                      if (profileState is ProfileLoaded) {
+                        final p = profileState.profile;
+                        return RankHeader(
+                          rank: p.performance.rank,
+                          totalMembers: entries?.length ?? 0,
+                          weekDelta: 0,
+                          score: p.performance.score,
+                          perfGain: p.performance.gain7d,
+                          wins: p.statsMonth.wins,
+                          matches: p.statsMonth.matches,
+                          streak: p.statsMonth.streak,
+                          onBellTap: onBellTap,
+                          unreadCount: unread,
+                        );
+                      }
+                      return RankHeader(
+                        rank: 0,
+                        totalMembers: 0,
+                        weekDelta: 0,
+                        score: 0,
+                        perfGain: 0,
+                        wins: 0,
+                        matches: 0,
+                        streak: 0,
+                        isLoading: true,
+                        onBellTap: onBellTap,
+                        unreadCount: unread,
+                      );
+                    },
                   );
                 },
               );

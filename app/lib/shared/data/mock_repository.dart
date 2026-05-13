@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:bap_pulse/shared/models/challenge.dart';
 import 'package:bap_pulse/shared/models/jersey.dart';
 import 'package:bap_pulse/shared/models/match.dart';
 import 'package:bap_pulse/shared/models/player.dart';
@@ -125,56 +124,43 @@ class MockRepository {
       id: 'm2', playerAId: 'u4', playerBId: 'u6',
       scoreA: [21, 21], scoreB: [17, 14], winnerId: 'u4',
       date: 'Hier', time: '20:15', court: 'Terrain 1',
-      status: MatchStatus.validated, eloChange: 21,
+      status: MatchStatus.confirmed, eloChange: 21,
     ),
     GameMatch(
       id: 'm3', playerAId: 'u1', playerBId: 'u8',
       scoreA: [21, 19, 21], scoreB: [14, 21, 17], winnerId: 'u1',
       date: '20 avr.', time: '19:00', court: 'Terrain 2',
-      status: MatchStatus.validated, eloChange: 16,
+      status: MatchStatus.confirmed, eloChange: 16,
     ),
     GameMatch(
       id: 'm4', playerAId: 'u2', playerBId: 'u11',
       scoreA: [21, 21], scoreB: [19, 15], winnerId: 'u2',
       date: '18 avr.', time: '20:45', court: 'Terrain 4',
-      status: MatchStatus.validated, eloChange: 12,
+      status: MatchStatus.confirmed, eloChange: 12,
     ),
     GameMatch(
       id: 'm5', playerAId: 'u1', playerBId: 'u9',
       scoreA: [21, 21], scoreB: [11, 16], winnerId: 'u1',
       date: '16 avr.', time: '19:30', court: 'Terrain 1',
-      status: MatchStatus.validated, eloChange: 8,
+      status: MatchStatus.confirmed, eloChange: 8,
     ),
     GameMatch(
       id: 'm6', playerAId: 'u3', playerBId: 'u11',
       scoreA: [21, 21], scoreB: [18, 19], winnerId: 'u3',
       date: '15 avr.', time: '20:00', court: 'Terrain 3',
-      status: MatchStatus.validated, eloChange: 14,
+      status: MatchStatus.confirmed, eloChange: 14,
     ),
     GameMatch(
       id: 'm7', playerAId: 'u1', playerBId: 'u5',
       scoreA: [21, 12, 21], scoreB: [18, 21, 15], winnerId: 'u1',
       date: '14 avr.', time: '19:15', court: 'Terrain 2',
-      status: MatchStatus.validated, eloChange: 9,
+      status: MatchStatus.confirmed, eloChange: 9,
     ),
     GameMatch(
       id: 'm8', playerAId: 'u4', playerBId: 'u10',
       scoreA: [21, 21], scoreB: [16, 18], winnerId: 'u4',
       date: '13 avr.', time: '20:30', court: 'Terrain 1',
-      status: MatchStatus.validated, eloChange: 11,
-    ),
-  ];
-
-  final List<Challenge> _challenges = const [
-    Challenge(
-      id: 'c1', fromId: 'u8', toId: 'u1',
-      when: 'Mar. 21 avr. · 19:30', court: 'Terrain 3',
-      status: ChallengeStatus.incoming, note: 'On se le fait ?',
-    ),
-    Challenge(
-      id: 'c2', fromId: 'u1', toId: 'u11',
-      when: 'Jeu. 23 avr. · 20:00', court: 'Terrain 2',
-      status: ChallengeStatus.pending, note: 'Revanche 🏸',
+      status: MatchStatus.confirmed, eloChange: 11,
     ),
   ];
 
@@ -239,7 +225,6 @@ class MockRepository {
 
   List<Player> get players => List.unmodifiable(_players);
   List<GameMatch> get matches => List.unmodifiable(_matches);
-  List<Challenge> get challenges => List.unmodifiable(_challenges);
   List<Jersey> get jerseys => List.unmodifiable(_jerseys);
 
   Player byId(String id) => _players.firstWhere((p) => p.id == id);
@@ -282,13 +267,6 @@ class MockRepository {
           (m.playerAId == a && m.playerBId == b) ||
           (m.playerAId == b && m.playerBId == a))
       .toList();
-
-  Challenge? incomingChallengeFor(String playerId) {
-    for (final c in _challenges) {
-      if (c.toId == playerId && c.status == ChallengeStatus.incoming) return c;
-    }
-    return null;
-  }
 
   /// Mocked performance history for the current user (13 points, used by
   /// the profile sparkline). Non-decreasing — ends at the player's current

@@ -11,6 +11,69 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const confirmMatch = `-- name: ConfirmMatch :one
+UPDATE matches
+SET status       = 'CONFIRMED',
+    confirmed_at = NOW()
+WHERE id = $1 AND status = 'PENDING'
+RETURNING id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, played_at, set1_team1, set1_team2, set2_team1, set2_team2, set3_team1, set3_team2, status, submitted_by_id, confirmed_at
+`
+
+func (q *Queries) ConfirmMatch(ctx context.Context, id pgtype.UUID) (Match, error) {
+	row := q.db.QueryRow(ctx, confirmMatch, id)
+	var i Match
+	err := row.Scan(
+		&i.ID,
+		&i.MatchType,
+		&i.Team1Player1ID,
+		&i.Team1Player2ID,
+		&i.Team2Player1ID,
+		&i.Team2Player2ID,
+		&i.PlayedAt,
+		&i.Set1Team1,
+		&i.Set1Team2,
+		&i.Set2Team1,
+		&i.Set2Team2,
+		&i.Set3Team1,
+		&i.Set3Team2,
+		&i.Status,
+		&i.SubmittedByID,
+		&i.ConfirmedAt,
+	)
+	return i, err
+}
+
+const contestMatch = `-- name: ContestMatch :one
+UPDATE matches
+SET status = 'CONTESTED'
+WHERE id = $1 AND status = 'PENDING'
+RETURNING id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, played_at, set1_team1, set1_team2, set2_team1, set2_team2, set3_team1, set3_team2, status, submitted_by_id, confirmed_at
+`
+
+func (q *Queries) ContestMatch(ctx context.Context, id pgtype.UUID) (Match, error) {
+	row := q.db.QueryRow(ctx, contestMatch, id)
+	var i Match
+	err := row.Scan(
+		&i.ID,
+		&i.MatchType,
+		&i.Team1Player1ID,
+		&i.Team1Player2ID,
+		&i.Team2Player1ID,
+		&i.Team2Player2ID,
+		&i.PlayedAt,
+		&i.Set1Team1,
+		&i.Set1Team2,
+		&i.Set2Team1,
+		&i.Set2Team2,
+		&i.Set3Team1,
+		&i.Set3Team2,
+		&i.Status,
+		&i.SubmittedByID,
+		&i.ConfirmedAt,
+	)
+	return i, err
+}
+
 const createMatch = `-- name: CreateMatch :one
 INSERT INTO matches (
     match_type,
@@ -19,9 +82,12 @@ INSERT INTO matches (
     set1_team1, set1_team2,
     set2_team1, set2_team2,
     set3_team1, set3_team2,
-    played_at
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-RETURNING id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, played_at, validated, set1_team1, set1_team2, set2_team1, set2_team2, set3_team1, set3_team2
+    played_at,
+    status,
+    submitted_by_id,
+    confirmed_at
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+RETURNING id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, played_at, set1_team1, set1_team2, set2_team1, set2_team2, set3_team1, set3_team2, status, submitted_by_id, confirmed_at
 `
 
 type CreateMatchParams struct {
@@ -37,8 +103,14 @@ type CreateMatchParams struct {
 	Set3Team1      pgtype.Int4        `json:"set3_team1"`
 	Set3Team2      pgtype.Int4        `json:"set3_team2"`
 	PlayedAt       pgtype.Timestamptz `json:"played_at"`
+	Status         MatchStatus        `json:"status"`
+	SubmittedByID  pgtype.Text        `json:"submitted_by_id"`
+	ConfirmedAt    pgtype.Timestamptz `json:"confirmed_at"`
 }
 
+// Creates a match. Caller decides the initial status: 'PENDING' when the score
+// is awaiting opponent confirmation (ELO not yet applied), 'CONFIRMED' for
+// already-validated entries (e.g. admin-imported or auto-confirmed flows).
 func (q *Queries) CreateMatch(ctx context.Context, arg CreateMatchParams) (Match, error) {
 	row := q.db.QueryRow(ctx, createMatch,
 		arg.MatchType,
@@ -53,6 +125,9 @@ func (q *Queries) CreateMatch(ctx context.Context, arg CreateMatchParams) (Match
 		arg.Set3Team1,
 		arg.Set3Team2,
 		arg.PlayedAt,
+		arg.Status,
+		arg.SubmittedByID,
+		arg.ConfirmedAt,
 	)
 	var i Match
 	err := row.Scan(
@@ -63,19 +138,21 @@ func (q *Queries) CreateMatch(ctx context.Context, arg CreateMatchParams) (Match
 		&i.Team2Player1ID,
 		&i.Team2Player2ID,
 		&i.PlayedAt,
-		&i.Validated,
 		&i.Set1Team1,
 		&i.Set1Team2,
 		&i.Set2Team1,
 		&i.Set2Team2,
 		&i.Set3Team1,
 		&i.Set3Team2,
+		&i.Status,
+		&i.SubmittedByID,
+		&i.ConfirmedAt,
 	)
 	return i, err
 }
 
 const getMatchByID = `-- name: GetMatchByID :one
-SELECT id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, played_at, validated, set1_team1, set1_team2, set2_team1, set2_team2, set3_team1, set3_team2 FROM matches
+SELECT id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, played_at, set1_team1, set1_team2, set2_team1, set2_team2, set3_team1, set3_team2, status, submitted_by_id, confirmed_at FROM matches
 WHERE id = $1
 `
 
@@ -90,20 +167,23 @@ func (q *Queries) GetMatchByID(ctx context.Context, id pgtype.UUID) (Match, erro
 		&i.Team2Player1ID,
 		&i.Team2Player2ID,
 		&i.PlayedAt,
-		&i.Validated,
 		&i.Set1Team1,
 		&i.Set1Team2,
 		&i.Set2Team1,
 		&i.Set2Team2,
 		&i.Set3Team1,
 		&i.Set3Team2,
+		&i.Status,
+		&i.SubmittedByID,
+		&i.ConfirmedAt,
 	)
 	return i, err
 }
 
 const getMatchesInPeriod = `-- name: GetMatchesInPeriod :many
-SELECT id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, played_at, validated, set1_team1, set1_team2, set2_team1, set2_team2, set3_team1, set3_team2 FROM matches
-WHERE match_type = $1
+SELECT id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, played_at, set1_team1, set1_team2, set2_team1, set2_team2, set3_team1, set3_team2, status, submitted_by_id, confirmed_at FROM matches
+WHERE status = 'CONFIRMED'
+  AND match_type = $1
   AND played_at >= $2
   AND played_at <  $3
 ORDER BY played_at DESC
@@ -132,13 +212,15 @@ func (q *Queries) GetMatchesInPeriod(ctx context.Context, arg GetMatchesInPeriod
 			&i.Team2Player1ID,
 			&i.Team2Player2ID,
 			&i.PlayedAt,
-			&i.Validated,
 			&i.Set1Team1,
 			&i.Set1Team2,
 			&i.Set2Team1,
 			&i.Set2Team2,
 			&i.Set3Team1,
 			&i.Set3Team2,
+			&i.Status,
+			&i.SubmittedByID,
+			&i.ConfirmedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -151,12 +233,14 @@ func (q *Queries) GetMatchesInPeriod(ctx context.Context, arg GetMatchesInPeriod
 }
 
 const getPlayerMatches = `-- name: GetPlayerMatches :many
-SELECT id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, played_at, validated, set1_team1, set1_team2, set2_team1, set2_team2, set3_team1, set3_team2 FROM matches
-WHERE team1_player1_id = $1 OR team1_player2_id = $1
-   OR team2_player1_id = $1 OR team2_player2_id = $1
+SELECT id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, played_at, set1_team1, set1_team2, set2_team1, set2_team2, set3_team1, set3_team2, status, submitted_by_id, confirmed_at FROM matches
+WHERE status = 'CONFIRMED'
+  AND (team1_player1_id = $1 OR team1_player2_id = $1
+    OR team2_player1_id = $1 OR team2_player2_id = $1)
 ORDER BY played_at DESC
 `
 
+// Only CONFIRMED matches count for a player's history.
 func (q *Queries) GetPlayerMatches(ctx context.Context, team1Player1ID string) ([]Match, error) {
 	rows, err := q.db.Query(ctx, getPlayerMatches, team1Player1ID)
 	if err != nil {
@@ -174,13 +258,15 @@ func (q *Queries) GetPlayerMatches(ctx context.Context, team1Player1ID string) (
 			&i.Team2Player1ID,
 			&i.Team2Player2ID,
 			&i.PlayedAt,
-			&i.Validated,
 			&i.Set1Team1,
 			&i.Set1Team2,
 			&i.Set2Team1,
 			&i.Set2Team2,
 			&i.Set3Team1,
 			&i.Set3Team2,
+			&i.Status,
+			&i.SubmittedByID,
+			&i.ConfirmedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -193,10 +279,12 @@ func (q *Queries) GetPlayerMatches(ctx context.Context, team1Player1ID string) (
 }
 
 const listMatches = `-- name: ListMatches :many
-SELECT id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, played_at, validated, set1_team1, set1_team2, set2_team1, set2_team2, set3_team1, set3_team2 FROM matches
+SELECT id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, played_at, set1_team1, set1_team2, set2_team1, set2_team2, set3_team1, set3_team2, status, submitted_by_id, confirmed_at FROM matches
+WHERE status = 'CONFIRMED'
 ORDER BY played_at DESC
 `
 
+// Public lists (rankings, feeds, history) only show CONFIRMED matches.
 func (q *Queries) ListMatches(ctx context.Context) ([]Match, error) {
 	rows, err := q.db.Query(ctx, listMatches)
 	if err != nil {
@@ -214,13 +302,15 @@ func (q *Queries) ListMatches(ctx context.Context) ([]Match, error) {
 			&i.Team2Player1ID,
 			&i.Team2Player2ID,
 			&i.PlayedAt,
-			&i.Validated,
 			&i.Set1Team1,
 			&i.Set1Team2,
 			&i.Set2Team1,
 			&i.Set2Team2,
 			&i.Set3Team1,
 			&i.Set3Team2,
+			&i.Status,
+			&i.SubmittedByID,
+			&i.ConfirmedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -230,33 +320,4 @@ func (q *Queries) ListMatches(ctx context.Context) ([]Match, error) {
 		return nil, err
 	}
 	return items, nil
-}
-
-const validateMatch = `-- name: ValidateMatch :one
-UPDATE matches
-SET validated = true
-WHERE id = $1
-RETURNING id, match_type, team1_player1_id, team1_player2_id, team2_player1_id, team2_player2_id, played_at, validated, set1_team1, set1_team2, set2_team1, set2_team2, set3_team1, set3_team2
-`
-
-func (q *Queries) ValidateMatch(ctx context.Context, id pgtype.UUID) (Match, error) {
-	row := q.db.QueryRow(ctx, validateMatch, id)
-	var i Match
-	err := row.Scan(
-		&i.ID,
-		&i.MatchType,
-		&i.Team1Player1ID,
-		&i.Team1Player2ID,
-		&i.Team2Player1ID,
-		&i.Team2Player2ID,
-		&i.PlayedAt,
-		&i.Validated,
-		&i.Set1Team1,
-		&i.Set1Team2,
-		&i.Set2Team1,
-		&i.Set2Team2,
-		&i.Set3Team1,
-		&i.Set3Team2,
-	)
-	return i, err
 }

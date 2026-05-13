@@ -26,9 +26,11 @@ import (
 	"google.golang.org/api/option"
 
 	"bap-pulse/config"
+	"bap-pulse/db"
 	_ "bap-pulse/docs"
 	"bap-pulse/handlers"
 	"bap-pulse/middleware"
+	"bap-pulse/services"
 )
 
 //go:embed docs/swagger.json
@@ -96,6 +98,18 @@ func main() {
 	}
 	log.Println("Firebase Auth initialized")
 
+	// FCM (Cloud Messaging). Failure here is fatal in production: we want push
+	// notifications wired before serving traffic. Local dev with no Firebase
+	// credentials falls back to a nil client, which the Notifier handles by
+	// skipping the FCM hop while still persisting in-app notifications.
+	messagingClient, err := firebaseApp.Messaging(ctx)
+	if err != nil {
+		log.Printf("Firebase Messaging unavailable (push disabled): %v", err)
+		messagingClient = nil
+	} else {
+		log.Println("Firebase Messaging initialized")
+	}
+
 	// --- Fiber ---
 	app := fiber.New(fiber.Config{
 		AppName: "BAP Pulse API",
@@ -137,12 +151,17 @@ func main() {
 	// --- All routes below require a valid Firebase token ---
 	app.Use(middleware.FirebaseAuth(authClient))
 
+	// Notifier: persists in-app notifications and dispatches push.
+	notifier := services.NewNotifier(db.New(pool), messagingClient)
+
 	// --- Auth ---
 	app.Post("/auth/sync", handlers.Sync(pool))
 
 	// --- Users ---
 	users := app.Group("/users")
 	users.Get("/", handlers.GetUsers(pool))
+	users.Post("/me/fcm-tokens", handlers.RegisterFcmToken(pool))
+	users.Delete("/me/fcm-tokens/:token", handlers.UnregisterFcmToken(pool))
 	users.Get("/:id/profile", handlers.GetUserProfile(pool))
 	users.Get("/:id/matches", handlers.GetUserMatches(pool))
 	users.Get("/:id", handlers.GetUser(pool))
@@ -155,8 +174,25 @@ func main() {
 	// --- Matches ---
 	matches := app.Group("/matches")
 	matches.Get("/", handlers.GetMatches(pool))
-	matches.Post("/", handlers.CreateMatch(pool))
+	matches.Post("/", handlers.CreateMatch(pool, notifier))
 	matches.Get("/:id", handlers.GetMatch(pool))
+	matches.Post("/:id/confirm", handlers.ConfirmMatch(pool, notifier))
+	matches.Post("/:id/contest", handlers.ContestMatch(pool, notifier))
+
+	// --- Challenges (player-to-player, SINGLES only in v1) ---
+	challenges := app.Group("/challenges")
+	challenges.Get("/", handlers.ListChallenges(pool))
+	challenges.Post("/", handlers.CreateChallenge(pool, notifier))
+	challenges.Post("/:id/accept", handlers.AcceptChallenge(pool, notifier))
+	challenges.Post("/:id/decline", handlers.DeclineChallenge(pool, notifier))
+	challenges.Post("/:id/cancel", handlers.CancelChallenge(pool))
+
+	// --- Notifications (in-app center) ---
+	notifications := app.Group("/notifications")
+	notifications.Get("/", handlers.ListNotifications(pool))
+	notifications.Get("/unread-count", handlers.UnreadNotificationCount(pool))
+	notifications.Post("/read-all", handlers.MarkAllNotificationsRead(pool))
+	notifications.Post("/:id/read", handlers.MarkNotificationRead(pool))
 
 	// --- News (read = any auth, write = admin only) ---
 	news := app.Group("/news")

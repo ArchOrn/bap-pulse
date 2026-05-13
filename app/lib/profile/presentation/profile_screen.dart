@@ -8,6 +8,7 @@ import 'package:bap_pulse/core/theme/text_styles.dart';
 import 'package:bap_pulse/core/widgets/jersey_badge.dart';
 import 'package:bap_pulse/core/widgets/trend_chip.dart';
 import 'package:bap_pulse/auth/bloc/auth_bloc.dart';
+import 'package:bap_pulse/notifications/bloc/notifications_bloc.dart';
 import 'package:bap_pulse/profile/bloc/profile_bloc.dart';
 import 'package:bap_pulse/profile/data/profile_models.dart';
 import 'package:bap_pulse/profile/presentation/widgets/elo_sparkline.dart';
@@ -187,19 +188,62 @@ class _Cover extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                      ),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.notifications_outlined,
-                        color: Colors.white,
-                        size: 17,
-                      ),
+                    BlocBuilder<NotificationsBloc, NotificationsState>(
+                      builder: (context, notifState) {
+                        final unread = notifState.unreadCount;
+                        return GestureDetector(
+                          onTap: () => context.push('/notifications'),
+                          behavior: HitTestBehavior.opaque,
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Container(
+                                width: 34,
+                                height: 34,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
+                                ),
+                                alignment: Alignment.center,
+                                child: const Icon(
+                                  Icons.notifications_outlined,
+                                  color: Colors.white,
+                                  size: 17,
+                                ),
+                              ),
+                              if (unread > 0)
+                                Positioned(
+                                  top: -2,
+                                  right: -2,
+                                  child: Container(
+                                    constraints: const BoxConstraints(
+                                        minWidth: 16, minHeight: 16),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 4, vertical: 1),
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.accentRed,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: AppColors.bgScaffold,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      unread > 9 ? '9+' : '$unread',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w700,
+                                        height: 1,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),

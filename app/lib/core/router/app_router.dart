@@ -17,6 +17,7 @@ import 'package:bap_pulse/jerseys/presentation/jerseys_screen.dart';
 import 'package:bap_pulse/leaderboard/presentation/leaderboard_screen.dart';
 import 'package:bap_pulse/news/presentation/news_detail_screen.dart';
 import 'package:bap_pulse/news/presentation/news_list_screen.dart';
+import 'package:bap_pulse/notifications/presentation/notifications_screen.dart';
 import 'package:bap_pulse/profile/data/account.dart';
 import 'package:bap_pulse/profile/presentation/delete_account_screen.dart';
 import 'package:bap_pulse/profile/presentation/nickname_edit_screen.dart';
@@ -119,6 +120,10 @@ GoRouter buildRouter(AuthBloc authBloc) {
       GoRoute(
         path: '/news',
         builder: (_, _) => const NewsListScreen(),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (_, _) => const NotificationsScreen(),
       ),
       GoRoute(
         path: '/news/:id',

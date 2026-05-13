@@ -93,7 +93,7 @@ func validateSets(sets []setScore) string {
 
 // GetMatches godoc
 //
-//	@Summary		List all matches
+//	@Summary		List confirmed matches
 //	@Tags			matches
 //	@Security		BearerAuth
 //	@Produce		json
@@ -140,26 +140,28 @@ func GetMatch(pool *pgxpool.Pool) fiber.Handler {
 
 // CreateMatch godoc
 //
-//	@Summary		Create a match
-//	@Description	Creates a match with set scores (best of 3, 21 points per set), recalculates ELO ratings, and records history.
+//	@Summary		Submit a match score for confirmation
+//	@Description	Creates a PENDING match. ELO and performance points are NOT yet applied — they will be on confirmation by the opposing team. The opposing team is notified.
 //	@Tags			matches
 //	@Security		BearerAuth
 //	@Accept			json
 //	@Produce		json
 //	@Param			body	body		createMatchRequest	true	"Match details"
-//	@Success		201		{object}	map[string]interface{}
+//	@Success		201		{object}	db.Match
 //	@Failure		400		{object}	map[string]string
+//	@Failure		403		{object}	map[string]string
 //	@Failure		404		{object}	map[string]string
 //	@Failure		500		{object}	map[string]string
 //	@Router			/matches [post]
-func CreateMatch(pool *pgxpool.Pool) fiber.Handler {
+func CreateMatch(pool *pgxpool.Pool, notifier *services.Notifier) fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		uid := c.Locals("firebaseUID").(string)
+
 		var req createMatchRequest
 		if err := c.BodyParser(&req); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 		}
 
-		// Validate sets
 		if msg := validateSets(req.Sets); msg != "" {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": msg})
 		}
@@ -173,49 +175,46 @@ func CreateMatch(pool *pgxpool.Pool) fiber.Handler {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "All 4 player IDs are required for doubles/mixed"})
 		}
 
-		// Check for duplicate players
 		playerIDs := []string{req.Team1Player1ID, req.Team2Player1ID}
 		if isDoubles {
 			playerIDs = append(playerIDs, req.Team1Player2ID, req.Team2Player2ID)
 		}
 		seen := make(map[string]bool, len(playerIDs))
+		callerInMatch := false
 		for _, id := range playerIDs {
 			if seen[id] {
 				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "A player cannot appear more than once in a match"})
 			}
 			seen[id] = true
+			if id == uid {
+				callerInMatch = true
+			}
+		}
+		if !callerInMatch {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "You can only submit matches you played in"})
 		}
 
 		q := db.New(pool)
 
-		p1, err := q.GetUserByID(c.Context(), req.Team1Player1ID)
-		if err != nil {
+		if _, err := q.GetUserByID(c.Context(), req.Team1Player1ID); err != nil {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Team 1 player 1 not found"})
 		}
-		p3, err := q.GetUserByID(c.Context(), req.Team2Player1ID)
-		if err != nil {
+		if _, err := q.GetUserByID(c.Context(), req.Team2Player1ID); err != nil {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Team 2 player 1 not found"})
 		}
-
-		// Nullable fields for partner slots (singles leaves them empty).
 		team1P2 := pgtype.Text{}
 		team2P2 := pgtype.Text{}
-
-		var p2, p4 db.User
 		if isDoubles {
-			p2, err = q.GetUserByID(c.Context(), req.Team1Player2ID)
-			if err != nil {
+			if _, err := q.GetUserByID(c.Context(), req.Team1Player2ID); err != nil {
 				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Team 1 player 2 not found"})
 			}
-			p4, err = q.GetUserByID(c.Context(), req.Team2Player2ID)
-			if err != nil {
+			if _, err := q.GetUserByID(c.Context(), req.Team2Player2ID); err != nil {
 				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Team 2 player 2 not found"})
 			}
 			team1P2 = pgtype.Text{String: req.Team1Player2ID, Valid: true}
 			team2P2 = pgtype.Text{String: req.Team2Player2ID, Valid: true}
 		}
 
-		// Build set columns
 		set3T1 := pgtype.Int4{}
 		set3T2 := pgtype.Int4{}
 		if len(req.Sets) == 3 {
@@ -236,27 +235,235 @@ func CreateMatch(pool *pgxpool.Pool) fiber.Handler {
 			Set3Team1:      set3T1,
 			Set3Team2:      set3T2,
 			PlayedAt:       pgtype.Timestamptz{Time: time.Now(), Valid: true},
+			Status:         db.MatchStatusPENDING,
+			SubmittedByID:  pgtype.Text{String: uid, Valid: true},
+			ConfirmedAt:    pgtype.Timestamptz{},
 		})
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create match"})
 		}
 
-		eloChanges, err := applyEloChanges(c, q, match.ID, db.MatchType(req.MatchType), req, p1, p2, p3, p4, isDoubles)
+		submitter, _ := q.GetUserByID(c.Context(), uid)
+		matchID := uuidString(match.ID)
+
+		// Notify the opposing team members. The first to confirm validates the
+		// match; teammate of the submitter receives no push (their own report).
+		for _, opponentID := range opposingTeamMembers(match, uid) {
+			_ = notifier.Send(
+				c.Context(),
+				opponentID,
+				db.NotificationTypeMATCHAWAITINGCONFIRMATION,
+				"Score à confirmer 🏸",
+				displayName(submitter)+" a saisi le score de votre match",
+				map[string]string{
+					"match_id": matchID,
+				},
+			)
+		}
+
+		return c.Status(fiber.StatusCreated).JSON(match)
+	}
+}
+
+// ConfirmMatch godoc
+//
+//	@Summary		Confirm a pending match score
+//	@Description	Applies ELO + performance points and emits the match-confirmed news. Caller must be a member of the team opposite to the submitter.
+//	@Tags			matches
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			id	path		string	true	"Match ID (UUID)"
+//	@Success		200	{object}	map[string]interface{}
+//	@Failure		400	{object}	map[string]string
+//	@Failure		403	{object}	map[string]string
+//	@Failure		404	{object}	map[string]string
+//	@Failure		500	{object}	map[string]string
+//	@Router			/matches/{id}/confirm [post]
+func ConfirmMatch(pool *pgxpool.Pool, notifier *services.Notifier) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		uid := c.Locals("firebaseUID").(string)
+
+		id, err := parseUUID(c.Params("id"))
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
+		}
+
+		q := db.New(pool)
+		match, err := q.GetMatchByID(c.Context(), id)
+		if err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Match not found"})
+		}
+		if match.Status != db.MatchStatusPENDING {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Match is not pending"})
+		}
+		if !isOnOpposingTeam(match, uid) {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Only the opposing team can confirm"})
+		}
+
+		updated, err := q.ConfirmMatch(c.Context(), id)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to confirm match"})
+		}
+
+		eloChanges, err := applyEloChangesForMatch(c, q, updated)
 		if err != nil {
 			return err
 		}
 
-		// Auto-generate a news item summarizing the match (best-effort: a failure
-		// here must not break the match-creation flow).
-		if err := services.GenerateMatchNews(c.Context(), q, match); err != nil {
+		if err := services.GenerateMatchNews(c.Context(), q, updated); err != nil {
 			log.Printf("news_generator: %v", err)
 		}
 
-		return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-			"match": match,
+		if updated.SubmittedByID.Valid {
+			confirmer, _ := q.GetUserByID(c.Context(), uid)
+			_ = notifier.Send(
+				c.Context(),
+				updated.SubmittedByID.String,
+				db.NotificationTypeMATCHCONFIRMED,
+				"Score confirmé ✅",
+				displayName(confirmer)+" a confirmé le résultat",
+				map[string]string{
+					"match_id": uuidString(updated.ID),
+				},
+			)
+		}
+
+		return c.JSON(fiber.Map{
+			"match": updated,
 			"elo":   eloChanges,
 		})
 	}
+}
+
+// ContestMatch godoc
+//
+//	@Summary		Contest a pending match score
+//	@Description	Marks the match CONTESTED. ELO is not applied. The submitter is notified.
+//	@Tags			matches
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			id	path		string	true	"Match ID (UUID)"
+//	@Success		200	{object}	db.Match
+//	@Failure		400	{object}	map[string]string
+//	@Failure		403	{object}	map[string]string
+//	@Failure		404	{object}	map[string]string
+//	@Failure		500	{object}	map[string]string
+//	@Router			/matches/{id}/contest [post]
+func ContestMatch(pool *pgxpool.Pool, notifier *services.Notifier) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		uid := c.Locals("firebaseUID").(string)
+
+		id, err := parseUUID(c.Params("id"))
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
+		}
+
+		q := db.New(pool)
+		match, err := q.GetMatchByID(c.Context(), id)
+		if err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Match not found"})
+		}
+		if match.Status != db.MatchStatusPENDING {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Match is not pending"})
+		}
+		if !isOnOpposingTeam(match, uid) {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Only the opposing team can contest"})
+		}
+
+		updated, err := q.ContestMatch(c.Context(), id)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to contest match"})
+		}
+
+		if updated.SubmittedByID.Valid {
+			contester, _ := q.GetUserByID(c.Context(), uid)
+			_ = notifier.Send(
+				c.Context(),
+				updated.SubmittedByID.String,
+				db.NotificationTypeMATCHCONTESTED,
+				"Score contesté ⚠️",
+				displayName(contester)+" conteste le résultat",
+				map[string]string{
+					"match_id": uuidString(updated.ID),
+				},
+			)
+		}
+
+		return c.JSON(updated)
+	}
+}
+
+// opposingTeamMembers returns the user IDs on the team that the submitter is
+// NOT on. Used to fan out the "score awaiting confirmation" notification.
+func opposingTeamMembers(m db.Match, submitterID string) []string {
+	submitterInTeam1 := m.Team1Player1ID == submitterID ||
+		(m.Team1Player2ID.Valid && m.Team1Player2ID.String == submitterID)
+
+	var opponents []string
+	if submitterInTeam1 {
+		opponents = append(opponents, m.Team2Player1ID)
+		if m.Team2Player2ID.Valid {
+			opponents = append(opponents, m.Team2Player2ID.String)
+		}
+	} else {
+		opponents = append(opponents, m.Team1Player1ID)
+		if m.Team1Player2ID.Valid {
+			opponents = append(opponents, m.Team1Player2ID.String)
+		}
+	}
+	return opponents
+}
+
+// isOnOpposingTeam reports whether userID is on the team opposite to the
+// match submitter. v1 rule: any single member of that team can confirm.
+func isOnOpposingTeam(m db.Match, userID string) bool {
+	if !m.SubmittedByID.Valid {
+		return false
+	}
+	for _, opp := range opposingTeamMembers(m, m.SubmittedByID.String) {
+		if opp == userID {
+			return true
+		}
+	}
+	return false
+}
+
+// applyEloChangesForMatch loads the players involved in match and computes/
+// persists ELO + performance-points changes. Called once a PENDING match is
+// confirmed by the opposing team.
+func applyEloChangesForMatch(c *fiber.Ctx, q *db.Queries, match db.Match) (fiber.Map, error) {
+	sets := []setScore{
+		{Team1: match.Set1Team1, Team2: match.Set1Team2},
+		{Team1: match.Set2Team1, Team2: match.Set2Team2},
+	}
+	if match.Set3Team1.Valid && match.Set3Team2.Valid {
+		sets = append(sets, setScore{Team1: match.Set3Team1.Int32, Team2: match.Set3Team2.Int32})
+	}
+
+	isDoubles := match.MatchType == db.MatchTypeDOUBLES || match.MatchType == db.MatchTypeMIXED
+
+	p1, err := q.GetUserByID(c.Context(), match.Team1Player1ID)
+	if err != nil {
+		return nil, c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Player not found"})
+	}
+	p3, err := q.GetUserByID(c.Context(), match.Team2Player1ID)
+	if err != nil {
+		return nil, c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Player not found"})
+	}
+
+	var p2, p4 db.User
+	if isDoubles {
+		p2, err = q.GetUserByID(c.Context(), match.Team1Player2ID.String)
+		if err != nil {
+			return nil, c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Player not found"})
+		}
+		p4, err = q.GetUserByID(c.Context(), match.Team2Player2ID.String)
+		if err != nil {
+			return nil, c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Player not found"})
+		}
+	}
+
+	return applyEloChanges(c, q, match.ID, match.MatchType, sets, p1, p2, p3, p4, isDoubles)
 }
 
 // applyEloChanges computes and persists ELO + performance-points changes for
@@ -268,11 +475,11 @@ func applyEloChanges(
 	q *db.Queries,
 	matchID pgtype.UUID,
 	matchType db.MatchType,
-	req createMatchRequest,
+	sets []setScore,
 	p1, p2, p3, p4 db.User,
 	isDoubles bool,
 ) (fiber.Map, error) {
-	setsT1, setsT2 := setsWon(req.Sets)
+	setsT1, setsT2 := setsWon(sets)
 
 	// ELO column to read & update for this tableau.
 	eloOf := func(u db.User) int32 { return services.EloFor(u, matchType) }
@@ -294,9 +501,9 @@ func applyEloChanges(
 	}
 
 	type playerOutcome struct {
-		player db.User
-		eloBefore int32
-		eloAfter  int32
+		player     db.User
+		eloBefore  int32
+		eloAfter   int32
 		perfPoints int32
 	}
 

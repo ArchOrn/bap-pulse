@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:bap_pulse/challenges/data/challenges_repository.dart';
+import 'package:bap_pulse/challenges/presentation/challenge_sent_screen.dart';
 import 'package:bap_pulse/core/api/api_client.dart';
 import 'package:bap_pulse/core/theme/avatar_color.dart';
 import 'package:bap_pulse/core/theme/colors.dart';
@@ -206,15 +208,16 @@ class _PlayerDetailBody extends StatelessWidget {
           ),
         ),
 
-        // Challenge CTA — hidden when the user is viewing themselves
+        // Challenge CTA — hidden when the user is viewing themselves.
+        // Sends a PENDING challenge via POST /challenges; the opponent then
+        // receives a push and the challenge appears in their notification
+        // center where they can accept or decline.
         if (!isSelf)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
-            child: PrimaryButton(
-              label: 'Défier ${user.firstName}',
-              icon: Icons.sports_kabaddi_rounded,
-              onPressed: () =>
-                  context.push('/score/new?opponent=$playerId'),
+            child: _ChallengeButton(
+              opponentId: playerId,
+              opponentFirstName: user.firstName,
             ),
           ),
 
@@ -479,6 +482,63 @@ class _MiniCell extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// CTA that fires off a SINGLES challenge to [opponentId] and, on success,
+/// pushes the [ChallengeSentScreen]. Surfaces API errors as a snackbar.
+class _ChallengeButton extends StatefulWidget {
+  final String opponentId;
+  final String opponentFirstName;
+
+  const _ChallengeButton({
+    required this.opponentId,
+    required this.opponentFirstName,
+  });
+
+  @override
+  State<_ChallengeButton> createState() => _ChallengeButtonState();
+}
+
+class _ChallengeButtonState extends State<_ChallengeButton> {
+  bool _busy = false;
+
+  Future<void> _submit() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await ChallengesRepository.instance.create(toUserId: widget.opponentId);
+      if (!mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (_) => ChallengeSentScreen(
+            opponentFirstName: widget.opponentFirstName,
+          ),
+        ),
+      );
+    } on Exception catch (e) {
+      if (!mounted) return;
+      final message = e is ApiException ? e.message : 'Action impossible';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.accentRed,
+          content: Text(message),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PrimaryButton(
+      label: 'Défier ${widget.opponentFirstName}',
+      icon: Icons.sports_kabaddi_rounded,
+      loading: _busy,
+      onPressed: _submit,
     );
   }
 }

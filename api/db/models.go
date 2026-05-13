@@ -11,6 +11,95 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type ChallengeStatus string
+
+const (
+	ChallengeStatusPENDING   ChallengeStatus = "PENDING"
+	ChallengeStatusACCEPTED  ChallengeStatus = "ACCEPTED"
+	ChallengeStatusDECLINED  ChallengeStatus = "DECLINED"
+	ChallengeStatusEXPIRED   ChallengeStatus = "EXPIRED"
+	ChallengeStatusCANCELLED ChallengeStatus = "CANCELLED"
+)
+
+func (e *ChallengeStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ChallengeStatus(s)
+	case string:
+		*e = ChallengeStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ChallengeStatus: %T", src)
+	}
+	return nil
+}
+
+type NullChallengeStatus struct {
+	ChallengeStatus ChallengeStatus `json:"challenge_status"`
+	Valid           bool            `json:"valid"` // Valid is true if ChallengeStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullChallengeStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.ChallengeStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ChallengeStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullChallengeStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ChallengeStatus), nil
+}
+
+type MatchStatus string
+
+const (
+	MatchStatusPENDING   MatchStatus = "PENDING"
+	MatchStatusCONFIRMED MatchStatus = "CONFIRMED"
+	MatchStatusCONTESTED MatchStatus = "CONTESTED"
+	MatchStatusCANCELLED MatchStatus = "CANCELLED"
+)
+
+func (e *MatchStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = MatchStatus(s)
+	case string:
+		*e = MatchStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for MatchStatus: %T", src)
+	}
+	return nil
+}
+
+type NullMatchStatus struct {
+	MatchStatus MatchStatus `json:"match_status"`
+	Valid       bool        `json:"valid"` // Valid is true if MatchStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullMatchStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.MatchStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.MatchStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullMatchStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.MatchStatus), nil
+}
+
 type MatchType string
 
 const (
@@ -54,6 +143,65 @@ func (ns NullMatchType) Value() (driver.Value, error) {
 	return string(ns.MatchType), nil
 }
 
+type NotificationType string
+
+const (
+	NotificationTypeCHALLENGERECEIVED         NotificationType = "CHALLENGE_RECEIVED"
+	NotificationTypeCHALLENGEACCEPTED         NotificationType = "CHALLENGE_ACCEPTED"
+	NotificationTypeCHALLENGEDECLINED         NotificationType = "CHALLENGE_DECLINED"
+	NotificationTypeMATCHAWAITINGCONFIRMATION NotificationType = "MATCH_AWAITING_CONFIRMATION"
+	NotificationTypeMATCHCONFIRMED            NotificationType = "MATCH_CONFIRMED"
+	NotificationTypeMATCHCONTESTED            NotificationType = "MATCH_CONTESTED"
+)
+
+func (e *NotificationType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = NotificationType(s)
+	case string:
+		*e = NotificationType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for NotificationType: %T", src)
+	}
+	return nil
+}
+
+type NullNotificationType struct {
+	NotificationType NotificationType `json:"notification_type"`
+	Valid            bool             `json:"valid"` // Valid is true if NotificationType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullNotificationType) Scan(value interface{}) error {
+	if value == nil {
+		ns.NotificationType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.NotificationType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullNotificationType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.NotificationType), nil
+}
+
+type Challenge struct {
+	ID          pgtype.UUID        `json:"id"`
+	FromUserID  string             `json:"from_user_id"`
+	ToUserID    string             `json:"to_user_id"`
+	MatchType   MatchType          `json:"match_type"`
+	ProposedAt  pgtype.Timestamptz `json:"proposed_at"`
+	Court       pgtype.Text        `json:"court"`
+	Note        pgtype.Text        `json:"note"`
+	Status      ChallengeStatus    `json:"status"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	RespondedAt pgtype.Timestamptz `json:"responded_at"`
+}
+
 type EloHistory struct {
 	ID                pgtype.UUID        `json:"id"`
 	PlayerID          string             `json:"player_id"`
@@ -64,6 +212,14 @@ type EloHistory struct {
 	PerformancePoints int32              `json:"performance_points"`
 }
 
+type FcmToken struct {
+	Token      string             `json:"token"`
+	UserID     string             `json:"user_id"`
+	Platform   string             `json:"platform"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	LastSeenAt pgtype.Timestamptz `json:"last_seen_at"`
+}
+
 type Match struct {
 	ID             pgtype.UUID        `json:"id"`
 	MatchType      MatchType          `json:"match_type"`
@@ -72,13 +228,15 @@ type Match struct {
 	Team2Player1ID string             `json:"team2_player1_id"`
 	Team2Player2ID pgtype.Text        `json:"team2_player2_id"`
 	PlayedAt       pgtype.Timestamptz `json:"played_at"`
-	Validated      bool               `json:"validated"`
 	Set1Team1      int32              `json:"set1_team1"`
 	Set1Team2      int32              `json:"set1_team2"`
 	Set2Team1      int32              `json:"set2_team1"`
 	Set2Team2      int32              `json:"set2_team2"`
 	Set3Team1      pgtype.Int4        `json:"set3_team1"`
 	Set3Team2      pgtype.Int4        `json:"set3_team2"`
+	Status         MatchStatus        `json:"status"`
+	SubmittedByID  pgtype.Text        `json:"submitted_by_id"`
+	ConfirmedAt    pgtype.Timestamptz `json:"confirmed_at"`
 }
 
 type News struct {
@@ -89,6 +247,17 @@ type News struct {
 	Source    string             `json:"source"`
 	MatchID   pgtype.UUID        `json:"match_id"`
 	CreatedBy pgtype.Text        `json:"created_by"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type Notification struct {
+	ID        pgtype.UUID        `json:"id"`
+	UserID    string             `json:"user_id"`
+	Type      NotificationType   `json:"type"`
+	Title     string             `json:"title"`
+	Body      string             `json:"body"`
+	Data      []byte             `json:"data"`
+	ReadAt    pgtype.Timestamptz `json:"read_at"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 

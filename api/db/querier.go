@@ -11,14 +11,26 @@ import (
 )
 
 type Querier interface {
+	ConfirmMatch(ctx context.Context, id pgtype.UUID) (Match, error)
+	ContestMatch(ctx context.Context, id pgtype.UUID) (Match, error)
 	// Counts matches the player has already played in this tableau (used for K-factor).
 	CountMatchesPlayedByPlayerInTableau(ctx context.Context, arg CountMatchesPlayedByPlayerInTableauParams) (int32, error)
+	CountUnreadNotifications(ctx context.Context, userID string) (int64, error)
+	CreateChallenge(ctx context.Context, arg CreateChallengeParams) (Challenge, error)
 	CreateEloHistory(ctx context.Context, arg CreateEloHistoryParams) (EloHistory, error)
+	// Creates a match. Caller decides the initial status: 'PENDING' when the score
+	// is awaiting opponent confirmation (ELO not yet applied), 'CONFIRMED' for
+	// already-validated entries (e.g. admin-imported or auto-confirmed flows).
 	CreateMatch(ctx context.Context, arg CreateMatchParams) (Match, error)
 	CreateNews(ctx context.Context, arg CreateNewsParams) (News, error)
+	CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeleteFcmToken(ctx context.Context, arg DeleteFcmTokenParams) error
+	// Used to purge tokens reported as unregistered/invalid by FCM.
+	DeleteFcmTokensByValue(ctx context.Context, dollar_1 []string) error
 	DeleteNews(ctx context.Context, id pgtype.UUID) error
 	DeleteUser(ctx context.Context, id string) error
+	GetChallengeByID(ctx context.Context, id pgtype.UUID) (Challenge, error)
 	// Daily perf points awarded to ONE player in [from, to). Empty days are absent;
 	// callers fill gaps and cumulate as needed.
 	GetDailyPerformancePointsByPlayer(ctx context.Context, arg GetDailyPerformancePointsByPlayerParams) ([]GetDailyPerformancePointsByPlayerRow, error)
@@ -29,17 +41,26 @@ type Querier interface {
 	GetMatchEloHistory(ctx context.Context, matchID pgtype.UUID) ([]EloHistory, error)
 	GetMatchesInPeriod(ctx context.Context, arg GetMatchesInPeriodParams) ([]Match, error)
 	GetNewsByID(ctx context.Context, id pgtype.UUID) (News, error)
+	// Only CONFIRMED matches count for a player's history.
 	GetPlayerMatches(ctx context.Context, team1Player1ID string) ([]Match, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id string) (User, error)
 	GetUserEloHistory(ctx context.Context, playerID string) ([]EloHistory, error)
+	// Both sides — what the user received and what they sent.
+	ListChallengesForUser(ctx context.Context, fromUserID string) ([]Challenge, error)
+	ListFcmTokensForUser(ctx context.Context, userID string) ([]FcmToken, error)
 	ListLatestNews(ctx context.Context, limit int32) ([]News, error)
+	// Public lists (rankings, feeds, history) only show CONFIRMED matches.
 	ListMatches(ctx context.Context) ([]Match, error)
 	ListNews(ctx context.Context, arg ListNewsParams) ([]News, error)
+	ListNotificationsForUser(ctx context.Context, arg ListNotificationsForUserParams) ([]Notification, error)
 	ListUsers(ctx context.Context) ([]User, error)
+	MarkAllNotificationsRead(ctx context.Context, userID string) error
+	MarkNotificationRead(ctx context.Context, arg MarkNotificationReadParams) (Notification, error)
 	SumPerformancePointsByPlayer(ctx context.Context, arg SumPerformancePointsByPlayerParams) ([]SumPerformancePointsByPlayerRow, error)
 	// Sum of perf points awarded to ONE player in [from, to) for the given tableau.
 	SumPerformancePointsByPlayerInRange(ctx context.Context, arg SumPerformancePointsByPlayerInRangeParams) (int32, error)
+	UpdateChallengeStatus(ctx context.Context, arg UpdateChallengeStatusParams) (Challenge, error)
 	UpdateNews(ctx context.Context, arg UpdateNewsParams) (News, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 	UpdateUserEloDoubles(ctx context.Context, arg UpdateUserEloDoublesParams) (User, error)
@@ -48,7 +69,9 @@ type Querier interface {
 	// Used when a user updates their FFBAD/gender BEFORE having played any match.
 	UpdateUserInitialElo(ctx context.Context, arg UpdateUserInitialEloParams) (User, error)
 	UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) (User, error)
-	ValidateMatch(ctx context.Context, id pgtype.UUID) (Match, error)
+	// Stores or refreshes a device token. Same token across users is rebound
+	// to the new user (a device can switch accounts).
+	UpsertFcmToken(ctx context.Context, arg UpsertFcmTokenParams) (FcmToken, error)
 }
 
 var _ Querier = (*Queries)(nil)

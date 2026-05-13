@@ -2,19 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'package:bap_pulse/core/theme/colors.dart';
 import 'package:bap_pulse/core/theme/text_styles.dart';
-import 'package:bap_pulse/core/widgets/player_avatar.dart';
 import 'package:bap_pulse/core/widgets/primary_button.dart';
-import 'package:bap_pulse/shared/models/player.dart';
 
+/// Confirmation screen shown after a match score is submitted. The match sits
+/// in PENDING status server-side until the opponent confirms or contests it.
 class ScoreSentScreen extends StatelessWidget {
-  final Player opponent;
-  final List<List<int>> sets;
+  final String opponentFirstName;
 
-  const ScoreSentScreen({
-    super.key,
-    required this.opponent,
-    required this.sets,
-  });
+  const ScoreSentScreen({super.key, required this.opponentFirstName});
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +47,7 @@ class ScoreSentScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                '${opponent.firstName} va recevoir une notification pour valider le match. Le score sera mis à jour dès validation.',
+                '$opponentFirstName va recevoir une notification pour valider le match. Le score sera mis à jour dès validation.',
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodyLarge
                     .copyWith(color: AppColors.textMuted, height: 1.5),
@@ -66,14 +61,12 @@ class ScoreSentScreen extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    PlayerAvatar(player: opponent, size: 40),
-                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            opponent.name,
+                            opponentFirstName,
                             style: const TextStyle(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w600,
@@ -100,13 +93,13 @@ class ScoreSentScreen extends StatelessWidget {
                           Container(
                             width: 6,
                             height: 6,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: AppColors.accentAmber,
                               shape: BoxShape.circle,
                             ),
                           ),
                           const SizedBox(width: 4),
-                          Text(
+                          const Text(
                             'EN ATTENTE',
                             style: TextStyle(
                               fontSize: 11,
