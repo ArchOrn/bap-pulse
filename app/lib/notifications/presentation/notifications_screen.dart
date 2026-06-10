@@ -38,9 +38,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => context.canPop()
-              ? context.pop()
-              : context.go('/home'),
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/home'),
         ),
         title: const Text(
           'Notifications',
@@ -54,9 +53,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             builder: (context, state) {
               if (state.unreadCount == 0) return const SizedBox.shrink();
               return TextButton(
-                onPressed: () => context
-                    .read<NotificationsBloc>()
-                    .add(const NotificationsMarkAllReadRequested()),
+                onPressed: () => context.read<NotificationsBloc>().add(
+                  const NotificationsMarkAllReadRequested(),
+                ),
                 child: const Text(
                   'Tout lu',
                   style: TextStyle(
@@ -75,12 +74,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               state.items.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (state.status == NotificationsStatus.error && state.items.isEmpty) {
+          if (state.status == NotificationsStatus.error &&
+              state.items.isEmpty) {
             return _ErrorState(
               message: state.errorMessage ?? 'Une erreur est survenue.',
-              onRetry: () => context
-                  .read<NotificationsBloc>()
-                  .add(const NotificationsRefreshRequested()),
+              onRetry: () => context.read<NotificationsBloc>().add(
+                const NotificationsRefreshRequested(),
+              ),
             );
           }
           if (state.items.isEmpty) {
@@ -88,9 +88,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           }
           return RefreshIndicator(
             color: AppColors.primary,
-            onRefresh: () async => context
-                .read<NotificationsBloc>()
-                .add(const NotificationsRefreshRequested()),
+            onRefresh: () async => context.read<NotificationsBloc>().add(
+              const NotificationsRefreshRequested(),
+            ),
             child: ListView.separated(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               itemCount: state.items.length,
@@ -113,7 +113,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   void _markRead(AppNotification n) {
     if (n.isUnread) {
-      context.read<NotificationsBloc>().add(NotificationsMarkReadRequested(n.id));
+      context.read<NotificationsBloc>().add(
+        NotificationsMarkReadRequested(n.id),
+      );
     }
   }
 
@@ -147,7 +149,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   ({String label, VoidCallback onPressed})? _secondaryAction(
-      AppNotification n) {
+    AppNotification n,
+  ) {
     if (n.type == AppNotificationType.challengeReceived &&
         n.challengeId != null) {
       return (
@@ -158,8 +161,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return null;
   }
 
-  Future<void> _respondChallenge(AppNotification n,
-      {required bool accept}) async {
+  Future<void> _respondChallenge(
+    AppNotification n, {
+    required bool accept,
+  }) async {
     final id = n.challengeId;
     if (id == null) return;
     _markRead(n);
@@ -172,24 +177,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor:
-              accept ? AppColors.accentGreen : AppColors.accentRed,
+          backgroundColor: accept ? AppColors.accentGreen : AppColors.accentRed,
           content: Text(accept ? 'Défi accepté' : 'Défi refusé'),
         ),
       );
       if (mounted) {
         context.read<NotificationsBloc>().add(
-              const NotificationsRefreshRequested(),
-            );
+          const NotificationsRefreshRequested(),
+        );
       }
     } on Exception catch (e) {
       if (!mounted) return;
       final message = e is ApiException ? e.message : 'Action impossible';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.accentRed,
-          content: Text(message),
-        ),
+        SnackBar(backgroundColor: AppColors.accentRed, content: Text(message)),
       );
     }
   }
@@ -206,8 +207,11 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.notifications_off_outlined,
-                size: 56, color: AppColors.textFaint),
+            Icon(
+              Icons.notifications_off_outlined,
+              size: 56,
+              color: AppColors.textFaint,
+            ),
             const SizedBox(height: 14),
             Text(
               'Aucune notification',
@@ -243,16 +247,15 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.cloud_off_rounded,
-                size: 48, color: AppColors.textFaint),
+            Icon(Icons.cloud_off_rounded, size: 48, color: AppColors.textFaint),
             const SizedBox(height: 14),
-            Text(message,
-                textAlign: TextAlign.center, style: AppTextStyles.bodySmall),
-            const SizedBox(height: 14),
-            TextButton(
-              onPressed: onRetry,
-              child: const Text('Réessayer'),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodySmall,
             ),
+            const SizedBox(height: 14),
+            TextButton(onPressed: onRetry, child: const Text('Réessayer')),
           ],
         ),
       ),

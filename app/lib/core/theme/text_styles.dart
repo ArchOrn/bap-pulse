@@ -102,12 +102,11 @@ class AppTextStyles {
     FontWeight weight = FontWeight.w700,
     Color color = AppColors.textPrimary,
     double letterSpacing = -0.3,
-  }) =>
-      GoogleFonts.spaceGrotesk(
-        fontSize: size,
-        fontWeight: weight,
-        letterSpacing: letterSpacing,
-        color: color,
-        fontFeatures: const [FontFeature.tabularFigures()],
-      );
+  }) => GoogleFonts.spaceGrotesk(
+    fontSize: size,
+    fontWeight: weight,
+    letterSpacing: letterSpacing,
+    color: color,
+    fontFeatures: const [FontFeature.tabularFigures()],
+  );
 }

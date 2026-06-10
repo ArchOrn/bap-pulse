@@ -9,6 +9,7 @@ import 'package:bap_pulse/core/api/api_config.dart';
 class ApiException implements Exception {
   final int? statusCode;
   final String message;
+
   ApiException(this.statusCode, this.message);
 
   @override
@@ -24,41 +25,53 @@ class ApiException implements Exception {
 ///     the API's `{"error": "..."}` body, so screens never see raw dio types.
 class ApiClient {
   ApiClient._() {
-    _dio = Dio(BaseOptions(
-      baseUrl: ApiConfig.baseUrl,
-      connectTimeout: const Duration(seconds: 8),
-      receiveTimeout: const Duration(seconds: 8),
-      contentType: Headers.jsonContentType,
-      responseType: ResponseType.json,
-    ));
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: ApiConfig.baseUrl,
+        connectTimeout: const Duration(seconds: 8),
+        receiveTimeout: const Duration(seconds: 8),
+        contentType: Headers.jsonContentType,
+        responseType: ResponseType.json,
+      ),
+    );
 
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        final user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
-          final token = await user.getIdToken();
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          try {
+            final user = FirebaseAuth.instance.currentUser;
+            if (user != null) {
+              final token = await user.getIdToken();
+              if (token != null) {
+                options.headers['Authorization'] = 'Bearer $token';
+              }
+            }
+          } catch (_) {
+            // A failure fetching the token must NOT swallow the request:
+            // without this catch, handler.next() would never run and the
+            // request would hang forever with no error surfaced.
           }
-        }
-        handler.next(options);
-      },
-      onError: (e, handler) {
-        final status = e.response?.statusCode;
-        String message = e.message ?? 'Network error';
-        final data = e.response?.data;
-        if (data is Map && data['error'] is String) {
-          message = data['error'] as String;
-        }
-        handler.reject(DioException(
-          requestOptions: e.requestOptions,
-          response: e.response,
-          type: e.type,
-          error: ApiException(status, message),
-          message: message,
-        ));
-      },
-    ));
+          handler.next(options);
+        },
+        onError: (e, handler) {
+          final status = e.response?.statusCode;
+          String message = e.message ?? 'Network error';
+          final data = e.response?.data;
+          if (data is Map && data['error'] is String) {
+            message = data['error'] as String;
+          }
+          handler.reject(
+            DioException(
+              requestOptions: e.requestOptions,
+              response: e.response,
+              type: e.type,
+              error: ApiException(status, message),
+              message: message,
+            ),
+          );
+        },
+      ),
+    );
   }
 
   late final Dio _dio;

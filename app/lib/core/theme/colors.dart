@@ -20,7 +20,9 @@ class AppColors {
   static const Color onPrimary = AccentSage.onPrimary;
 
   // Accents
-  static const Color accentOrange = Color(0xFFFF7A59); // streak / "Saisir un score"
+  static const Color accentOrange = Color(
+    0xFFFF7A59,
+  ); // streak / "Saisir un score"
   static const Color accentRed = Color(0xFFE63946); // defeat / contest / error
   static const Color accentGreen = Color(0xFF2FB974); // win / validate
   static const Color accentYellow = Color(0xFFFFD60A); // maillot jaune

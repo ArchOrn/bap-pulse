@@ -68,13 +68,12 @@ class NotificationsState extends Equatable {
     int? unreadCount,
     String? errorMessage,
     bool clearError = false,
-  }) =>
-      NotificationsState(
-        status: status ?? this.status,
-        items: items ?? this.items,
-        unreadCount: unreadCount ?? this.unreadCount,
-        errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
-      );
+  }) => NotificationsState(
+    status: status ?? this.status,
+    items: items ?? this.items,
+    unreadCount: unreadCount ?? this.unreadCount,
+    errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+  );
 
   @override
   List<Object?> get props => [status, items, unreadCount, errorMessage];
@@ -87,8 +86,8 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
   StreamSubscription<RemoteMessage>? _pushSub;
 
   NotificationsBloc({NotificationsRepository? repo})
-      : _repo = repo ?? NotificationsRepository.instance,
-        super(const NotificationsState()) {
+    : _repo = repo ?? NotificationsRepository.instance,
+      super(const NotificationsState()) {
     on<NotificationsLoadRequested>(_onLoad);
     on<NotificationsRefreshRequested>(_onRefresh);
     on<NotificationsMarkAllReadRequested>(_onMarkAllRead);
@@ -96,8 +95,9 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     on<_NotificationsPushReceived>(_onPushReceived);
     on<NotificationsCleared>((_, emit) => emit(const NotificationsState()));
 
-    _pushSub = FcmService.instance.onForegroundMessage
-        .listen((_) => add(const _NotificationsPushReceived()));
+    _pushSub = FcmService.instance.onForegroundMessage.listen(
+      (_) => add(const _NotificationsPushReceived()),
+    );
   }
 
   Future<void> _onLoad(
@@ -129,17 +129,21 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     try {
       final items = await _repo.list();
       final unread = items.where((n) => n.isUnread).length;
-      emit(state.copyWith(
-        status: NotificationsStatus.loaded,
-        items: items,
-        unreadCount: unread,
-        clearError: true,
-      ));
+      emit(
+        state.copyWith(
+          status: NotificationsStatus.loaded,
+          items: items,
+          unreadCount: unread,
+          clearError: true,
+        ),
+      );
     } on Exception catch (e) {
-      emit(state.copyWith(
-        status: NotificationsStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: NotificationsStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 
@@ -158,7 +162,9 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
 
     try {
       await _repo.markRead(event.id);
-    } on Exception {/* swallow — refresh on next open if needed */}
+    } on Exception {
+      /* swallow — refresh on next open if needed */
+    }
   }
 
   Future<void> _onMarkAllRead(
@@ -173,7 +179,9 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
 
     try {
       await _repo.markAllRead();
-    } on Exception {/* swallow — server will catch up on next refresh */}
+    } on Exception {
+      /* swallow — server will catch up on next refresh */
+    }
   }
 
   @override

@@ -72,10 +72,7 @@ class _PlayerDetailBody extends StatelessWidget {
   final String playerId;
   final UserProfile profile;
 
-  const _PlayerDetailBody({
-    required this.playerId,
-    required this.profile,
-  });
+  const _PlayerDetailBody({required this.playerId, required this.profile});
 
   @override
   Widget build(BuildContext context) {
@@ -129,8 +126,11 @@ class _PlayerDetailBody extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                       alignment: Alignment.center,
-                      child: const Icon(Icons.arrow_back,
-                          color: Colors.white, size: 18),
+                      child: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                     ),
                   ),
                   const Spacer(),
@@ -247,15 +247,17 @@ class _PlayerDetailBody extends StatelessWidget {
                               Text(
                                 '${profile.performance.score}',
                                 style: AppTextStyles.numeric(
-                                    size: 36, letterSpacing: -1),
+                                  size: 36,
+                                  letterSpacing: -1,
+                                ),
                               ),
                               const SizedBox(width: 10),
                               if (profile.performance.gain7d > 0)
                                 Padding(
-                                  padding:
-                                      const EdgeInsets.only(bottom: 6),
+                                  padding: const EdgeInsets.only(bottom: 6),
                                   child: TrendChip(
-                                      value: profile.performance.gain7d),
+                                    value: profile.performance.gain7d,
+                                  ),
                                 ),
                             ],
                           ),
@@ -284,7 +286,9 @@ class _PlayerDetailBody extends StatelessWidget {
                   decoration: const BoxDecoration(
                     border: Border(
                       top: BorderSide(
-                          color: AppColors.dividerStrong, width: 0.5),
+                        color: AppColors.dividerStrong,
+                        width: 0.5,
+                      ),
                     ),
                   ),
                   child: Row(
@@ -361,8 +365,11 @@ class _PlayerDetailLoading extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
-                child: const Icon(Icons.arrow_back,
-                    color: Colors.white, size: 18),
+                child: const Icon(
+                  Icons.arrow_back,
+                  color: Colors.white,
+                  size: 18,
+                ),
               ),
             ),
           ),
@@ -396,8 +403,11 @@ class _PlayerDetailError extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
-                child: const Icon(Icons.arrow_back,
-                    color: AppColors.textPrimary, size: 18),
+                child: const Icon(
+                  Icons.arrow_back,
+                  color: AppColors.textPrimary,
+                  size: 18,
+                ),
               ),
             ),
             Expanded(
@@ -408,8 +418,9 @@ class _PlayerDetailError extends StatelessWidget {
                     Text(
                       message,
                       textAlign: TextAlign.center,
-                      style: AppTextStyles.bodyMedium
-                          .copyWith(color: AppColors.textMuted),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textMuted,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     FilledButton(
@@ -454,7 +465,10 @@ class _MiniCell extends StatelessWidget {
             Text(
               big,
               style: AppTextStyles.numeric(
-                  size: 22, color: color, letterSpacing: -0.5),
+                size: 22,
+                color: color,
+                letterSpacing: -0.5,
+              ),
             ),
             if (small != null)
               Padding(
@@ -513,19 +527,15 @@ class _ChallengeButtonState extends State<_ChallengeButton> {
       await Navigator.of(context).push(
         MaterialPageRoute(
           fullscreenDialog: true,
-          builder: (_) => ChallengeSentScreen(
-            opponentFirstName: widget.opponentFirstName,
-          ),
+          builder: (_) =>
+              ChallengeSentScreen(opponentFirstName: widget.opponentFirstName),
         ),
       );
     } on Exception catch (e) {
       if (!mounted) return;
       final message = e is ApiException ? e.message : 'Action impossible';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.accentRed,
-          content: Text(message),
-        ),
+        SnackBar(backgroundColor: AppColors.accentRed, content: Text(message)),
       );
     } finally {
       if (mounted) setState(() => _busy = false);

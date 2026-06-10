@@ -24,10 +24,7 @@ class EloBar extends StatelessWidget {
       borderRadius: BorderRadius.circular(height),
       child: Stack(
         children: [
-          Container(
-            height: height,
-            color: color.withValues(alpha: 0.1),
-          ),
+          Container(height: height, color: color.withValues(alpha: 0.1)),
           FractionallySizedBox(
             widthFactor: pct,
             child: Container(height: height, color: color),

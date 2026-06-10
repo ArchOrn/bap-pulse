@@ -107,9 +107,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   @override
   void initState() {
     super.initState();
-    context
-        .read<LeaderboardBloc>()
-        .add(LeaderboardLoadRequested(_criterion));
+    context.read<LeaderboardBloc>().add(LeaderboardLoadRequested(_criterion));
   }
 
   void _onCriterionTap(LeaderboardCriterion c) {
@@ -200,11 +198,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     required String? myUid,
   }) {
     if (entries != null && entries.isNotEmpty) {
-      return _LoadedBody(
-        meta: meta,
-        entries: entries,
-        myUid: myUid,
-      );
+      return _LoadedBody(meta: meta, entries: entries, myUid: myUid);
     }
     if (state is LeaderboardError && state.criterion == _criterion) {
       return _ErrorCard(message: state.message);
@@ -352,17 +346,12 @@ class _CriterionChips extends StatelessWidget {
             onTap: () => onTap(c),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.bgCardElevated
-                    : AppColors.bgCard,
+                color: isSelected ? AppColors.bgCardElevated : AppColors.bgCard,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isSelected
-                      ? AppColors.primary
-                      : Colors.transparent,
+                  color: isSelected ? AppColors.primary : Colors.transparent,
                   width: 1.5,
                 ),
               ),
@@ -370,9 +359,10 @@ class _CriterionChips extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   JerseyBadge(
-                      kind: cMeta.jersey,
-                      size: 32,
-                      variant: JerseyVariant.disc),
+                    kind: cMeta.jersey,
+                    size: 32,
+                    variant: JerseyVariant.disc,
+                  ),
                   const SizedBox(width: 10),
                   Text(
                     cMeta.name,
@@ -484,19 +474,22 @@ class _CategoryPills extends StatelessWidget {
       child: Row(
         children: [
           _CategoryPill(
-              label: 'Tous',
-              selected: selected == null,
-              onTap: () => onChange(null)),
+            label: 'Tous',
+            selected: selected == null,
+            onTap: () => onChange(null),
+          ),
           const SizedBox(width: 6),
           _CategoryPill(
-              label: 'Simple H',
-              selected: selected == PlayerCategory.sh,
-              onTap: () => onChange(PlayerCategory.sh)),
+            label: 'Simple H',
+            selected: selected == PlayerCategory.sh,
+            onTap: () => onChange(PlayerCategory.sh),
+          ),
           const SizedBox(width: 6),
           _CategoryPill(
-              label: 'Simple D',
-              selected: selected == PlayerCategory.sd,
-              onTap: () => onChange(PlayerCategory.sd)),
+            label: 'Simple D',
+            selected: selected == PlayerCategory.sd,
+            onTap: () => onChange(PlayerCategory.sd),
+          ),
         ],
       ),
     );
@@ -562,7 +555,10 @@ class _LeaderHero extends StatelessWidget {
         clipBehavior: Clip.none,
         children: [
           Positioned(
-              right: 0, top: 0, child: JerseyBadge(kind: meta.jersey, size: 58)),
+            right: 0,
+            top: 0,
+            child: JerseyBadge(kind: meta.jersey, size: 58),
+          ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -578,8 +574,10 @@ class _LeaderHero extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 leader.name,
-                style: AppTextStyles.h2
-                    .copyWith(fontSize: 28, color: meta.heroText),
+                style: AppTextStyles.h2.copyWith(
+                  fontSize: 28,
+                  color: meta.heroText,
+                ),
               ),
               const SizedBox(height: 2),
               Row(
@@ -712,10 +710,12 @@ class _LeaderRow extends StatelessWidget {
                           child: LinearProgressIndicator(
                             value: progress,
                             minHeight: 4,
-                            backgroundColor:
-                                Colors.white.withValues(alpha: 0.06),
+                            backgroundColor: Colors.white.withValues(
+                              alpha: 0.06,
+                            ),
                             valueColor: const AlwaysStoppedAnimation(
-                                AppColors.primary),
+                              AppColors.primary,
+                            ),
                           ),
                         ),
                       ),
@@ -735,10 +735,7 @@ class _LeaderRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            Text(
-              '${entry.value}',
-              style: AppTextStyles.numeric(size: 17),
-            ),
+            Text('${entry.value}', style: AppTextStyles.numeric(size: 17)),
           ],
         ),
       ),
@@ -752,11 +749,7 @@ class _EntryAvatar extends StatelessWidget {
   final LeaderboardEntry entry;
   final double size;
   final JerseyKind? jersey;
-  const _EntryAvatar({
-    required this.entry,
-    required this.size,
-    this.jersey,
-  });
+  const _EntryAvatar({required this.entry, required this.size, this.jersey});
 
   @override
   Widget build(BuildContext context) {
@@ -869,7 +862,9 @@ class _LeaderboardSkeletonState extends State<_LeaderboardSkeleton>
                         decoration: const BoxDecoration(
                           border: Border(
                             bottom: BorderSide(
-                                color: AppColors.divider, width: 0.5),
+                              color: AppColors.divider,
+                              width: 0.5,
+                            ),
                           ),
                         ),
                       ),
@@ -898,14 +893,15 @@ class _ErrorCard extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: AppTextStyles.bodyMedium
-                .copyWith(color: AppColors.textMuted),
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textMuted,
+            ),
           ),
           const SizedBox(height: 16),
           FilledButton(
-            onPressed: () => context
-                .read<LeaderboardBloc>()
-                .add(const LeaderboardRefreshRequested()),
+            onPressed: () => context.read<LeaderboardBloc>().add(
+              const LeaderboardRefreshRequested(),
+            ),
             child: const Text('Réessayer'),
           ),
         ],

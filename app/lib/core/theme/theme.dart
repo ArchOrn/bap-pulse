@@ -61,8 +61,7 @@ ThemeData buildAppTheme() {
       labelStyle: GoogleFonts.inter(color: AppColors.textMuted),
       prefixIconColor: AppColors.textMuted,
       suffixIconColor: AppColors.textMuted,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       border: _inputBorder(AppColors.outline),
       enabledBorder: _inputBorder(AppColors.outline),
       focusedBorder: _inputBorder(AppColors.primary, width: 1.5),
@@ -79,10 +78,9 @@ ThemeData buildAppTheme() {
           letterSpacing: 0.3,
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        padding: const EdgeInsets.symmetric(vertical: 18),
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 24),
         elevation: 0,
-        disabledBackgroundColor:
-            AppColors.primary.withValues(alpha: 0.5),
+        disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
         disabledForegroundColor: AppColors.onPrimary.withValues(alpha: 0.7),
       ),
     ),
@@ -90,21 +88,15 @@ ThemeData buildAppTheme() {
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.textPrimary,
         side: const BorderSide(color: AppColors.outline),
-        textStyle: GoogleFonts.inter(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
+        textStyle: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: AppColors.primary,
-        textStyle: GoogleFonts.inter(
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-        ),
+        textStyle: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600),
       ),
     ),
     snackBarTheme: const SnackBarThemeData(

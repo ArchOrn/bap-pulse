@@ -28,33 +28,33 @@ class JerseyBadge extends StatelessWidget {
 
     return switch (variant) {
       JerseyVariant.jersey => SizedBox(
-          width: size,
-          height: size * 1.05,
-          child: CustomPaint(painter: _JerseyShirtPainter(j)),
-        ),
+        width: size,
+        height: size * 1.05,
+        child: CustomPaint(painter: _JerseyShirtPainter(j)),
+      ),
       JerseyVariant.disc => _disc(j),
       JerseyVariant.flat => _flat(j),
     };
   }
 
   Widget _disc(Jersey j) => Container(
-        width: size,
-        height: size,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: j.color,
-          border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
+    width: size,
+    height: size,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: j.color,
+      border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.15),
+          blurRadius: 12,
+          offset: const Offset(0, 4),
         ),
-        child: _discContent(j),
-      );
+      ],
+    ),
+    child: _discContent(j),
+  );
 
   Widget _discContent(Jersey j) {
     switch (kind) {
@@ -68,41 +68,49 @@ class JerseyBadge extends StatelessWidget {
           ),
         );
       case JerseyKind.green:
-        return Icon(Icons.check_rounded,
-            size: size * 0.55, color: Colors.white);
+        return Icon(
+          Icons.check_rounded,
+          size: size * 0.55,
+          color: Colors.white,
+        );
       case JerseyKind.fight:
-        return Icon(Icons.star_rounded,
-            size: size * 0.6, color: j.accent ?? Colors.black);
+        return Icon(
+          Icons.star_rounded,
+          size: size * 0.6,
+          color: j.accent ?? Colors.black,
+        );
       case JerseyKind.polka:
         return CustomPaint(
-            size: Size(size, size), painter: _PolkaDotsPainter(j));
+          size: Size(size, size),
+          painter: _PolkaDotsPainter(j),
+        );
     }
   }
 
   Widget _flat(Jersey j) => Container(
-        width: size,
-        height: size * 0.72,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: j.color,
-          borderRadius: BorderRadius.circular(size * 0.18),
-          border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
-        ),
-        child: Text(
-          switch (kind) {
-            JerseyKind.yellow => 'GC',
-            JerseyKind.polka => 'KOM',
-            JerseyKind.green => 'W4',
-            JerseyKind.fight => 'FGT',
-          },
-          style: GoogleFonts.spaceGrotesk(
-            fontSize: size * 0.28,
-            fontWeight: FontWeight.w700,
-            color: j.textColor,
-            letterSpacing: -0.3,
-          ),
-        ),
-      );
+    width: size,
+    height: size * 0.72,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      color: j.color,
+      borderRadius: BorderRadius.circular(size * 0.18),
+      border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+    ),
+    child: Text(
+      switch (kind) {
+        JerseyKind.yellow => 'GC',
+        JerseyKind.polka => 'KOM',
+        JerseyKind.green => 'W4',
+        JerseyKind.fight => 'FGT',
+      },
+      style: GoogleFonts.spaceGrotesk(
+        fontSize: size * 0.28,
+        fontWeight: FontWeight.w700,
+        color: j.textColor,
+        letterSpacing: -0.3,
+      ),
+    ),
+  );
 }
 
 class _JerseyShirtPainter extends CustomPainter {
@@ -143,10 +151,7 @@ class _JerseyShirtPainter extends CustomPainter {
     );
 
     // Body fill
-    canvas.drawPath(
-      shirt,
-      Paint()..color = jersey.color,
-    );
+    canvas.drawPath(shirt, Paint()..color = jersey.color);
 
     // Polka dots overlay
     if (jersey.kind == JerseyKind.polka && jersey.accent != null) {
@@ -157,10 +162,7 @@ class _JerseyShirtPainter extends CustomPainter {
       for (double y = 0; y < vbH; y += step) {
         for (double x = 0; x < vbW; x += step) {
           canvas.drawCircle(
-            Offset(
-              (x + 3.5) * scaleX,
-              (y + 3.5) * scaleY,
-            ),
+            Offset((x + 3.5) * scaleX, (y + 3.5) * scaleY),
             2 * ((scaleX + scaleY) / 2),
             dotPaint,
           );
@@ -206,8 +208,7 @@ class _JerseyShirtPainter extends CustomPainter {
             ),
           )
           ..layout()
-          ..paint(canvas,
-              Offset(28 * scaleX - tp.width / 2, 32 * scaleY));
+          ..paint(canvas, Offset(28 * scaleX - tp.width / 2, 32 * scaleY));
         break;
       case JerseyKind.green:
         final check = Path()
@@ -263,10 +264,18 @@ class _PolkaDotsPainter extends CustomPainter {
     final cy = size.height / 2;
     final r = size.width / 2 - 2;
     canvas.save();
-    canvas.clipPath(Path()..addOval(Rect.fromCircle(center: Offset(cx, cy), radius: r)));
+    canvas.clipPath(
+      Path()..addOval(Rect.fromCircle(center: Offset(cx, cy), radius: r)),
+    );
 
     const dots = [
-      [14, 16], [36, 12], [22, 30], [42, 28], [16, 40], [38, 44], [28, 22]
+      [14, 16],
+      [36, 12],
+      [22, 30],
+      [42, 28],
+      [16, 40],
+      [38, 44],
+      [28, 22],
     ];
     final s = size.width / 56;
     for (final d in dots) {

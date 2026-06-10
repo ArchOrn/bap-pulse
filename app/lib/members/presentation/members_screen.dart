@@ -50,8 +50,7 @@ class _MembersScreenState extends State<MembersScreen> {
       body: FutureBuilder<List<MemberSummary>>(
         future: _future,
         builder: (context, snapshot) {
-          final isLoading =
-              snapshot.connectionState == ConnectionState.waiting;
+          final isLoading = snapshot.connectionState == ConnectionState.waiting;
           final hasError = snapshot.hasError;
           final members = snapshot.data;
 
@@ -182,7 +181,9 @@ class _SearchBar extends StatelessWidget {
                   contentPadding: EdgeInsets.symmetric(vertical: 12),
                 ),
                 style: const TextStyle(
-                    color: AppColors.textPrimary, fontSize: 15),
+                  color: AppColors.textPrimary,
+                  fontSize: 15,
+                ),
               ),
             ),
           ],
@@ -244,15 +245,21 @@ class _MembersGroupedList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final myUid = FirebaseAuth.instance.currentUser?.uid;
-    final filtered = members
-        .where((m) =>
-            (category == null || m.category == category) &&
-            (query.isEmpty ||
-                _foldDiacritics(m.name.toLowerCase())
-                    .contains(_foldDiacritics(query.toLowerCase()))))
-        .toList()
-      ..sort((a, b) =>
-          _foldDiacritics(a.name).compareTo(_foldDiacritics(b.name)));
+    final filtered =
+        members
+            .where(
+              (m) =>
+                  (category == null || m.category == category) &&
+                  (query.isEmpty ||
+                      _foldDiacritics(
+                        m.name.toLowerCase(),
+                      ).contains(_foldDiacritics(query.toLowerCase()))),
+            )
+            .toList()
+          ..sort(
+            (a, b) =>
+                _foldDiacritics(a.name).compareTo(_foldDiacritics(b.name)),
+          );
 
     final groups = <String, List<MemberSummary>>{};
     for (final m in filtered) {
@@ -272,8 +279,9 @@ class _MembersGroupedList extends StatelessWidget {
                 ? 'Aucun membre dans cette catégorie.'
                 : 'Aucun résultat pour « $query ».',
             textAlign: TextAlign.center,
-            style: AppTextStyles.bodyMedium
-                .copyWith(color: AppColors.textMuted),
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textMuted,
+            ),
           ),
         ),
       );
@@ -334,8 +342,11 @@ class _Pill extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  const _Pill(
-      {required this.label, required this.selected, required this.onTap});
+  const _Pill({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -367,8 +378,11 @@ class _MemberRow extends StatelessWidget {
   final MemberSummary member;
   final bool isMe;
   final VoidCallback onTap;
-  const _MemberRow(
-      {required this.member, required this.isMe, required this.onTap});
+  const _MemberRow({
+    required this.member,
+    required this.isMe,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -378,7 +392,8 @@ class _MemberRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: const BoxDecoration(
           border: Border(
-              bottom: BorderSide(color: AppColors.divider, width: 0.5)),
+            bottom: BorderSide(color: AppColors.divider, width: 0.5),
+          ),
         ),
         child: Row(
           children: [
@@ -432,8 +447,11 @@ class _MemberRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 4),
-            const Icon(Icons.chevron_right,
-                size: 18, color: AppColors.textMuted),
+            const Icon(
+              Icons.chevron_right,
+              size: 18,
+              color: AppColors.textMuted,
+            ),
           ],
         ),
       ),
@@ -526,7 +544,9 @@ class _MembersSkeleton extends StatelessWidget {
                       for (var i = 0; i < 4; i++)
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 12),
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
                             border: i == 3
                                 ? null
@@ -542,20 +562,18 @@ class _MembersSkeleton extends StatelessWidget {
                               const PulsingPlaceholder(
                                 width: 38,
                                 height: 38,
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(19)),
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(19),
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: const [
-                                    PulsingPlaceholder(
-                                        width: 130, height: 13),
+                                    PulsingPlaceholder(width: 130, height: 13),
                                     SizedBox(height: 6),
-                                    PulsingPlaceholder(
-                                        width: 180, height: 11),
+                                    PulsingPlaceholder(width: 180, height: 11),
                                   ],
                                 ),
                               ),
@@ -594,14 +612,12 @@ class _MembersErrorCard extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: AppTextStyles.bodyMedium
-                .copyWith(color: AppColors.textMuted),
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textMuted,
+            ),
           ),
           const SizedBox(height: 16),
-          FilledButton(
-            onPressed: onRetry,
-            child: const Text('Réessayer'),
-          ),
+          FilledButton(onPressed: onRetry, child: const Text('Réessayer')),
         ],
       ),
     );

@@ -6,20 +6,14 @@ class EloSparkline extends StatelessWidget {
   final List<int> data;
   final double height;
 
-  const EloSparkline({
-    super.key,
-    required this.data,
-    this.height = 70,
-  });
+  const EloSparkline({super.key, required this.data, this.height = 70});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
       height: height,
-      child: CustomPaint(
-        painter: _SparklinePainter(data),
-      ),
+      child: CustomPaint(painter: _SparklinePainter(data)),
     );
   }
 }
@@ -75,11 +69,7 @@ class _SparklinePainter extends CustomPainter {
     );
 
     // End dot
-    canvas.drawCircle(
-      pts.last,
-      4,
-      Paint()..color = AppColors.primary,
-    );
+    canvas.drawCircle(pts.last, 4, Paint()..color = AppColors.primary);
     canvas.drawCircle(
       pts.last,
       4,

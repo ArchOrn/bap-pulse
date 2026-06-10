@@ -61,8 +61,9 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
             return Center(
               child: Text(
                 'Cette news n\'existe plus.',
-                style: AppTextStyles.bodyMedium
-                    .copyWith(color: AppColors.textMuted),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textMuted,
+                ),
               ),
             );
           }
@@ -86,10 +87,7 @@ class _Body extends StatelessWidget {
         const SizedBox(height: 16),
         RichText(
           text: TextSpan(
-            children: markdownToSpans(
-              news.title,
-              baseStyle: AppTextStyles.h2,
-            ),
+            children: markdownToSpans(news.title, baseStyle: AppTextStyles.h2),
           ),
         ),
         const SizedBox(height: 12),
@@ -123,10 +121,7 @@ class _MetaRow extends StatelessWidget {
         ),
         Text(
           _formatDate(news.createdAt),
-          style: const TextStyle(
-            color: AppColors.textMuted,
-            fontSize: 12,
-          ),
+          style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
         ),
       ],
     );
@@ -238,9 +233,7 @@ class _Paragraph extends StatelessWidget {
     }
 
     return RichText(
-      text: TextSpan(
-        children: markdownToSpans(text, baseStyle: base),
-      ),
+      text: TextSpan(children: markdownToSpans(text, baseStyle: base)),
     );
   }
 }
@@ -261,14 +254,12 @@ class _ErrorState extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               'Cette news n\'a pas pu être chargée.',
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textMuted),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textMuted,
+              ),
             ),
             const SizedBox(height: 16),
-            TextButton(
-              onPressed: onRetry,
-              child: const Text('Réessayer'),
-            ),
+            TextButton(onPressed: onRetry, child: const Text('Réessayer')),
           ],
         ),
       ),
@@ -278,8 +269,18 @@ class _ErrorState extends StatelessWidget {
 
 String _formatDate(DateTime date) {
   const months = [
-    'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
+    'janvier',
+    'février',
+    'mars',
+    'avril',
+    'mai',
+    'juin',
+    'juillet',
+    'août',
+    'septembre',
+    'octobre',
+    'novembre',
+    'décembre',
   ];
   final h = date.hour.toString().padLeft(2, '0');
   final m = date.minute.toString().padLeft(2, '0');

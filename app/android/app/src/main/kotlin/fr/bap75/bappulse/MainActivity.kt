@@ -1,4 +1,4 @@
-package com.example.bap_pulse
+package fr.bap75.bappulse
 
 import io.flutter.embedding.android.FlutterActivity
 

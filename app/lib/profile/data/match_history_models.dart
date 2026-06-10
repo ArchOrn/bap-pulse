@@ -26,19 +26,18 @@ class UserMatchEntry {
   });
 
   factory UserMatchEntry.fromJson(Map<String, dynamic> json) => UserMatchEntry(
-        id: json['id'] as String,
-        playedAt: DateTime.parse(json['played_at'] as String),
-        tableau: json['tableau'] as String,
-        opponent: ProfileUser.fromJson(
-            json['opponent'] as Map<String, dynamic>),
-        wonByUser: json['won_by_user'] as bool,
-        eloChange: (json['elo_change'] as num).toInt(),
-        perfPoints: (json['perf_points'] as num).toInt(),
-        sets: ((json['sets'] as List?) ?? const [])
-            .map((e) => MatchSet.fromJson(e as Map<String, dynamic>))
-            .toList(growable: false),
-        validated: json['validated'] as bool,
-      );
+    id: json['id'] as String,
+    playedAt: DateTime.parse(json['played_at'] as String),
+    tableau: json['tableau'] as String,
+    opponent: ProfileUser.fromJson(json['opponent'] as Map<String, dynamic>),
+    wonByUser: json['won_by_user'] as bool,
+    eloChange: (json['elo_change'] as num).toInt(),
+    perfPoints: (json['perf_points'] as num).toInt(),
+    sets: ((json['sets'] as List?) ?? const [])
+        .map((e) => MatchSet.fromJson(e as Map<String, dynamic>))
+        .toList(growable: false),
+    validated: json['validated'] as bool,
+  );
 }
 
 class MatchSet {
@@ -48,7 +47,7 @@ class MatchSet {
   const MatchSet({required this.mine, required this.opp});
 
   factory MatchSet.fromJson(Map<String, dynamic> json) => MatchSet(
-        mine: (json['mine'] as num).toInt(),
-        opp: (json['opp'] as num).toInt(),
-      );
+    mine: (json['mine'] as num).toInt(),
+    opp: (json['opp'] as num).toInt(),
+  );
 }

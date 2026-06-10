@@ -20,9 +20,10 @@ class AuthService {
   Future<UserCredential> register({
     required String email,
     required String password,
-  }) =>
-      _auth.createUserWithEmailAndPassword(
-          email: email.trim(), password: password);
+  }) => _auth.createUserWithEmailAndPassword(
+    email: email.trim(),
+    password: password,
+  );
 
   Future<void> sendPasswordResetEmail(String email) =>
       _auth.sendPasswordResetEmail(email: email.trim());

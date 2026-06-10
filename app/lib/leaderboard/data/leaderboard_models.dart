@@ -8,27 +8,27 @@ enum LeaderboardCriterion { performance, ligue, combatif, upsets }
 extension LeaderboardCriterionX on LeaderboardCriterion {
   /// Path of the API endpoint backing this criterion.
   String get endpoint => switch (this) {
-        LeaderboardCriterion.performance => '/rankings/performance',
-        LeaderboardCriterion.ligue => '/rankings/league',
-        LeaderboardCriterion.combatif => '/rankings/matches-played',
-        LeaderboardCriterion.upsets => '/rankings/giant-killer',
-      };
+    LeaderboardCriterion.performance => '/rankings/performance',
+    LeaderboardCriterion.ligue => '/rankings/league',
+    LeaderboardCriterion.combatif => '/rankings/matches-played',
+    LeaderboardCriterion.upsets => '/rankings/giant-killer',
+  };
 
   /// JSON field carrying the metric value in the API response.
   String get metricField => switch (this) {
-        LeaderboardCriterion.performance => 'points',
-        LeaderboardCriterion.ligue => 'wins',
-        LeaderboardCriterion.combatif => 'matches_played',
-        LeaderboardCriterion.upsets => 'upset_wins',
-      };
+    LeaderboardCriterion.performance => 'points',
+    LeaderboardCriterion.ligue => 'wins',
+    LeaderboardCriterion.combatif => 'matches_played',
+    LeaderboardCriterion.upsets => 'upset_wins',
+  };
 
   /// Jersey awarded to the leader of this classement.
   JerseyKind get jersey => switch (this) {
-        LeaderboardCriterion.performance => JerseyKind.yellow,
-        LeaderboardCriterion.ligue => JerseyKind.green,
-        LeaderboardCriterion.combatif => JerseyKind.fight,
-        LeaderboardCriterion.upsets => JerseyKind.polka,
-      };
+    LeaderboardCriterion.performance => JerseyKind.yellow,
+    LeaderboardCriterion.ligue => JerseyKind.green,
+    LeaderboardCriterion.combatif => JerseyKind.fight,
+    LeaderboardCriterion.upsets => JerseyKind.polka,
+  };
 }
 
 /// One row of any of the four classements. The metric varies by criterion;

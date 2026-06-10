@@ -62,16 +62,16 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
               : 'Impossible de charger les membres.';
           return _ErrorScaffold(
             message: message,
-            onRetry: () => setState(() => _membersFuture = MembersApi().fetch()),
+            onRetry: () =>
+                setState(() => _membersFuture = MembersApi().fetch()),
           );
         }
         final members = snapshot.data ?? const <MemberSummary>[];
         final myUid = FirebaseAuth.instance.currentUser?.uid;
         final me = members.firstWhere(
           (m) => m.id == myUid,
-          orElse: () => members.isNotEmpty
-              ? members.first
-              : _placeholderSelf(myUid),
+          orElse: () =>
+              members.isNotEmpty ? members.first : _placeholderSelf(myUid),
         );
         final opponent = _opponentId == null
             ? null
@@ -98,19 +98,19 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
   }
 
   MemberSummary _placeholderSelf(String? uid) => MemberSummary(
-        id: uid ?? '',
-        firstName: 'Moi',
-        lastName: '',
-        gender: null,
-        elo: 0,
-        perfScore: 0,
-        perfRank: 0,
-        perfGain7d: 0,
-        matchesMonth: 0,
-        winsMonth: 0,
-        lossesMonth: 0,
-        jerseys: const [],
-      );
+    id: uid ?? '',
+    firstName: 'Moi',
+    lastName: '',
+    gender: null,
+    elo: 0,
+    perfScore: 0,
+    perfRank: 0,
+    perfGain7d: 0,
+    matchesMonth: 0,
+    winsMonth: 0,
+    lossesMonth: 0,
+    jerseys: const [],
+  );
 }
 
 // ─── Step 1: opponent picker ──────────────────────────────────────────────
@@ -146,15 +146,16 @@ class _OpponentPicker extends StatelessWidget {
                       onTap: () => onSelected(m.id),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 12),
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
                         child: Row(
                           children: [
                             _MemberAvatar(member: m, size: 40),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     m.name,
@@ -172,8 +173,11 @@ class _OpponentPicker extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            const Icon(Icons.chevron_right,
-                                size: 18, color: AppColors.textMuted),
+                            const Icon(
+                              Icons.chevron_right,
+                              size: 18,
+                              color: AppColors.textMuted,
+                            ),
                           ],
                         ),
                       ),
@@ -212,10 +216,8 @@ class _ScoreInput extends StatefulWidget {
 class _ScoreInputState extends State<_ScoreInput> {
   bool _submitting = false;
 
-  int get myWonSets =>
-      widget.sets.where((s) => s[0] > s[1]).length;
-  int get oppWonSets =>
-      widget.sets.where((s) => s[1] > s[0]).length;
+  int get myWonSets => widget.sets.where((s) => s[0] > s[1]).length;
+  int get oppWonSets => widget.sets.where((s) => s[1] > s[0]).length;
   bool get iWon => myWonSets > oppWonSets;
 
   void _update(int i, int side, int delta) {
@@ -226,7 +228,10 @@ class _ScoreInputState extends State<_ScoreInput> {
 
   void _addSet() {
     if (widget.sets.length >= 3) return;
-    widget.onSetsChanged([...widget.sets, [0, 0]]);
+    widget.onSetsChanged([
+      ...widget.sets,
+      [0, 0],
+    ]);
   }
 
   Future<void> _submit() async {
@@ -248,15 +253,14 @@ class _ScoreInputState extends State<_ScoreInput> {
       if (!mounted) return;
       // Refresh notifications so the submitter sees their newly created
       // "awaiting confirmation" record reflected in the badge state.
-      context
-          .read<NotificationsBloc>()
-          .add(const NotificationsRefreshRequested());
+      context.read<NotificationsBloc>().add(
+        const NotificationsRefreshRequested(),
+      );
       await Navigator.of(context).push(
         MaterialPageRoute(
           fullscreenDialog: true,
-          builder: (_) => ScoreSentScreen(
-            opponentFirstName: widget.opponent.firstName,
-          ),
+          builder: (_) =>
+              ScoreSentScreen(opponentFirstName: widget.opponent.firstName),
         ),
       );
       if (mounted) Navigator.of(context).pop();
@@ -264,10 +268,7 @@ class _ScoreInputState extends State<_ScoreInput> {
       if (!mounted) return;
       final message = e is ApiException ? e.message : 'Envoi impossible';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.accentRed,
-          content: Text(message),
-        ),
+        SnackBar(backgroundColor: AppColors.accentRed, content: Text(message)),
       );
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -310,12 +311,16 @@ class _ScoreInputState extends State<_ScoreInput> {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(child: _MemberSide(member: me, won: iWon)),
+                            Expanded(
+                              child: _MemberSide(member: me, won: iWon),
+                            ),
                             Padding(
                               padding: const EdgeInsets.only(top: 18),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 6),
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.04),
                                   borderRadius: BorderRadius.circular(8),
@@ -331,8 +336,8 @@ class _ScoreInputState extends State<_ScoreInput> {
                               ),
                             ),
                             Expanded(
-                                child:
-                                    _MemberSide(member: opponent, won: !iWon)),
+                              child: _MemberSide(member: opponent, won: !iWon),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 20),
@@ -378,8 +383,7 @@ class _ScoreInputState extends State<_ScoreInput> {
                           borderRadius: BorderRadius.circular(10),
                           child: Container(
                             width: double.infinity,
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 10),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),
@@ -390,8 +394,7 @@ class _ScoreInputState extends State<_ScoreInput> {
                               ),
                             ),
                             child: Opacity(
-                              opacity:
-                                  widget.sets.length >= 3 ? 0.4 : 1,
+                              opacity: widget.sets.length >= 3 ? 0.4 : 1,
                               child: const Text(
                                 '+ Ajouter un set',
                                 style: TextStyle(
@@ -480,8 +483,7 @@ class _ScoreInputState extends State<_ScoreInput> {
                 child: Column(
                   children: [
                     PrimaryButton(
-                      label:
-                          'Envoyer à ${opponent.firstName} pour validation',
+                      label: 'Envoyer à ${opponent.firstName} pour validation',
                       loading: _submitting,
                       onPressed: _submit,
                     ),
@@ -534,10 +536,7 @@ class _MemberSide extends StatelessWidget {
   final MemberSummary member;
   final bool won;
 
-  const _MemberSide({
-    required this.member,
-    required this.won,
-  });
+  const _MemberSide({required this.member, required this.won});
 
   @override
   Widget build(BuildContext context) {
@@ -576,8 +575,7 @@ class _MemberSide extends StatelessWidget {
           if (won) ...[
             const SizedBox(height: 6),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: AppColors.accentGreen,
                 borderRadius: BorderRadius.circular(99),
@@ -685,9 +683,7 @@ class _ScorePreview extends StatelessWidget {
             text: '$to',
             style: TextStyle(
               fontWeight: FontWeight.w700,
-              color: gain > 0
-                  ? AppColors.accentGreen
-                  : AppColors.textMuted,
+              color: gain > 0 ? AppColors.accentGreen : AppColors.textMuted,
             ),
           ),
           if (gain > 0)
@@ -713,12 +709,12 @@ class _SkeletonScaffold extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           ModalHeader(
-              title: 'Saisir le score',
-              subtitle: 'Chargement des membres…'),
+            title: 'Saisir le score',
+            subtitle: 'Chargement des membres…',
+          ),
           for (var i = 0; i < 5; i++)
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               child: PulsingPlaceholder(
                 height: 56,
                 borderRadius: BorderRadius.circular(14),
@@ -753,12 +749,17 @@ class _ErrorScaffold extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.cloud_off_rounded,
-                  size: 56, color: AppColors.textFaint),
+              Icon(
+                Icons.cloud_off_rounded,
+                size: 56,
+                color: AppColors.textFaint,
+              ),
               const SizedBox(height: 16),
-              Text(message,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.bodySmall),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodySmall,
+              ),
               const SizedBox(height: 16),
               TextButton(onPressed: onRetry, child: const Text('Réessayer')),
             ],

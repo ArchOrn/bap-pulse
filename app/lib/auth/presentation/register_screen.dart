@@ -82,11 +82,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    Text('Rejoins\nla ligue.', style: AppTextStyles.h1.copyWith(fontSize: 38)),
+                    Text(
+                      'Rejoins\nla ligue.',
+                      style: AppTextStyles.h1.copyWith(fontSize: 38),
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       'Quelques infos et c\'est parti.',
-                      style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textMuted),
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: AppColors.textMuted,
+                      ),
                     ),
                     const SizedBox(height: 32),
                     Row(
@@ -100,8 +105,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               TextFormField(
                                 controller: _firstNameCtrl,
                                 textInputAction: TextInputAction.next,
-                                decoration: const InputDecoration(hintText: 'Thomas'),
-                                validator: (v) => v == null || v.isEmpty ? 'Requis' : null,
+                                decoration: const InputDecoration(
+                                  hintText: 'Thomas',
+                                ),
+                                validator: (v) =>
+                                    v == null || v.isEmpty ? 'Requis' : null,
                               ),
                             ],
                           ),
@@ -115,8 +123,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               TextFormField(
                                 controller: _lastNameCtrl,
                                 textInputAction: TextInputAction.next,
-                                decoration: const InputDecoration(hintText: 'Lefèvre'),
-                                validator: (v) => v == null || v.isEmpty ? 'Requis' : null,
+                                decoration: const InputDecoration(
+                                  hintText: 'Lefèvre',
+                                ),
+                                validator: (v) =>
+                                    v == null || v.isEmpty ? 'Requis' : null,
                               ),
                             ],
                           ),
@@ -132,7 +143,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         hintText: 'thomas_l',
                         prefixIcon: Icon(Icons.person_outline, size: 20),
                       ),
-                      validator: (v) => v == null || v.length < 3 ? 'Au moins 3 caractères' : null,
+                      validator: (v) => v == null || v.length < 3
+                          ? 'Au moins 3 caractères'
+                          : null,
                     ),
                     const SizedBox(height: 18),
                     _label('Email'),
@@ -145,7 +158,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         hintText: 'prenom.nom@bap.fr',
                         prefixIcon: Icon(Icons.mail_outline, size: 20),
                       ),
-                      validator: (v) => v == null || !v.contains('@') ? 'Email invalide' : null,
+                      validator: (v) => v == null || !v.contains('@')
+                          ? 'Email invalide'
+                          : null,
                     ),
                     const SizedBox(height: 18),
                     _label('Mot de passe'),
@@ -158,10 +173,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         prefixIcon: const Icon(Icons.lock_outline, size: 20),
                         suffixIcon: IconButton(
                           onPressed: () => setState(() => _obscure = !_obscure),
-                          icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 20),
+                          icon: Icon(
+                            _obscure
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            size: 20,
+                          ),
                         ),
                       ),
-                      validator: (v) => v == null || v.length < 8 ? '8 caractères minimum' : null,
+                      validator: (v) => v == null || v.length < 8
+                          ? '8 caractères minimum'
+                          : null,
                     ),
                     const SizedBox(height: 18),
                     _label('Code d\'invitation BAP'),
@@ -172,7 +194,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         hintText: 'ex. BAP-2026-XXXX',
                         prefixIcon: Icon(Icons.vpn_key_outlined, size: 20),
                       ),
-                      validator: (v) => v == null || v.isEmpty ? 'Requis' : null,
+                      validator: (v) =>
+                          v == null || v.isEmpty ? 'Requis' : null,
                     ),
                     const SizedBox(height: 24),
                     PrimaryButton(
@@ -192,7 +215,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: Wrap(
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          Text('Déjà membre ? ', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textMuted)),
+                          Text(
+                            'Déjà membre ? ',
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.textMuted,
+                            ),
+                          ),
                           GestureDetector(
                             onTap: () => context.pop(),
                             child: Text(
@@ -220,7 +248,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     padding: const EdgeInsets.only(bottom: 8, left: 4),
     child: Text(
       text.toUpperCase(),
-      style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.2),
+      style: TextStyle(
+        color: AppColors.textMuted,
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.2,
+      ),
     ),
   );
 }

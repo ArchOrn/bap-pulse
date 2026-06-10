@@ -33,7 +33,9 @@ class _AuthListenable extends ChangeNotifier {
   _AuthListenable(AuthBloc bloc) {
     _sub = bloc.stream.listen((_) => notifyListeners());
   }
+
   late final StreamSubscription _sub;
+
   @override
   void dispose() {
     _sub.cancel();
@@ -48,10 +50,7 @@ GoRouter buildRouter(AuthBloc authBloc) {
     redirect: (context, state) {
       final auth = authBloc.state;
       final loc = state.matchedLocation;
-      final onAuthRoute = loc == '/' ||
-          loc == '/login' ||
-          loc == '/register' ||
-          loc == '/forgot-password';
+      final onAuthRoute = loc == '/' || loc == '/login' || loc == '/register' || loc == '/forgot-password';
 
       if (auth.status == AuthStatus.unknown) return null;
 
@@ -66,106 +65,67 @@ GoRouter buildRouter(AuthBloc authBloc) {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/',
-        builder: (_, _) => const SplashScreen(),
-      ),
-      GoRoute(
-        path: '/login',
-        builder: (_, _) => const LoginScreen(),
-      ),
-      GoRoute(
-        path: '/register',
-        builder: (_, _) => const RegisterScreen(),
-      ),
-      GoRoute(
-        path: '/forgot-password',
-        builder: (_, _) => const ForgotPasswordScreen(),
-      ),
+      GoRoute(path: '/', builder: (_, _) => const SplashScreen()),
+      GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
+      GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
+      GoRoute(path: '/forgot-password', builder: (_, _) => const ForgotPasswordScreen()),
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
         routes: [
           GoRoute(
             path: '/home',
-            pageBuilder: (_, _) =>
-                const NoTransitionPage(child: HomeScreen()),
+            pageBuilder: (_, _) => const NoTransitionPage(child: HomeScreen()),
           ),
           GoRoute(
             path: '/leaderboard',
-            pageBuilder: (_, _) =>
-                const NoTransitionPage(child: LeaderboardScreen()),
+            pageBuilder: (_, _) => const NoTransitionPage(child: LeaderboardScreen()),
           ),
           GoRoute(
             path: '/members',
-            pageBuilder: (_, _) =>
-                const NoTransitionPage(child: MembersScreen()),
+            pageBuilder: (_, _) => const NoTransitionPage(child: MembersScreen()),
           ),
           GoRoute(
             path: '/jerseys',
-            pageBuilder: (_, _) =>
-                const NoTransitionPage(child: JerseysScreen()),
+            pageBuilder: (_, _) => const NoTransitionPage(child: JerseysScreen()),
           ),
           GoRoute(
             path: '/profile',
-            pageBuilder: (_, _) =>
-                const NoTransitionPage(child: ProfileScreen()),
+            pageBuilder: (_, _) => const NoTransitionPage(child: ProfileScreen()),
           ),
         ],
       ),
       GoRoute(
         path: '/members/player/:id',
-        builder: (_, state) =>
-            PlayerDetailScreen(playerId: state.pathParameters['id']!),
+        builder: (_, state) => PlayerDetailScreen(playerId: state.pathParameters['id']!),
       ),
-      GoRoute(
-        path: '/news',
-        builder: (_, _) => const NewsListScreen(),
-      ),
-      GoRoute(
-        path: '/notifications',
-        builder: (_, _) => const NotificationsScreen(),
-      ),
+      GoRoute(path: '/news', builder: (_, _) => const NewsListScreen()),
+      GoRoute(path: '/notifications', builder: (_, _) => const NotificationsScreen()),
       GoRoute(
         path: '/news/:id',
-        builder: (_, state) =>
-            NewsDetailScreen(newsId: state.pathParameters['id']!),
+        builder: (_, state) => NewsDetailScreen(newsId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/score/new',
         pageBuilder: (_, state) => MaterialPage(
           fullscreenDialog: true,
-          child: ScoreEntryScreen(
-            preselectedOpponentId: state.uri.queryParameters['opponent'],
-          ),
+          child: ScoreEntryScreen(preselectedOpponentId: state.uri.queryParameters['opponent']),
         ),
       ),
       GoRoute(
         path: '/score/validate/:matchId',
-        pageBuilder: (_, state) => MaterialPage(
-          fullscreenDialog: true,
-          child: ScoreValidateScreen(matchId: state.pathParameters['matchId']!),
-        ),
+        pageBuilder: (_, state) =>
+            MaterialPage(fullscreenDialog: true, child: ScoreValidateScreen(matchId: state.pathParameters['matchId']!)),
       ),
-      GoRoute(
-        path: '/history',
-        builder: (_, _) => const HistoryScreen(),
-      ),
+      GoRoute(path: '/history', builder: (_, _) => const HistoryScreen()),
       GoRoute(
         path: '/settings',
-        pageBuilder: (_, _) => const MaterialPage(
-          fullscreenDialog: true,
-          child: SettingsScreen(),
-        ),
+        pageBuilder: (_, _) => const MaterialPage(fullscreenDialog: true, child: SettingsScreen()),
       ),
       GoRoute(
         path: '/settings/nickname',
-        builder: (_, state) =>
-            NicknameEditScreen(account: state.extra as Account),
+        builder: (_, state) => NicknameEditScreen(account: state.extra as Account),
       ),
-      GoRoute(
-        path: '/settings/delete-account',
-        builder: (_, _) => const DeleteAccountScreen(),
-      ),
+      GoRoute(path: '/settings/delete-account', builder: (_, _) => const DeleteAccountScreen()),
     ],
   );
 }

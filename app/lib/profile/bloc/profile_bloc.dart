@@ -67,8 +67,8 @@ class ProfileError extends ProfileState {
 
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   ProfileBloc({ProfileApi? api})
-      : _api = api ?? ProfileApi(),
-        super(const ProfileInitial()) {
+    : _api = api ?? ProfileApi(),
+      super(const ProfileInitial()) {
     on<ProfileLoadRequested>(_onLoad);
     on<ProfileRefreshRequested>(_onRefresh);
     on<ProfileCleared>((_, emit) => emit(const ProfileInitial()));
@@ -77,13 +77,17 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final ProfileApi _api;
 
   Future<void> _onLoad(
-      ProfileLoadRequested event, Emitter<ProfileState> emit) async {
+    ProfileLoadRequested event,
+    Emitter<ProfileState> emit,
+  ) async {
     emit(ProfileLoading(event.userId));
     await _fetch(event.userId, emit);
   }
 
   Future<void> _onRefresh(
-      ProfileRefreshRequested event, Emitter<ProfileState> emit) async {
+    ProfileRefreshRequested event,
+    Emitter<ProfileState> emit,
+  ) async {
     final userId = switch (state) {
       ProfileLoaded(:final profile) => profile.user.id,
       ProfileLoading(:final userId) => userId,
@@ -102,10 +106,12 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     } on ApiException catch (e) {
       emit(ProfileError(userId: userId, message: e.message));
     } catch (_) {
-      emit(ProfileError(
-        userId: userId,
-        message: 'Impossible de charger le profil.',
-      ));
+      emit(
+        ProfileError(
+          userId: userId,
+          message: 'Impossible de charger le profil.',
+        ),
+      );
     }
   }
 }

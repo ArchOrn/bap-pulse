@@ -1,16 +1,23 @@
 import 'package:equatable/equatable.dart';
 
 /// Mirrors `challenge_status` in the API.
-enum ChallengeStatus { pending, accepted, declined, expired, cancelled, unknown }
+enum ChallengeStatus {
+  pending,
+  accepted,
+  declined,
+  expired,
+  cancelled,
+  unknown,
+}
 
 ChallengeStatus _parseStatus(String raw) => switch (raw) {
-      'PENDING' => ChallengeStatus.pending,
-      'ACCEPTED' => ChallengeStatus.accepted,
-      'DECLINED' => ChallengeStatus.declined,
-      'EXPIRED' => ChallengeStatus.expired,
-      'CANCELLED' => ChallengeStatus.cancelled,
-      _ => ChallengeStatus.unknown,
-    };
+  'PENDING' => ChallengeStatus.pending,
+  'ACCEPTED' => ChallengeStatus.accepted,
+  'DECLINED' => ChallengeStatus.declined,
+  'EXPIRED' => ChallengeStatus.expired,
+  'CANCELLED' => ChallengeStatus.cancelled,
+  _ => ChallengeStatus.unknown,
+};
 
 class Challenge extends Equatable {
   final String id;

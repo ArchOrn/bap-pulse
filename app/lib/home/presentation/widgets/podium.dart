@@ -145,7 +145,10 @@ class _PodiumColumn extends StatelessWidget {
         Text(
           entry.firstName,
           style: const TextStyle(
-              color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
           textAlign: TextAlign.center,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,

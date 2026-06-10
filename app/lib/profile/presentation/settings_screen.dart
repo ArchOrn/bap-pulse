@@ -51,19 +51,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgScaffold,
-      body: Builder(builder: (context) {
-        if (_error != null) {
-          return _SettingsError(message: _error!, onRetry: _load);
-        }
-        final account = _account;
-        if (account == null) {
-          return const _SettingsLoading();
-        }
-        return _SettingsBody(
-          account: account,
-          onAccountUpdated: _applyAccount,
-        );
-      }),
+      body: Builder(
+        builder: (context) {
+          if (_error != null) {
+            return _SettingsError(message: _error!, onRetry: _load);
+          }
+          final account = _account;
+          if (account == null) {
+            return const _SettingsLoading();
+          }
+          return _SettingsBody(
+            account: account,
+            onAccountUpdated: _applyAccount,
+          );
+        },
+      ),
     );
   }
 }
@@ -74,10 +76,7 @@ class _SettingsBody extends StatelessWidget {
   final Account account;
   final ValueChanged<Account> onAccountUpdated;
 
-  const _SettingsBody({
-    required this.account,
-    required this.onAccountUpdated,
-  });
+  const _SettingsBody({required this.account, required this.onAccountUpdated});
 
   @override
   Widget build(BuildContext context) {
@@ -128,8 +127,8 @@ class _SettingsBody extends StatelessWidget {
               trailing: account.nickname?.isNotEmpty == true
                   ? account.nickname!
                   : 'Ajouter un pseudo',
-              trailingMuted: account.nickname == null ||
-                  account.nickname!.isEmpty,
+              trailingMuted:
+                  account.nickname == null || account.nickname!.isEmpty,
               onTap: () async {
                 final result = await context.push<Account>(
                   '/settings/nickname',
@@ -147,10 +146,7 @@ class _SettingsBody extends StatelessWidget {
               children: [
                 _InfoRow(label: 'Prénom', value: account.firstName),
                 _InfoRow(label: 'Nom', value: account.lastName),
-                _InfoRow(
-                  label: 'Genre',
-                  value: _formatGender(account.gender),
-                ),
+                _InfoRow(label: 'Genre', value: _formatGender(account.gender)),
                 _InfoRow(
                   label: 'Classement FFBAD',
                   value: account.ffbadRank ?? '—',
@@ -214,10 +210,10 @@ class _SettingsBody extends StatelessWidget {
   }
 
   static String _formatGender(String? g) => switch (g) {
-        'MALE' => 'Homme',
-        'FEMALE' => 'Femme',
-        _ => '—',
-      };
+    'MALE' => 'Homme',
+    'FEMALE' => 'Femme',
+    _ => '—',
+  };
 }
 
 // ── Section pieces ─────────────────────────────────────────────────────────
@@ -255,10 +251,7 @@ class _Card extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
       ),
       clipBehavior: Clip.hardEdge,
-      child: Material(
-        type: MaterialType.transparency,
-        child: child,
-      ),
+      child: Material(type: MaterialType.transparency, child: child),
     );
   }
 }
@@ -290,10 +283,7 @@ class _ActionRow extends StatelessWidget {
           border: isLast
               ? null
               : const Border(
-                  bottom: BorderSide(
-                    color: AppColors.divider,
-                    width: 0.5,
-                  ),
+                  bottom: BorderSide(color: AppColors.divider, width: 0.5),
                 ),
         ),
         child: Row(
@@ -304,9 +294,7 @@ class _ActionRow extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 15,
                   color: color ?? AppColors.textPrimary,
-                  fontWeight: color != null
-                      ? FontWeight.w600
-                      : FontWeight.w400,
+                  fontWeight: color != null ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
             ),
@@ -320,8 +308,9 @@ class _ActionRow extends StatelessWidget {
                     color: trailingMuted
                         ? AppColors.textMuted
                         : AppColors.textPrimary,
-                    fontStyle:
-                        trailingMuted ? FontStyle.italic : FontStyle.normal,
+                    fontStyle: trailingMuted
+                        ? FontStyle.italic
+                        : FontStyle.normal,
                   ),
                 ),
               ),
@@ -356,10 +345,7 @@ class _InfoRow extends StatelessWidget {
         border: isLast
             ? null
             : const Border(
-                bottom: BorderSide(
-                  color: AppColors.divider,
-                  width: 0.5,
-                ),
+                bottom: BorderSide(color: AppColors.divider, width: 0.5),
               ),
       ),
       child: Row(
@@ -407,9 +393,7 @@ class _SettingsLoading extends StatelessWidget {
         children: [
           Text('Paramètres', style: AppTextStyles.h1),
           const SizedBox(height: 24),
-          const Expanded(
-            child: Center(child: CircularProgressIndicator()),
-          ),
+          const Expanded(child: Center(child: CircularProgressIndicator())),
         ],
       ),
     );
@@ -435,9 +419,7 @@ class _SettingsError extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text('Paramètres', style: AppTextStyles.h1),
-              ),
+              Expanded(child: Text('Paramètres', style: AppTextStyles.h1)),
               TextButton(
                 onPressed: () => context.pop(),
                 child: const Text('Fermer'),
@@ -452,8 +434,9 @@ class _SettingsError extends StatelessWidget {
                   Text(
                     message,
                     textAlign: TextAlign.center,
-                    style: AppTextStyles.bodyMedium
-                        .copyWith(color: AppColors.textMuted),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textMuted,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   FilledButton(
@@ -469,4 +452,3 @@ class _SettingsError extends StatelessWidget {
     );
   }
 }
-

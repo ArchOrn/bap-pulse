@@ -14,15 +14,15 @@ enum AppNotificationType {
 }
 
 AppNotificationType _parseType(String raw) => switch (raw) {
-      'CHALLENGE_RECEIVED' => AppNotificationType.challengeReceived,
-      'CHALLENGE_ACCEPTED' => AppNotificationType.challengeAccepted,
-      'CHALLENGE_DECLINED' => AppNotificationType.challengeDeclined,
-      'MATCH_AWAITING_CONFIRMATION' =>
-        AppNotificationType.matchAwaitingConfirmation,
-      'MATCH_CONFIRMED' => AppNotificationType.matchConfirmed,
-      'MATCH_CONTESTED' => AppNotificationType.matchContested,
-      _ => AppNotificationType.unknown,
-    };
+  'CHALLENGE_RECEIVED' => AppNotificationType.challengeReceived,
+  'CHALLENGE_ACCEPTED' => AppNotificationType.challengeAccepted,
+  'CHALLENGE_DECLINED' => AppNotificationType.challengeDeclined,
+  'MATCH_AWAITING_CONFIRMATION' =>
+    AppNotificationType.matchAwaitingConfirmation,
+  'MATCH_CONFIRMED' => AppNotificationType.matchConfirmed,
+  'MATCH_CONTESTED' => AppNotificationType.matchContested,
+  _ => AppNotificationType.unknown,
+};
 
 /// One row of `GET /notifications`. Used by the in-app notification center to
 /// display a backlog of challenge/match events, with inline accept/confirm CTAs
@@ -56,14 +56,14 @@ class AppNotification extends Equatable {
   String? get fromUserId => data['from_user_id'] as String?;
 
   AppNotification copyWith({DateTime? readAt}) => AppNotification(
-        id: id,
-        type: type,
-        title: title,
-        body: body,
-        data: data,
-        readAt: readAt ?? this.readAt,
-        createdAt: createdAt,
-      );
+    id: id,
+    type: type,
+    title: title,
+    body: body,
+    data: data,
+    readAt: readAt ?? this.readAt,
+    createdAt: createdAt,
+  );
 
   factory AppNotification.fromJson(Map<String, dynamic> json) {
     // The API re-serializes JSONB as a raw JSON object (see toResponse in
@@ -76,12 +76,15 @@ class AppNotification extends Equatable {
       try {
         final decoded = jsonDecode(raw);
         if (decoded is Map) payload = decoded.cast<String, dynamic>();
-      } catch (_) {/* ignore — keep payload empty */}
+      } catch (_) {
+        /* ignore — keep payload empty */
+      }
     }
 
     final readAtRaw = json['read_at'];
-    final readAt =
-        readAtRaw is String ? DateTime.tryParse(readAtRaw)?.toLocal() : null;
+    final readAt = readAtRaw is String
+        ? DateTime.tryParse(readAtRaw)?.toLocal()
+        : null;
 
     return AppNotification(
       id: json['id'] as String,

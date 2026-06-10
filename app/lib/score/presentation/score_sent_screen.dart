@@ -36,8 +36,11 @@ class ScoreSentScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Icon(Icons.check_rounded,
-                    color: AppColors.onPrimary, size: 44),
+                child: const Icon(
+                  Icons.check_rounded,
+                  color: AppColors.onPrimary,
+                  size: 44,
+                ),
               ),
               const SizedBox(height: 22),
               Text(
@@ -49,8 +52,10 @@ class ScoreSentScreen extends StatelessWidget {
               Text(
                 '$opponentFirstName va recevoir une notification pour valider le match. Le score sera mis à jour dès validation.',
                 textAlign: TextAlign.center,
-                style: AppTextStyles.bodyLarge
-                    .copyWith(color: AppColors.textMuted, height: 1.5),
+                style: AppTextStyles.bodyLarge.copyWith(
+                  color: AppColors.textMuted,
+                  height: 1.5,
+                ),
               ),
               const SizedBox(height: 32),
               Container(
@@ -82,7 +87,9 @@ class ScoreSentScreen extends StatelessWidget {
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.accentAmber.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(99),

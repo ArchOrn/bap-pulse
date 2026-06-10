@@ -21,22 +21,22 @@ class Account {
   });
 
   Account copyWith({String? nickname}) => Account(
-        id: id,
-        email: email,
-        firstName: firstName,
-        lastName: lastName,
-        nickname: nickname,
-        gender: gender,
-        ffbadRank: ffbadRank,
-      );
+    id: id,
+    email: email,
+    firstName: firstName,
+    lastName: lastName,
+    nickname: nickname,
+    gender: gender,
+    ffbadRank: ffbadRank,
+  );
 
   factory Account.fromJson(Map<String, dynamic> json) => Account(
-        id: json['id'] as String,
-        email: json['email'] as String,
-        firstName: json['first_name'] as String,
-        lastName: json['last_name'] as String,
-        nickname: json['nickname'] as String?,
-        gender: json['gender'] as String?,
-        ffbadRank: json['ffbad_rank'] as String?,
-      );
+    id: json['id'] as String,
+    email: json['email'] as String,
+    firstName: json['first_name'] as String,
+    lastName: json['last_name'] as String,
+    nickname: json['nickname'] as String?,
+    gender: json['gender'] as String?,
+    ffbadRank: json['ffbad_rank'] as String?,
+  );
 }

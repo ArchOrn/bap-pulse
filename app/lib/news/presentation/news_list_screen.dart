@@ -64,9 +64,7 @@ class _NewsListScreenState extends State<NewsListScreen> {
             onRefresh: _refresh,
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-              children: [
-                PulseFeed(items: snapshot.data ?? const []),
-              ],
+              children: [PulseFeed(items: snapshot.data ?? const [])],
             ),
           );
         },
@@ -91,14 +89,12 @@ class _ErrorState extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               'Le fil n\'a pas pu être chargé.',
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textMuted),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textMuted,
+              ),
             ),
             const SizedBox(height: 16),
-            TextButton(
-              onPressed: onRetry,
-              child: const Text('Réessayer'),
-            ),
+            TextButton(onPressed: onRetry, child: const Text('Réessayer')),
           ],
         ),
       ),

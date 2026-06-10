@@ -4,12 +4,12 @@ import 'package:equatable/equatable.dart';
 enum MatchStatus { pending, confirmed, contested, cancelled }
 
 MatchStatus parseMatchStatus(String raw) => switch (raw) {
-      'PENDING' => MatchStatus.pending,
-      'CONFIRMED' => MatchStatus.confirmed,
-      'CONTESTED' => MatchStatus.contested,
-      'CANCELLED' => MatchStatus.cancelled,
-      _ => MatchStatus.confirmed,
-    };
+  'PENDING' => MatchStatus.pending,
+  'CONFIRMED' => MatchStatus.confirmed,
+  'CONTESTED' => MatchStatus.contested,
+  'CANCELLED' => MatchStatus.cancelled,
+  _ => MatchStatus.confirmed,
+};
 
 class GameMatch extends Equatable {
   final String id;
@@ -56,13 +56,13 @@ class GameMatch extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        playerAId,
-        playerBId,
-        scoreA,
-        scoreB,
-        winnerId,
-        status,
-        eloChange,
-      ];
+    id,
+    playerAId,
+    playerBId,
+    scoreA,
+    scoreB,
+    winnerId,
+    status,
+    eloChange,
+  ];
 }

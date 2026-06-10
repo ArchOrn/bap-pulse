@@ -91,14 +91,13 @@ class AuthState extends Equatable {
     String? error,
     bool clearError = false,
     bool? resetEmailSent,
-  }) =>
-      AuthState(
-        status: status ?? this.status,
-        user: user ?? this.user,
-        busy: busy ?? this.busy,
-        error: clearError ? null : (error ?? this.error),
-        resetEmailSent: resetEmailSent ?? this.resetEmailSent,
-      );
+  }) => AuthState(
+    status: status ?? this.status,
+    user: user ?? this.user,
+    busy: busy ?? this.busy,
+    error: clearError ? null : (error ?? this.error),
+    resetEmailSent: resetEmailSent ?? this.resetEmailSent,
+  );
 
   @override
   List<Object?> get props => [status, user?.uid, busy, error, resetEmailSent];
@@ -111,8 +110,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   StreamSubscription<User?>? _sub;
 
   AuthBloc({AuthService? authService})
-      : _authService = authService ?? AuthService(),
-        super(const AuthState.unknown()) {
+    : _authService = authService ?? AuthService(),
+      super(const AuthState.unknown()) {
     on<_AuthUserChanged>(_onUserChanged);
     on<AuthSignInRequested>(_onSignIn);
     on<AuthRegisterRequested>(_onRegister);
@@ -120,23 +119,28 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthSignOutRequested>(_onSignOut);
     on<AuthErrorCleared>((_, emit) => emit(state.copyWith(clearError: true)));
 
-    _sub = _authService.authStateChanges
-        .listen((user) => add(_AuthUserChanged(user)));
+    _sub = _authService.authStateChanges.listen(
+      (user) => add(_AuthUserChanged(user)),
+    );
   }
 
   void _onUserChanged(_AuthUserChanged event, Emitter<AuthState> emit) {
-    emit(state.copyWith(
-      status: event.user != null
-          ? AuthStatus.authenticated
-          : AuthStatus.unauthenticated,
-      user: event.user,
-      clearError: true,
-      busy: false,
-    ));
+    emit(
+      state.copyWith(
+        status: event.user != null
+            ? AuthStatus.authenticated
+            : AuthStatus.unauthenticated,
+        user: event.user,
+        clearError: true,
+        busy: false,
+      ),
+    );
   }
 
   Future<void> _onSignIn(
-      AuthSignInRequested event, Emitter<AuthState> emit) async {
+    AuthSignInRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(state.copyWith(busy: true, clearError: true));
     try {
       await _authService.signIn(email: event.email, password: event.password);
@@ -149,13 +153,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onRegister(
-      AuthRegisterRequested event, Emitter<AuthState> emit) async {
+    AuthRegisterRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(state.copyWith(busy: true, clearError: true));
     try {
       // NB: invite code, profile fields (firstName/lastName/username) will be
       // sent to the API in a follow-up. For now we only register on Firebase.
-      await _authService.register(
-          email: event.email, password: event.password);
+      await _authService.register(email: event.email, password: event.password);
     } on FirebaseAuthException catch (e) {
       emit(state.copyWith(busy: false, error: _mapError(e)));
     } catch (_) {
@@ -164,7 +169,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onPasswordReset(
-      AuthPasswordResetRequested event, Emitter<AuthState> emit) async {
+    AuthPasswordResetRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(state.copyWith(busy: true, clearError: true, resetEmailSent: false));
     try {
       await _authService.sendPasswordResetEmail(event.email);
@@ -177,20 +184,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onSignOut(
-      AuthSignOutRequested event, Emitter<AuthState> emit) async {
+    AuthSignOutRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     await _authService.signOut();
   }
 
   String _mapError(FirebaseAuthException e) => switch (e.code) {
-        'invalid-email' => 'Adresse email invalide.',
-        'user-not-found' || 'invalid-credential' =>
-          'Identifiants incorrects.',
-        'wrong-password' => 'Mot de passe incorrect.',
-        'email-already-in-use' => 'Cette adresse est déjà utilisée.',
-        'weak-password' => 'Mot de passe trop faible (8 caractères minimum).',
-        'network-request-failed' => 'Connexion réseau indisponible.',
-        _ => e.message ?? 'Erreur d\'authentification.',
-      };
+    'invalid-email' => 'Adresse email invalide.',
+    'user-not-found' || 'invalid-credential' => 'Identifiants incorrects.',
+    'wrong-password' => 'Mot de passe incorrect.',
+    'email-already-in-use' => 'Cette adresse est déjà utilisée.',
+    'weak-password' => 'Mot de passe trop faible (8 caractères minimum).',
+    'network-request-failed' => 'Connexion réseau indisponible.',
+    _ => e.message ?? 'Erreur d\'authentification.',
+  };
 
   @override
   Future<void> close() async {

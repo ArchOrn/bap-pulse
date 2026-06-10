@@ -70,8 +70,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '239139234503',
     projectId: 'bap-pulse',
     storageBucket: 'bap-pulse.firebasestorage.app',
-    iosClientId: '239139234503-vlnnipcniuq2vth0tag96jg8n8v9v5os.apps.googleusercontent.com',
-    iosBundleId: 'com.example.bapPulse',
+    iosClientId:
+        '239139234503-vlnnipcniuq2vth0tag96jg8n8v9v5os.apps.googleusercontent.com',
+    iosBundleId: 'fr.bap75.bappulse',
   );
-
 }

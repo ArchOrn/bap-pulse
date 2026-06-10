@@ -63,8 +63,8 @@ class MatchHistoryError extends MatchHistoryState {
 
 class MatchHistoryBloc extends Bloc<MatchHistoryEvent, MatchHistoryState> {
   MatchHistoryBloc({MatchHistoryApi? api})
-      : _api = api ?? MatchHistoryApi(),
-        super(const MatchHistoryInitial()) {
+    : _api = api ?? MatchHistoryApi(),
+      super(const MatchHistoryInitial()) {
     on<MatchHistoryLoadRequested>(_onLoad);
     on<MatchHistoryRefreshRequested>(_onRefresh);
   }
@@ -72,13 +72,17 @@ class MatchHistoryBloc extends Bloc<MatchHistoryEvent, MatchHistoryState> {
   final MatchHistoryApi _api;
 
   Future<void> _onLoad(
-      MatchHistoryLoadRequested event, Emitter<MatchHistoryState> emit) async {
+    MatchHistoryLoadRequested event,
+    Emitter<MatchHistoryState> emit,
+  ) async {
     emit(MatchHistoryLoading(event.userId));
     await _fetch(event.userId, emit);
   }
 
-  Future<void> _onRefresh(MatchHistoryRefreshRequested event,
-      Emitter<MatchHistoryState> emit) async {
+  Future<void> _onRefresh(
+    MatchHistoryRefreshRequested event,
+    Emitter<MatchHistoryState> emit,
+  ) async {
     final userId = switch (state) {
       MatchHistoryLoaded(:final userId) => userId,
       MatchHistoryLoading(:final userId) => userId,
@@ -97,10 +101,12 @@ class MatchHistoryBloc extends Bloc<MatchHistoryEvent, MatchHistoryState> {
     } on ApiException catch (e) {
       emit(MatchHistoryError(userId: userId, message: e.message));
     } catch (_) {
-      emit(MatchHistoryError(
-        userId: userId,
-        message: 'Impossible de charger l\'historique.',
-      ));
+      emit(
+        MatchHistoryError(
+          userId: userId,
+          message: 'Impossible de charger l\'historique.',
+        ),
+      );
     }
   }
 }

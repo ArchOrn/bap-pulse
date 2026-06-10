@@ -143,7 +143,8 @@ class _JerseysScreenState extends State<JerseysScreen> {
                       child: _JerseyCard(
                         meta: meta,
                         entries: state.cache[meta.criterion],
-                        hasError: state is LeaderboardError &&
+                        hasError:
+                            state is LeaderboardError &&
                             state.criterion == meta.criterion,
                       ),
                     ),
@@ -171,7 +172,9 @@ class _JerseyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final holder = (entries != null && entries!.isNotEmpty) ? entries!.first : null;
+    final holder = (entries != null && entries!.isNotEmpty)
+        ? entries!.first
+        : null;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -223,8 +226,7 @@ class _JerseyCard extends StatelessWidget {
                           children: [
                             Text(
                               meta.name,
-                              style:
-                                  AppTextStyles.h4.copyWith(fontSize: 18),
+                              style: AppTextStyles.h4.copyWith(fontSize: 18),
                             ),
                             const SizedBox(height: 1),
                             Text(
@@ -238,8 +240,10 @@ class _JerseyCard extends StatelessWidget {
                             const SizedBox(height: 6),
                             Text(
                               meta.description,
-                              style: AppTextStyles.bodySmall
-                                  .copyWith(fontSize: 12, height: 1.5),
+                              style: AppTextStyles.bodySmall.copyWith(
+                                fontSize: 12,
+                                height: 1.5,
+                              ),
                             ),
                           ],
                         ),
@@ -284,34 +288,31 @@ class _HolderRow extends StatelessWidget {
     );
 
     if (isLoading) {
-      return Container(
-        height: 56,
-        decoration: pill,
-      );
+      return Container(height: 56, decoration: pill);
     }
 
     if (hasError) {
       return Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: pill,
         child: Row(
           children: [
             Expanded(
               child: Text(
                 'Impossible de charger le porteur.',
-                style: AppTextStyles.bodySmall
-                    .copyWith(color: AppColors.textMuted, fontSize: 12),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textMuted,
+                  fontSize: 12,
+                ),
               ),
             ),
             TextButton(
-              onPressed: () => context
-                  .read<LeaderboardBloc>()
-                  .add(LeaderboardLoadRequested(meta.criterion)),
+              onPressed: () => context.read<LeaderboardBloc>().add(
+                LeaderboardLoadRequested(meta.criterion),
+              ),
               style: TextButton.styleFrom(
                 minimumSize: Size.zero,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               child: const Text('Réessayer'),
@@ -323,13 +324,14 @@ class _HolderRow extends StatelessWidget {
 
     if (holder == null) {
       return Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: pill,
         child: Text(
           'Pas encore de porteur ce mois-ci.',
-          style: AppTextStyles.bodySmall
-              .copyWith(color: AppColors.textMuted, fontSize: 12),
+          style: AppTextStyles.bodySmall.copyWith(
+            color: AppColors.textMuted,
+            fontSize: 12,
+          ),
         ),
       );
     }
@@ -337,8 +339,7 @@ class _HolderRow extends StatelessWidget {
     return GestureDetector(
       onTap: () => context.push('/members/player/${holder!.id}'),
       child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: pill,
         child: Row(
           children: [
@@ -374,8 +375,7 @@ class _HolderRow extends StatelessWidget {
               children: [
                 Text(
                   '${holder!.value}',
-                  style: AppTextStyles.numeric(
-                      size: 20, letterSpacing: -0.5),
+                  style: AppTextStyles.numeric(size: 20, letterSpacing: -0.5),
                 ),
                 const SizedBox(width: 4),
                 Text(

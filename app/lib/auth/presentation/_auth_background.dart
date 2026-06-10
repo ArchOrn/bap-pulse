@@ -16,10 +16,7 @@ class AuthBackground extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: [
-            Color(0xFF13201A),
-            Color(0xFF0B0F14),
-          ],
+          colors: [Color(0xFF13201A), Color(0xFF0B0F14)],
           stops: [0.0, 0.6],
         ),
       ),
@@ -29,10 +26,7 @@ class AuthBackground extends StatelessWidget {
           Positioned(
             top: -120,
             right: -90,
-            child: Opacity(
-              opacity: 0.05,
-              child: PulseLogo(size: 540, color: AppColors.primary),
-            ),
+            child: Opacity(opacity: 0.05, child: PulseLogo(size: 540, color: AppColors.primary)),
           ),
           child,
         ],

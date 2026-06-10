@@ -9,14 +9,14 @@ enum PlayerCategory {
 
 extension PlayerCategoryX on PlayerCategory {
   String get short => switch (this) {
-        PlayerCategory.sh => 'SH',
-        PlayerCategory.sd => 'SD',
-      };
+    PlayerCategory.sh => 'SH',
+    PlayerCategory.sd => 'SD',
+  };
 
   String get long => switch (this) {
-        PlayerCategory.sh => 'Simple homme',
-        PlayerCategory.sd => 'Simple dame',
-      };
+    PlayerCategory.sh => 'Simple homme',
+    PlayerCategory.sd => 'Simple dame',
+  };
 
   /// Maps the API's nullable gender ("MALE" / "FEMALE" / null) to a singles
   /// category. Defaults to SH when unknown — matches the mock fallback.
@@ -74,22 +74,21 @@ class Player extends Equatable {
 
   int get lossesMonth => matchesMonth - winsMonth;
 
-  double get winRate =>
-      matchesMonth == 0 ? 0 : winsMonth / matchesMonth;
+  double get winRate => matchesMonth == 0 ? 0 : winsMonth / matchesMonth;
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        elo,
-        trend,
-        performance,
-        perfGain,
-        matchesMonth,
-        winsMonth,
-        winsVsBetter,
-        streak,
-        category,
-        jerseys,
-      ];
+    id,
+    name,
+    elo,
+    trend,
+    performance,
+    perfGain,
+    matchesMonth,
+    winsMonth,
+    winsVsBetter,
+    streak,
+    category,
+    jerseys,
+  ];
 }

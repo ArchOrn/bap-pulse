@@ -22,7 +22,11 @@ class ModalHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
-          20, MediaQuery.of(context).padding.top + 14, 20, 14),
+        20,
+        MediaQuery.of(context).padding.top + 14,
+        20,
+        14,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -31,7 +35,10 @@ class ModalHeader extends StatelessWidget {
               GestureDetector(
                 onTap: onClose ?? () => Navigator.of(context).pop(),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 4,
+                  ),
                   child: Text(
                     closeLabel,
                     style: const TextStyle(

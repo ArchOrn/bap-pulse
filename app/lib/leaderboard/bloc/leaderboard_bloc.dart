@@ -56,10 +56,7 @@ class LeaderboardLoading extends LeaderboardState {
   @override
   final Map<LeaderboardCriterion, List<LeaderboardEntry>> cache;
 
-  const LeaderboardLoading({
-    required this.criterion,
-    this.cache = const {},
-  });
+  const LeaderboardLoading({required this.criterion, this.cache = const {}});
 
   @override
   List<Object?> get props => [criterion, cache];
@@ -101,8 +98,8 @@ class LeaderboardError extends LeaderboardState {
 
 class LeaderboardBloc extends Bloc<LeaderboardEvent, LeaderboardState> {
   LeaderboardBloc({LeaderboardApi? api})
-      : _api = api ?? LeaderboardApi(),
-        super(const LeaderboardInitial()) {
+    : _api = api ?? LeaderboardApi(),
+      super(const LeaderboardInitial()) {
     on<LeaderboardLoadRequested>(_onLoad);
     on<LeaderboardCriterionChanged>(_onCriterionChanged);
     on<LeaderboardRefreshRequested>(_onRefresh);
@@ -117,11 +114,13 @@ class LeaderboardBloc extends Bloc<LeaderboardEvent, LeaderboardState> {
     final cache = state.cache;
     final cached = cache[event.criterion];
     if (cached != null) {
-      emit(LeaderboardLoaded(
-        criterion: event.criterion,
-        entries: cached,
-        cache: cache,
-      ));
+      emit(
+        LeaderboardLoaded(
+          criterion: event.criterion,
+          entries: cached,
+          cache: cache,
+        ),
+      );
       return;
     }
     emit(LeaderboardLoading(criterion: event.criterion, cache: cache));
@@ -135,11 +134,13 @@ class LeaderboardBloc extends Bloc<LeaderboardEvent, LeaderboardState> {
     final cache = state.cache;
     final cached = cache[event.criterion];
     if (cached != null) {
-      emit(LeaderboardLoaded(
-        criterion: event.criterion,
-        entries: cached,
-        cache: cache,
-      ));
+      emit(
+        LeaderboardLoaded(
+          criterion: event.criterion,
+          entries: cached,
+          cache: cache,
+        ),
+      );
       return;
     }
     emit(LeaderboardLoading(criterion: event.criterion, cache: cache));
@@ -173,23 +174,25 @@ class LeaderboardBloc extends Bloc<LeaderboardEvent, LeaderboardState> {
       // concurrent fetches (e.g. jerseys screen kicking off all 4 criteria
       // at once) merge additively instead of last-writer-wins.
       final next = Map.of(state.cache)..[criterion] = entries;
-      emit(LeaderboardLoaded(
-        criterion: criterion,
-        entries: entries,
-        cache: next,
-      ));
+      emit(
+        LeaderboardLoaded(criterion: criterion, entries: entries, cache: next),
+      );
     } on ApiException catch (e) {
-      emit(LeaderboardError(
-        criterion: criterion,
-        message: e.message,
-        cache: state.cache,
-      ));
+      emit(
+        LeaderboardError(
+          criterion: criterion,
+          message: e.message,
+          cache: state.cache,
+        ),
+      );
     } catch (_) {
-      emit(LeaderboardError(
-        criterion: criterion,
-        message: 'Impossible de charger le classement.',
-        cache: state.cache,
-      ));
+      emit(
+        LeaderboardError(
+          criterion: criterion,
+          message: 'Impossible de charger le classement.',
+          cache: state.cache,
+        ),
+      );
     }
   }
 }

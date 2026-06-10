@@ -37,6 +37,7 @@ class ProfileScreen extends StatelessWidget {
 
 class _ProfileLoading extends StatelessWidget {
   const _ProfileLoading();
+
   @override
   Widget build(BuildContext context) =>
       const Center(child: CircularProgressIndicator());
@@ -44,7 +45,9 @@ class _ProfileLoading extends StatelessWidget {
 
 class _ProfileError extends StatelessWidget {
   final String message;
+
   const _ProfileError({required this.message});
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -53,15 +56,18 @@ class _ProfileError extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(message,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.bodyMedium
-                    .copyWith(color: AppColors.textMuted)),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textMuted,
+              ),
+            ),
             const SizedBox(height: 16),
             FilledButton(
-              onPressed: () => context
-                  .read<ProfileBloc>()
-                  .add(const ProfileRefreshRequested()),
+              onPressed: () => context.read<ProfileBloc>().add(
+                const ProfileRefreshRequested(),
+              ),
               child: const Text('Réessayer'),
             ),
           ],
@@ -73,16 +79,17 @@ class _ProfileError extends StatelessWidget {
 
 class _ProfileBody extends StatelessWidget {
   final UserProfile profile;
+
   const _ProfileBody({required this.profile});
 
   @override
   Widget build(BuildContext context) {
-    final history =
-        profile.perfHistory.map((p) => p.value).toList(growable: false);
+    final history = profile.perfHistory
+        .map((p) => p.value)
+        .toList(growable: false);
     return RefreshIndicator(
-      onRefresh: () async => context
-          .read<ProfileBloc>()
-          .add(const ProfileRefreshRequested()),
+      onRefresh: () async =>
+          context.read<ProfileBloc>().add(const ProfileRefreshRequested()),
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
@@ -137,6 +144,7 @@ class _ProfileBody extends StatelessWidget {
 
 class _Cover extends StatelessWidget {
   final UserProfile profile;
+
   const _Cover({required this.profile});
 
   @override
@@ -217,9 +225,13 @@ class _Cover extends StatelessWidget {
                                   right: -2,
                                   child: Container(
                                     constraints: const BoxConstraints(
-                                        minWidth: 16, minHeight: 16),
+                                      minWidth: 16,
+                                      minHeight: 16,
+                                    ),
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 4, vertical: 1),
+                                      horizontal: 4,
+                                      vertical: 1,
+                                    ),
                                     alignment: Alignment.center,
                                     decoration: BoxDecoration(
                                       color: AppColors.accentRed,
@@ -491,8 +503,18 @@ class _ScoreCard extends StatelessWidget {
   }
 
   static const _monthsFr = [
-    'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
+    'janvier',
+    'février',
+    'mars',
+    'avril',
+    'mai',
+    'juin',
+    'juillet',
+    'août',
+    'septembre',
+    'octobre',
+    'novembre',
+    'décembre',
   ];
 
   String _firstOfMonthLabel() {
@@ -505,6 +527,7 @@ class _ScoreCard extends StatelessWidget {
 
 class _StatGrid extends StatelessWidget {
   final ProfileStatsMonth stats;
+
   const _StatGrid({required this.stats});
 
   @override
@@ -607,6 +630,7 @@ class _MiniStat extends StatelessWidget {
 
 class _MyJerseysCard extends StatelessWidget {
   final UserProfile profile;
+
   const _MyJerseysCard({required this.profile});
 
   @override
@@ -710,29 +734,34 @@ class _MyJerseysCard extends StatelessWidget {
 
 class _HeadToHeadRow extends StatelessWidget {
   final ProfileHeadToHead headToHead;
+
   const _HeadToHeadRow({required this.headToHead});
 
   @override
   Widget build(BuildContext context) {
     final cards = <Widget>[];
     if (headToHead.nemesis != null) {
-      cards.add(Expanded(
-        child: _NemesisCard(
-          title: 'Bête noire',
-          color: AppColors.accentRed,
-          opponent: headToHead.nemesis!,
+      cards.add(
+        Expanded(
+          child: _NemesisCard(
+            title: 'Bête noire',
+            color: AppColors.accentRed,
+            opponent: headToHead.nemesis!,
+          ),
         ),
-      ));
+      );
     }
     if (headToHead.favoriteVictim != null) {
       if (cards.isNotEmpty) cards.add(const SizedBox(width: 10));
-      cards.add(Expanded(
-        child: _NemesisCard(
-          title: 'Victime favorite',
-          color: AppColors.accentGreen,
-          opponent: headToHead.favoriteVictim!,
+      cards.add(
+        Expanded(
+          child: _NemesisCard(
+            title: 'Victime favorite',
+            color: AppColors.accentGreen,
+            opponent: headToHead.favoriteVictim!,
+          ),
         ),
-      ));
+      );
     }
     return Row(children: cards);
   }

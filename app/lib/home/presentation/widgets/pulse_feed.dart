@@ -42,8 +42,7 @@ class _Row extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(item.emoji,
-                  style: const TextStyle(fontSize: 22, height: 1)),
+              Text(item.emoji, style: const TextStyle(fontSize: 22, height: 1)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(

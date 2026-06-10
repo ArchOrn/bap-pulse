@@ -55,8 +55,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       alignment: Alignment.centerLeft,
                       child: IconButton.filled(
                         style: IconButton.styleFrom(
-                          backgroundColor:
-                              Colors.white.withValues(alpha: 0.08),
+                          backgroundColor: Colors.white.withValues(alpha: 0.08),
                           foregroundColor: AppColors.textPrimary,
                         ),
                         onPressed: () => context.pop(),
@@ -73,8 +72,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     const SizedBox(height: 12),
                     Text(
                       'Indique l\'email de ton compte BAP. On t\'envoie un lien pour le réinitialiser.',
-                      style: AppTextStyles.bodyLarge
-                          .copyWith(color: AppColors.textMuted),
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: AppColors.textMuted,
+                      ),
                     ),
                     const SizedBox(height: 32),
                     if (auth.resetEmailSent) ...[
@@ -89,8 +89,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.check_circle_rounded,
-                                color: AppColors.accentGreen),
+                            const Icon(
+                              Icons.check_circle_rounded,
+                              color: AppColors.accentGreen,
+                            ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
@@ -115,8 +117,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         hintText: 'prenom.nom@bap.fr',
                         prefixIcon: Icon(Icons.mail_outline, size: 20),
                       ),
-                      validator: (v) =>
-                          v == null || !v.contains('@') ? 'Email invalide' : null,
+                      validator: (v) => v == null || !v.contains('@')
+                          ? 'Email invalide'
+                          : null,
                       onFieldSubmitted: (_) => _submit(),
                     ),
                     const SizedBox(height: 24),
@@ -136,15 +139,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Widget _label(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 8, left: 4),
-        child: Text(
-          text.toUpperCase(),
-          style: TextStyle(
-            color: AppColors.textMuted,
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.2,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.only(bottom: 8, left: 4),
+    child: Text(
+      text.toUpperCase(),
+      style: TextStyle(
+        color: AppColors.textMuted,
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.2,
+      ),
+    ),
+  );
 }

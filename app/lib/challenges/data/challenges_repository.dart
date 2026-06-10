@@ -17,7 +17,8 @@ class ChallengesRepository {
       '/challenges',
       data: {
         'to_user_id': toUserId,
-        if (proposedAt != null) 'proposed_at': proposedAt.toUtc().toIso8601String(),
+        if (proposedAt != null)
+          'proposed_at': proposedAt.toUtc().toIso8601String(),
         if (court != null && court.isNotEmpty) 'court': court,
         if (note != null && note.isNotEmpty) 'note': note,
       },
@@ -30,8 +31,9 @@ class ChallengesRepository {
   Future<Challenge> cancel(String id) => _respond(id, 'cancel');
 
   Future<Challenge> _respond(String id, String action) async {
-    final res = await ApiClient.instance.dio
-        .post<Map<String, dynamic>>('/challenges/$id/$action');
+    final res = await ApiClient.instance.dio.post<Map<String, dynamic>>(
+      '/challenges/$id/$action',
+    );
     return Challenge.fromJson(res.data!);
   }
 }

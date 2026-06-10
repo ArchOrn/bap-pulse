@@ -5,10 +5,7 @@ import 'package:bap_pulse/core/theme/colors.dart';
 /// the brand accent color, mirroring the existing pulse-feed style where player
 /// names pop) and `*italic*`. Anything else is rendered as plain text — by
 /// design, the BO editor exposes only this subset.
-List<TextSpan> markdownToSpans(
-  String input, {
-  TextStyle? baseStyle,
-}) {
+List<TextSpan> markdownToSpans(String input, {TextStyle? baseStyle}) {
   final base = baseStyle ?? const TextStyle(color: AppColors.textPrimary);
   final spans = <TextSpan>[];
   final buffer = StringBuffer();
@@ -25,13 +22,15 @@ List<TextSpan> markdownToSpans(
       final end = input.indexOf('**', i + 2);
       if (end != -1) {
         flush();
-        spans.add(TextSpan(
-          text: input.substring(i + 2, end),
-          style: base.copyWith(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w700,
+        spans.add(
+          TextSpan(
+            text: input.substring(i + 2, end),
+            style: base.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
-        ));
+        );
         i = end + 2;
         continue;
       }
@@ -40,10 +39,12 @@ List<TextSpan> markdownToSpans(
       final end = input.indexOf('*', i + 1);
       if (end != -1) {
         flush();
-        spans.add(TextSpan(
-          text: input.substring(i + 1, end),
-          style: base.copyWith(fontStyle: FontStyle.italic),
-        ));
+        spans.add(
+          TextSpan(
+            text: input.substring(i + 1, end),
+            style: base.copyWith(fontStyle: FontStyle.italic),
+          ),
+        );
         i = end + 1;
         continue;
       }

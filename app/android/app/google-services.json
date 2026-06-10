@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:239139234503:android:91bbff631f09c9002fd4e2",
         "android_client_info": {
-          "package_name": "com.example.bap_pulse"
+          "package_name": "fr.bap75.bappulse"
         }
       },
       "oauth_client": [
@@ -34,7 +34,7 @@
               "client_id": "239139234503-vlnnipcniuq2vth0tag96jg8n8v9v5os.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.bapPulse"
+                "bundle_id": "fr.bap75.bappulse"
               }
             }
           ]

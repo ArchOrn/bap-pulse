@@ -56,8 +56,7 @@ class PlayerSide extends StatelessWidget {
           if (won) ...[
             const SizedBox(height: 6),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: AppColors.accentGreen,
                 borderRadius: BorderRadius.circular(99),

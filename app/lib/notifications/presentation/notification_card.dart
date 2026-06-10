@@ -127,9 +127,10 @@ class NotificationCard extends StatelessWidget {
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.accentRed,
                           side: const BorderSide(
-                              color: AppColors.accentRed, width: 1.5),
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 10),
+                            color: AppColors.accentRed,
+                            width: 1.5,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -150,8 +151,7 @@ class NotificationCard extends StatelessWidget {
                       child: FilledButton(
                         style: FilledButton.styleFrom(
                           backgroundColor: tone.color,
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 10),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -174,21 +174,35 @@ class NotificationCard extends StatelessWidget {
   }
 
   static _Tone _toneFor(AppNotificationType type) => switch (type) {
-        AppNotificationType.challengeReceived =>
-          const _Tone(Icons.sports_kabaddi_rounded, AppColors.primary),
-        AppNotificationType.challengeAccepted =>
-          const _Tone(Icons.check_circle_rounded, AppColors.accentGreen),
-        AppNotificationType.challengeDeclined =>
-          const _Tone(Icons.cancel_rounded, AppColors.accentRed),
-        AppNotificationType.matchAwaitingConfirmation =>
-          const _Tone(Icons.flag_rounded, AppColors.accentAmber),
-        AppNotificationType.matchConfirmed =>
-          const _Tone(Icons.verified_rounded, AppColors.accentGreen),
-        AppNotificationType.matchContested =>
-          const _Tone(Icons.warning_rounded, AppColors.accentRed),
-        AppNotificationType.unknown =>
-          const _Tone(Icons.notifications_rounded, AppColors.textMuted),
-      };
+    AppNotificationType.challengeReceived => const _Tone(
+      Icons.sports_kabaddi_rounded,
+      AppColors.primary,
+    ),
+    AppNotificationType.challengeAccepted => const _Tone(
+      Icons.check_circle_rounded,
+      AppColors.accentGreen,
+    ),
+    AppNotificationType.challengeDeclined => const _Tone(
+      Icons.cancel_rounded,
+      AppColors.accentRed,
+    ),
+    AppNotificationType.matchAwaitingConfirmation => const _Tone(
+      Icons.flag_rounded,
+      AppColors.accentAmber,
+    ),
+    AppNotificationType.matchConfirmed => const _Tone(
+      Icons.verified_rounded,
+      AppColors.accentGreen,
+    ),
+    AppNotificationType.matchContested => const _Tone(
+      Icons.warning_rounded,
+      AppColors.accentRed,
+    ),
+    AppNotificationType.unknown => const _Tone(
+      Icons.notifications_rounded,
+      AppColors.textMuted,
+    ),
+  };
 
   static String _formatTimestamp(DateTime dt) {
     final delta = DateTime.now().difference(dt);

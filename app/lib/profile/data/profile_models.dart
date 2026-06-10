@@ -24,25 +24,26 @@ class UserProfile {
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
-        user: ProfileUser.fromJson(json['user'] as Map<String, dynamic>),
-        tableau: json['tableau'] as String,
-        elo: (json['elo'] as num).toInt(),
-        performance: ProfilePerformance.fromJson(
-            json['performance'] as Map<String, dynamic>),
-        statsMonth: ProfileStatsMonth.fromJson(
-            json['stats_month'] as Map<String, dynamic>),
-        jerseys: ((json['jerseys'] as List?) ?? const [])
-            .map((e) => e as String)
-            .toList(growable: false),
-        yellowJerseyThreshold:
-            (json['yellow_jersey_threshold'] as num).toInt(),
-        perfHistory: ((json['perf_history'] as List?) ?? const [])
-            .map((e) =>
-                ProfileHistoryPoint.fromJson(e as Map<String, dynamic>))
-            .toList(growable: false),
-        headToHead: ProfileHeadToHead.fromJson(
-            (json['head_to_head'] as Map<String, dynamic>?) ?? const {}),
-      );
+    user: ProfileUser.fromJson(json['user'] as Map<String, dynamic>),
+    tableau: json['tableau'] as String,
+    elo: (json['elo'] as num).toInt(),
+    performance: ProfilePerformance.fromJson(
+      json['performance'] as Map<String, dynamic>,
+    ),
+    statsMonth: ProfileStatsMonth.fromJson(
+      json['stats_month'] as Map<String, dynamic>,
+    ),
+    jerseys: ((json['jerseys'] as List?) ?? const [])
+        .map((e) => e as String)
+        .toList(growable: false),
+    yellowJerseyThreshold: (json['yellow_jersey_threshold'] as num).toInt(),
+    perfHistory: ((json['perf_history'] as List?) ?? const [])
+        .map((e) => ProfileHistoryPoint.fromJson(e as Map<String, dynamic>))
+        .toList(growable: false),
+    headToHead: ProfileHeadToHead.fromJson(
+      (json['head_to_head'] as Map<String, dynamic>?) ?? const {},
+    ),
+  );
 }
 
 class ProfileUser {
@@ -71,13 +72,13 @@ class ProfileUser {
   }
 
   factory ProfileUser.fromJson(Map<String, dynamic> json) => ProfileUser(
-        id: json['id'] as String,
-        firstName: json['first_name'] as String,
-        lastName: json['last_name'] as String,
-        nickname: json['nickname'] as String?,
-        gender: json['gender'] as String?,
-        joinedYear: (json['joined_year'] as num?)?.toInt() ?? 0,
-      );
+    id: json['id'] as String,
+    firstName: json['first_name'] as String,
+    lastName: json['last_name'] as String,
+    nickname: json['nickname'] as String?,
+    gender: json['gender'] as String?,
+    joinedYear: (json['joined_year'] as num?)?.toInt() ?? 0,
+  );
 }
 
 class ProfilePerformance {
@@ -150,7 +151,8 @@ class ProfileHeadToHead {
             : null,
         favoriteVictim: json['favorite_victim'] is Map<String, dynamic>
             ? ProfileOpponent.fromJson(
-                json['favorite_victim'] as Map<String, dynamic>)
+                json['favorite_victim'] as Map<String, dynamic>,
+              )
             : null,
       );
 }

@@ -34,9 +34,7 @@ class MobileFrame extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         child: Container(
           width: phoneWidth,
-          decoration: const BoxDecoration(
-            color: AppColors.bgScaffold,
-          ),
+          decoration: const BoxDecoration(color: AppColors.bgScaffold),
           child: MediaQuery(
             // Force MediaQuery.size to the phone width so widgets that read
             // the width (e.g. SafeArea, headers using MediaQuery padding)

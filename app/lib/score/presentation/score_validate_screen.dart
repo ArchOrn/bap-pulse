@@ -40,7 +40,9 @@ class _ScoreValidateScreenState extends State<ScoreValidateScreen> {
 
   Future<_MatchView> _load() async {
     final res = await Future.wait([
-      ApiClient.instance.dio.get<Map<String, dynamic>>('/matches/${widget.matchId}'),
+      ApiClient.instance.dio.get<Map<String, dynamic>>(
+        '/matches/${widget.matchId}',
+      ),
       MembersApi().fetch(),
     ]);
     final match = (res[0] as dynamic).data as Map<String, dynamic>;
@@ -56,21 +58,21 @@ class _ScoreValidateScreenState extends State<ScoreValidateScreen> {
       await ApiClient.instance.dio.post('/matches/${widget.matchId}/$path');
       if (!mounted) return;
       setState(() {
-        _outcomeMessage =
-            confirm ? 'Match validé.' : 'Match contesté — le submitter est notifié.';
+        _outcomeMessage = confirm
+            ? 'Match validé.'
+            : 'Match contesté — le submitter est notifié.';
         _outcomeColor = confirm ? AppColors.accentGreen : AppColors.accentRed;
       });
       // Bubble back into the notification center so the badge updates and the
       // confirmed match disappears from "awaiting" state on next refresh.
-      context.read<NotificationsBloc>().add(const NotificationsRefreshRequested());
+      context.read<NotificationsBloc>().add(
+        const NotificationsRefreshRequested(),
+      );
     } on Exception catch (e) {
       if (!mounted) return;
       final message = e is ApiException ? e.message : 'Action impossible';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.accentRed,
-          content: Text(message),
-        ),
+        SnackBar(backgroundColor: AppColors.accentRed, content: Text(message)),
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -98,7 +100,9 @@ class _ScoreValidateScreenState extends State<ScoreValidateScreen> {
   }
 
   Widget _errorBody(Object? error) {
-    final message = error is ApiException ? error.message : 'Match introuvable.';
+    final message = error is ApiException
+        ? error.message
+        : 'Match introuvable.';
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -107,11 +111,15 @@ class _ScoreValidateScreenState extends State<ScoreValidateScreen> {
           children: [
             Icon(Icons.cloud_off_rounded, size: 48, color: AppColors.textFaint),
             const SizedBox(height: 14),
-            Text(message,
-                textAlign: TextAlign.center, style: AppTextStyles.bodySmall),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodySmall,
+            ),
             const SizedBox(height: 14),
             TextButton(
-              onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
+              onPressed: () =>
+                  context.canPop() ? context.pop() : context.go('/home'),
               child: const Text('Retour'),
             ),
           ],
@@ -126,12 +134,13 @@ class _ScoreValidateScreenState extends State<ScoreValidateScreen> {
     final theirWins = view.oppWonSets;
     final canAct = view.canAct && _outcomeMessage == null;
 
-    final borderColor = _outcomeColor ??
+    final borderColor =
+        _outcomeColor ??
         (view.status == MatchStatus.pending
             ? AppColors.primary
             : (view.status == MatchStatus.confirmed
-                ? AppColors.accentGreen
-                : AppColors.accentRed));
+                  ? AppColors.accentGreen
+                  : AppColors.accentRed));
 
     return ListView(
       padding: EdgeInsets.zero,
@@ -141,8 +150,8 @@ class _ScoreValidateScreenState extends State<ScoreValidateScreen> {
           subtitle: view.status == MatchStatus.pending
               ? 'Demande reçue'
               : view.status == MatchStatus.confirmed
-                  ? 'Validé'
-                  : 'Contesté',
+              ? 'Validé'
+              : 'Contesté',
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -185,10 +194,7 @@ class _ScoreValidateScreenState extends State<ScoreValidateScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: _Side(
-                        member: view.opponent,
-                        won: !iWon,
-                      ),
+                      child: _Side(member: view.opponent, won: !iWon),
                     ),
                     Expanded(
                       flex: 2,
@@ -243,10 +249,7 @@ class _ScoreValidateScreenState extends State<ScoreValidateScreen> {
                       ),
                     ),
                     Expanded(
-                      child: _Side(
-                        member: view.me,
-                        won: iWon,
-                      ),
+                      child: _Side(member: view.me, won: iWon),
                     ),
                   ],
                 ),
@@ -257,7 +260,9 @@ class _ScoreValidateScreenState extends State<ScoreValidateScreen> {
                     for (var i = 0; i < view.mySetScores.length; i++) ...[
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 6),
+                          horizontal: 14,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.04),
                           borderRadius: BorderRadius.circular(10),
@@ -279,7 +284,8 @@ class _ScoreValidateScreenState extends State<ScoreValidateScreen> {
                                   '${view.oppSetScores[i]}',
                                   style: AppTextStyles.numeric(
                                     size: 16,
-                                    color: view.oppSetScores[i] >
+                                    color:
+                                        view.oppSetScores[i] >
                                             view.mySetScores[i]
                                         ? AppColors.textPrimary
                                         : AppColors.textMuted,
@@ -296,7 +302,8 @@ class _ScoreValidateScreenState extends State<ScoreValidateScreen> {
                                   '${view.mySetScores[i]}',
                                   style: AppTextStyles.numeric(
                                     size: 16,
-                                    color: view.mySetScores[i] >
+                                    color:
+                                        view.mySetScores[i] >
                                             view.oppSetScores[i]
                                         ? AppColors.textPrimary
                                         : AppColors.textMuted,
@@ -326,9 +333,12 @@ class _ScoreValidateScreenState extends State<ScoreValidateScreen> {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.accentRed,
                       side: const BorderSide(
-                          color: AppColors.accentRed, width: 2),
+                        color: AppColors.accentRed,
+                        width: 2,
+                      ),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                     onPressed: _busy ? null : () => _act(confirm: false),
@@ -342,7 +352,8 @@ class _ScoreValidateScreenState extends State<ScoreValidateScreen> {
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.accentGreen,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                     onPressed: _busy ? null : () => _act(confirm: true),
@@ -367,8 +378,9 @@ class _ScoreValidateScreenState extends State<ScoreValidateScreen> {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: (_outcomeColor ?? AppColors.accentGreen)
-                    .withValues(alpha: 0.12),
+                color: (_outcomeColor ?? AppColors.accentGreen).withValues(
+                  alpha: 0.12,
+                ),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Text(
@@ -529,10 +541,8 @@ class _MatchView {
     List<MemberSummary> members,
   ) {
     final myUid = FirebaseAuth.instance.currentUser?.uid ?? '';
-    MemberSummary byId(String id) => members.firstWhere(
-          (m) => m.id == id,
-          orElse: () => _placeholder(id),
-        );
+    MemberSummary byId(String id) =>
+        members.firstWhere((m) => m.id == id, orElse: () => _placeholder(id));
 
     final team1P1 = json['team1_player1_id'] as String;
     final team2P1 = json['team2_player1_id'] as String;
@@ -553,8 +563,7 @@ class _MatchView {
 
     final status = parseMatchStatus(json['status'] as String? ?? 'CONFIRMED');
 
-    int team1Scored(String key) =>
-        (json[key] as num? ?? 0).toInt();
+    int team1Scored(String key) => (json[key] as num? ?? 0).toInt();
     final List<int> team1Sets = [
       team1Scored('set1_team1'),
       team1Scored('set2_team1'),
@@ -581,7 +590,8 @@ class _MatchView {
 
     // Confirm/contest is reserved to a member of the team opposite to the
     // submitter — and only while the match is still PENDING.
-    final iAmInMatch = team1P1 == myUid ||
+    final iAmInMatch =
+        team1P1 == myUid ||
         team1P2 == myUid ||
         team2P1 == myUid ||
         team2P2 == myUid;
@@ -592,7 +602,8 @@ class _MatchView {
         ? team2P1 == myUid || team2P2 == myUid
         : team1P1 == myUid || team1P2 == myUid;
 
-    final canAct = iAmInMatch &&
+    final canAct =
+        iAmInMatch &&
         !iAmSubmitter &&
         iAmOnOpposingTeam &&
         status == MatchStatus.pending;
@@ -612,17 +623,17 @@ class _MatchView {
   }
 
   static MemberSummary _placeholder(String id) => MemberSummary(
-        id: id,
-        firstName: 'Joueur',
-        lastName: '',
-        gender: null,
-        elo: 0,
-        perfScore: 0,
-        perfRank: 0,
-        perfGain7d: 0,
-        matchesMonth: 0,
-        winsMonth: 0,
-        lossesMonth: 0,
-        jerseys: const [],
-      );
+    id: id,
+    firstName: 'Joueur',
+    lastName: '',
+    gender: null,
+    elo: 0,
+    perfScore: 0,
+    perfRank: 0,
+    perfGain7d: 0,
+    matchesMonth: 0,
+    winsMonth: 0,
+    lossesMonth: 0,
+    jerseys: const [],
+  );
 }

@@ -19,8 +19,8 @@ class HistoryScreen extends StatelessWidget {
       body: uid == null
           ? const _SignedOut()
           : BlocProvider(
-              create: (_) => MatchHistoryBloc()
-                ..add(MatchHistoryLoadRequested(uid)),
+              create: (_) =>
+                  MatchHistoryBloc()..add(MatchHistoryLoadRequested(uid)),
               child: const _HistoryBody(),
             ),
     );
@@ -36,8 +36,7 @@ class _SignedOut extends StatelessWidget {
       child: Text(
         'Tu dois être connecté pour voir ton historique.',
         textAlign: TextAlign.center,
-        style:
-            AppTextStyles.bodyMedium.copyWith(color: AppColors.textMuted),
+        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textMuted),
       ),
     );
   }
@@ -51,8 +50,8 @@ class _HistoryBody extends StatelessWidget {
     return BlocBuilder<MatchHistoryBloc, MatchHistoryState>(
       builder: (context, state) {
         return switch (state) {
-          MatchHistoryInitial() || MatchHistoryLoading() =>
-            const _LoadingView(),
+          MatchHistoryInitial() ||
+          MatchHistoryLoading() => const _LoadingView(),
           MatchHistoryError(:final message) => _ErrorView(message: message),
           MatchHistoryLoaded(:final matches) => _LoadedView(matches: matches),
         };
@@ -79,15 +78,18 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(message,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.bodyMedium
-                    .copyWith(color: AppColors.textMuted)),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textMuted,
+              ),
+            ),
             const SizedBox(height: 16),
             FilledButton(
-              onPressed: () => context
-                  .read<MatchHistoryBloc>()
-                  .add(const MatchHistoryRefreshRequested()),
+              onPressed: () => context.read<MatchHistoryBloc>().add(
+                const MatchHistoryRefreshRequested(),
+              ),
               child: const Text('Réessayer'),
             ),
           ],
@@ -105,13 +107,12 @@ class _LoadedView extends StatelessWidget {
   Widget build(BuildContext context) {
     final wins = matches.where((m) => m.wonByUser).length;
     final losses = matches.length - wins;
-    final winRate =
-        matches.isEmpty ? 0 : (wins / matches.length * 100).round();
+    final winRate = matches.isEmpty ? 0 : (wins / matches.length * 100).round();
 
     return RefreshIndicator(
-      onRefresh: () async => context
-          .read<MatchHistoryBloc>()
-          .add(const MatchHistoryRefreshRequested()),
+      onRefresh: () async => context.read<MatchHistoryBloc>().add(
+        const MatchHistoryRefreshRequested(),
+      ),
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
@@ -143,8 +144,9 @@ class _LoadedView extends StatelessWidget {
                   ),
                 ),
                 TextButton(
-                    onPressed: () => context.pop(),
-                    child: const Text('Fermer')),
+                  onPressed: () => context.pop(),
+                  child: const Text('Fermer'),
+                ),
               ],
             ),
           ),
@@ -160,21 +162,25 @@ class _LoadedView extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _Cell(
-                      big: '${matches.length}',
-                      label: 'Matchs',
-                      color: AppColors.textPrimary),
+                    big: '${matches.length}',
+                    label: 'Matchs',
+                    color: AppColors.textPrimary,
+                  ),
                   _Cell(
-                      big: '$wins',
-                      label: 'Victoires',
-                      color: AppColors.accentGreen),
+                    big: '$wins',
+                    label: 'Victoires',
+                    color: AppColors.accentGreen,
+                  ),
                   _Cell(
-                      big: '$losses',
-                      label: 'Défaites',
-                      color: AppColors.accentRed),
+                    big: '$losses',
+                    label: 'Défaites',
+                    color: AppColors.accentRed,
+                  ),
                   _Cell(
-                      big: '$winRate%',
-                      label: 'Taux V',
-                      color: AppColors.textPrimary),
+                    big: '$winRate%',
+                    label: 'Taux V',
+                    color: AppColors.textPrimary,
+                  ),
                 ],
               ),
             ),
@@ -199,7 +205,9 @@ class _LoadedView extends StatelessWidget {
 
     void flushBuffer() {
       if (buffer.isEmpty) return;
-      sections.add(_MonthHeader(label: _frenchMonthLabel(buffer.first.playedAt)));
+      sections.add(
+        _MonthHeader(label: _frenchMonthLabel(buffer.first.playedAt)),
+      );
       sections.add(_MatchList(matches: List<UserMatchEntry>.of(buffer)));
       buffer.clear();
     }
@@ -277,11 +285,7 @@ class _MatchList extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
         ),
         clipBehavior: Clip.hardEdge,
-        child: Column(
-          children: [
-            for (final m in matches) _Row(entry: m),
-          ],
-        ),
+        child: Column(children: [for (final m in matches) _Row(entry: m)]),
       ),
     );
   }
@@ -299,9 +303,14 @@ class _Cell extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(big,
-            style: AppTextStyles.numeric(
-                size: 22, color: color, letterSpacing: -0.5)),
+        Text(
+          big,
+          style: AppTextStyles.numeric(
+            size: 22,
+            color: color,
+            letterSpacing: -0.5,
+          ),
+        ),
         const SizedBox(height: 4),
         Text(
           label,
@@ -332,7 +341,8 @@ class _Row extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: const BoxDecoration(
           border: Border(
-              bottom: BorderSide(color: AppColors.divider, width: 0.5)),
+            bottom: BorderSide(color: AppColors.divider, width: 0.5),
+          ),
         ),
         child: Row(
           children: [
@@ -344,8 +354,8 @@ class _Row extends StatelessWidget {
                 color: pending
                     ? AppColors.accentAmber.withValues(alpha: 0.15)
                     : (won
-                        ? AppColors.accentGreen.withValues(alpha: 0.15)
-                        : AppColors.accentRed.withValues(alpha: 0.15)),
+                          ? AppColors.accentGreen.withValues(alpha: 0.15)
+                          : AppColors.accentRed.withValues(alpha: 0.15)),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -354,9 +364,7 @@ class _Row extends StatelessWidget {
                   size: 14,
                   color: pending
                       ? AppColors.accentAmber
-                      : (won
-                          ? AppColors.accentGreen
-                          : AppColors.accentRed),
+                      : (won ? AppColors.accentGreen : AppColors.accentRed),
                   letterSpacing: 0,
                 ),
               ),
@@ -425,8 +433,18 @@ class _Row extends StatelessWidget {
 // ─── Date formatting ───────────────────────────────────────────────────────
 
 const List<String> _monthsFr = [
-  'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-  'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
+  'janvier',
+  'février',
+  'mars',
+  'avril',
+  'mai',
+  'juin',
+  'juillet',
+  'août',
+  'septembre',
+  'octobre',
+  'novembre',
+  'décembre',
 ];
 
 /// Local date label like `12 mai · 19h30` (year omitted; visible in the

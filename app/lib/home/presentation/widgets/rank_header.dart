@@ -190,18 +190,25 @@ class _TitleRow extends StatelessWidget {
               clipBehavior: Clip.none,
               children: [
                 const Center(
-                  child: Icon(Icons.notifications_outlined,
-                      color: Colors.white, size: 18),
+                  child: Icon(
+                    Icons.notifications_outlined,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                 ),
                 if (unreadCount > 0)
                   Positioned(
                     top: 4,
                     right: 4,
                     child: Container(
-                      constraints:
-                          const BoxConstraints(minWidth: 14, minHeight: 14),
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      constraints: const BoxConstraints(
+                        minWidth: 14,
+                        minHeight: 14,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 1,
+                      ),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: AppColors.accentRed,
@@ -316,10 +323,7 @@ class _BodyLoaded extends StatelessWidget {
               label: '7 jours',
               color: AppColors.trendUp,
             ),
-            InlineMetric(
-              value: '$wins/$matches',
-              label: 'V/M',
-            ),
+            InlineMetric(value: '$wins/$matches', label: 'V/M'),
             InlineMetric(
               value: '$streak',
               label: 'Série',
@@ -402,11 +406,7 @@ class _MetricsBar extends StatelessWidget {
           ),
         ),
       ),
-      child: Row(
-        children: [
-          for (final c in children) Expanded(child: c),
-        ],
-      ),
+      child: Row(children: [for (final c in children) Expanded(child: c)]),
     );
   }
 }

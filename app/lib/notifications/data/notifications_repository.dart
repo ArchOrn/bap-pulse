@@ -53,8 +53,7 @@ class NotificationsRepository {
 
   Future<void> unregisterFcmToken(String token) async {
     try {
-      await ApiClient.instance.dio
-          .delete('/users/me/fcm-tokens/$token');
+      await ApiClient.instance.dio.delete('/users/me/fcm-tokens/$token');
     } on Exception {
       // Logout cleanup is best-effort. If the network is down or the token
       // already expired server-side, swallow it — leaking a token here is

@@ -51,11 +51,12 @@ class FcmService {
     );
 
     // Foreground iOS presentation — show the system banner like Android does.
-    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
 
     if (!kIsWeb) {
       // Local notifications channel on Android. iOS gets nothing here — the
@@ -66,9 +67,10 @@ class FcmService {
           iOS: DarwinInitializationSettings(),
         ),
       );
-      final androidImpl =
-          _localNotifs.resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
+      final androidImpl = _localNotifs
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       await androidImpl?.createNotificationChannel(
         const AndroidNotificationChannel(
           defaultChannelId,
@@ -117,7 +119,9 @@ class FcmService {
     }
     try {
       await FirebaseMessaging.instance.deleteToken();
-    } on Exception {/* best-effort */}
+    } on Exception {
+      /* best-effort */
+    }
   }
 
   Future<String?> _resolveToken() async {
@@ -139,7 +143,9 @@ class FcmService {
         token: token,
         platform: _platform(),
       );
-    } on Exception {/* swallow — retried on next refresh */}
+    } on Exception {
+      /* swallow — retried on next refresh */
+    }
   }
 
   Future<void> _handleForeground(RemoteMessage message) async {

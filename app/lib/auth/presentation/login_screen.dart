@@ -29,7 +29,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    context.read<AuthBloc>().add(AuthSignInRequested(email: _emailCtrl.text, password: _passwordCtrl.text));
+    context.read<AuthBloc>().add(
+      AuthSignInRequested(email: _emailCtrl.text, password: _passwordCtrl.text),
+    );
   }
 
   @override
@@ -64,11 +66,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    Text('Bon retour\nsur la ligue.', style: AppTextStyles.h1.copyWith(fontSize: 38)),
+                    Text(
+                      'Bon retour\nsur la ligue.',
+                      style: AppTextStyles.h1.copyWith(fontSize: 38),
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       'Connecte-toi pour reprendre le tour d\'avril.',
-                      style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textMuted),
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: AppColors.textMuted,
+                      ),
                     ),
                     const SizedBox(height: 32),
                     _label('Email'),
@@ -81,7 +88,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         hintText: 'thomas.l@bap.fr',
                         prefixIcon: Icon(Icons.mail_outline, size: 20),
                       ),
-                      validator: (v) => v == null || !v.contains('@') ? 'Email invalide' : null,
+                      validator: (v) => v == null || !v.contains('@')
+                          ? 'Email invalide'
+                          : null,
                     ),
                     const SizedBox(height: 18),
                     _label('Mot de passe'),
@@ -94,10 +103,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         prefixIcon: const Icon(Icons.lock_outline, size: 20),
                         suffixIcon: IconButton(
                           onPressed: () => setState(() => _obscure = !_obscure),
-                          icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 20),
+                          icon: Icon(
+                            _obscure
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            size: 20,
+                          ),
                         ),
                       ),
-                      validator: (v) => v == null || v.length < 6 ? 'Mot de passe trop court' : null,
+                      validator: (v) => v == null || v.length < 6
+                          ? 'Mot de passe trop court'
+                          : null,
                       onFieldSubmitted: (_) => _submit(),
                     ),
                     const SizedBox(height: 8),
@@ -122,7 +138,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           Text(
                             'Pas encore membre ? ',
-                            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textMuted),
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.textMuted,
+                            ),
                           ),
                           GestureDetector(
                             onTap: () => context.push('/register'),
@@ -151,7 +169,12 @@ class _LoginScreenState extends State<LoginScreen> {
     padding: const EdgeInsets.only(bottom: 8, left: 4),
     child: Text(
       text.toUpperCase(),
-      style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.2),
+      style: TextStyle(
+        color: AppColors.textMuted,
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.2,
+      ),
     ),
   );
 }

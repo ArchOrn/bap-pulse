@@ -26,8 +26,7 @@ class PlayerAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mainJersey =
-        player.jerseys.isNotEmpty ? player.jerseys.first : null;
+    final mainJersey = player.jerseys.isNotEmpty ? player.jerseys.first : null;
     final showBadge = showJersey && mainJersey != null;
     final badgeSize = size * 0.5;
 

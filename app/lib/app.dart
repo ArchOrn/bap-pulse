@@ -39,8 +39,9 @@ class _AppState extends State<App> {
     _router = buildRouter(_authBloc);
 
     // Deep-link routing on notification tap (both warm + cold start).
-    _deepLinkSub =
-        FcmService.instance.onMessageOpenedApp.listen(_handleDeepLink);
+    _deepLinkSub = FcmService.instance.onMessageOpenedApp.listen(
+      _handleDeepLink,
+    );
   }
 
   @override

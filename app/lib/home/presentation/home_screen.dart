@@ -33,8 +33,8 @@ class _HomeScreenState extends State<HomeScreen> {
     // count in the rank header. Bloc dedupes via cache, so this is a
     // no-op when the leaderboard tab has already been visited.
     context.read<LeaderboardBloc>().add(
-          const LeaderboardLoadRequested(LeaderboardCriterion.performance),
-        );
+      const LeaderboardLoadRequested(LeaderboardCriterion.performance),
+    );
   }
 
   @override
@@ -104,18 +104,19 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
             child: BlocBuilder<LeaderboardBloc, LeaderboardState>(
               builder: (context, state) {
-                final entries =
-                    state.cache[LeaderboardCriterion.performance];
+                final entries = state.cache[LeaderboardCriterion.performance];
                 if (entries != null && entries.length >= 3) {
                   return Podium(
                     top3: entries
                         .take(3)
-                        .map((e) => PodiumEntry(
-                              id: e.id,
-                              firstName: e.firstName,
-                              initials: e.initials,
-                              score: e.value,
-                            ))
+                        .map(
+                          (e) => PodiumEntry(
+                            id: e.id,
+                            firstName: e.firstName,
+                            initials: e.initials,
+                            score: e.value,
+                          ),
+                        )
                         .toList(),
                   );
                 }
@@ -151,8 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (snapshot.hasError) {
                   return _PulseFeedError(
                     onRetry: () => setState(() {
-                      _newsFuture =
-                          NewsRepository.instance.latest(limit: 5);
+                      _newsFuture = NewsRepository.instance.latest(limit: 5);
                     }),
                   );
                 }
@@ -210,10 +210,7 @@ class _PulseFeedError extends StatelessWidget {
               style: TextStyle(color: AppColors.textMuted, fontSize: 13),
             ),
           ),
-          TextButton(
-            onPressed: onRetry,
-            child: const Text('Réessayer'),
-          ),
+          TextButton(onPressed: onRetry, child: const Text('Réessayer')),
         ],
       ),
     );

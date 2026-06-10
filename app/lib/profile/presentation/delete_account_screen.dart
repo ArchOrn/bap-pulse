@@ -68,8 +68,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       setState(() {
         _busy = false;
         _error = switch (e.code) {
-          'wrong-password' || 'invalid-credential' =>
-            'Mot de passe incorrect.',
+          'wrong-password' || 'invalid-credential' => 'Mot de passe incorrect.',
           'too-many-requests' =>
             'Trop de tentatives. Réessaie dans un instant.',
           _ => 'Échec de la ré-authentification.',
@@ -103,8 +102,10 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: Text('Supprimer mon compte',
-                        style: AppTextStyles.h1),
+                    child: Text(
+                      'Supprimer mon compte',
+                      style: AppTextStyles.h1,
+                    ),
                   ),
                   TextButton(
                     onPressed: _busy ? null : () => context.pop(),

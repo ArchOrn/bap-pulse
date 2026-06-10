@@ -35,8 +35,11 @@ class ChallengeSentScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Icon(Icons.sports_kabaddi_rounded,
-                    color: AppColors.onPrimary, size: 38),
+                child: const Icon(
+                  Icons.sports_kabaddi_rounded,
+                  color: AppColors.onPrimary,
+                  size: 38,
+                ),
               ),
               const SizedBox(height: 22),
               Text(
@@ -48,15 +51,16 @@ class ChallengeSentScreen extends StatelessWidget {
               Text(
                 '$opponentFirstName va recevoir une notification. Tu seras prévenu de sa réponse.',
                 textAlign: TextAlign.center,
-                style: AppTextStyles.bodyLarge
-                    .copyWith(color: AppColors.textMuted, height: 1.5),
+                style: AppTextStyles.bodyLarge.copyWith(
+                  color: AppColors.textMuted,
+                  height: 1.5,
+                ),
               ),
               const Spacer(),
               PrimaryButton(
                 label: 'Retour à l\'accueil',
-                onPressed: () => context.canPop()
-                    ? context.pop()
-                    : context.go('/home'),
+                onPressed: () =>
+                    context.canPop() ? context.pop() : context.go('/home'),
               ),
             ],
           ),
