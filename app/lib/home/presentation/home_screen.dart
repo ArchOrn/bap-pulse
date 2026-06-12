@@ -14,6 +14,7 @@ import 'package:bap_pulse/news/data/news.dart';
 import 'package:bap_pulse/news/data/news_repository.dart';
 import 'package:bap_pulse/notifications/bloc/notifications_bloc.dart';
 import 'package:bap_pulse/profile/bloc/profile_bloc.dart';
+import 'package:bap_pulse/shell/main_shell.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -160,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
           ),
-          const SizedBox(height: 80),
+          SizedBox(height: mainShellBottomInset(context)),
         ],
       ),
     );

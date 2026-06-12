@@ -12,6 +12,7 @@ import 'package:bap_pulse/leaderboard/bloc/leaderboard_bloc.dart';
 import 'package:bap_pulse/leaderboard/data/leaderboard_models.dart';
 import 'package:bap_pulse/shared/models/jersey.dart';
 import 'package:bap_pulse/shared/models/player.dart';
+import 'package:bap_pulse/shell/main_shell.dart';
 
 class _CriterionMeta {
   final String name;
@@ -171,7 +172,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 60),
+              SizedBox(height: mainShellBottomInset(context)),
             ],
           );
         },

@@ -12,6 +12,7 @@ import 'package:bap_pulse/core/widgets/pulsing_placeholder.dart';
 import 'package:bap_pulse/members/data/member_summary.dart';
 import 'package:bap_pulse/members/data/members_api.dart';
 import 'package:bap_pulse/shared/models/player.dart';
+import 'package:bap_pulse/shell/main_shell.dart';
 
 class MembersScreen extends StatefulWidget {
   const MembersScreen({super.key});
@@ -80,7 +81,7 @@ class _MembersScreenState extends State<MembersScreen> {
                   members: members ?? const [],
                 ),
               ),
-              const SizedBox(height: 80),
+              SizedBox(height: mainShellBottomInset(context)),
             ],
           );
         },

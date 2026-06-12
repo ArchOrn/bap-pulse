@@ -14,6 +14,7 @@ import 'package:bap_pulse/profile/data/profile_models.dart';
 import 'package:bap_pulse/profile/presentation/widgets/elo_sparkline.dart';
 import 'package:bap_pulse/shared/models/jersey.dart';
 import 'package:bap_pulse/shared/models/player.dart';
+import 'package:bap_pulse/shell/main_shell.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -131,7 +132,7 @@ class _ProfileBody extends StatelessWidget {
             ),
           ],
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+            padding: EdgeInsets.fromLTRB(16, 16, 16, mainShellBottomInset(context)),
             child: _SettingsList(),
           ),
         ],

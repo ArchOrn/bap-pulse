@@ -10,6 +10,7 @@ import 'package:bap_pulse/core/widgets/jersey_badge.dart';
 import 'package:bap_pulse/leaderboard/bloc/leaderboard_bloc.dart';
 import 'package:bap_pulse/leaderboard/data/leaderboard_models.dart';
 import 'package:bap_pulse/shared/models/jersey.dart';
+import 'package:bap_pulse/shell/main_shell.dart';
 
 /// Display-only metadata for each jersey — copy, ornament tint, criterion
 /// binding. The dynamic data (holder, value) comes from the API via the
@@ -152,7 +153,7 @@ class _JerseysScreenState extends State<JerseysScreen> {
               );
             },
           ),
-          const SizedBox(height: 80),
+          SizedBox(height: mainShellBottomInset(context)),
         ],
       ),
     );

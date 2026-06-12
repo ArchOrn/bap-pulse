@@ -3,6 +3,13 @@ import 'package:go_router/go_router.dart';
 
 import 'package:bap_pulse/core/theme/colors.dart';
 
+/// Bottom space a shell tab screen reserves at the end of its scrollable so
+/// content isn't eaten by the (translucent, [Scaffold.extendBody]) navigation
+/// bar. The fixed part is a comfortable clearance over the bar; the device
+/// bottom safe-area inset (home indicator) is added on top where present.
+double mainShellBottomInset(BuildContext context) =>
+    40 + MediaQuery.of(context).padding.bottom;
+
 class MainShell extends StatelessWidget {
   final Widget child;
   const MainShell({super.key, required this.child});
