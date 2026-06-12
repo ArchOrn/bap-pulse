@@ -17,6 +17,8 @@ export const FFBAD_RANKS: FfbadRank[] = [
   'N3', 'N2', 'N1'
 ]
 
+export type UserStatus = 'pending' | 'approved' | 'rejected'
+
 export interface User {
   id: string
   first_name: string
@@ -28,7 +30,41 @@ export interface User {
   gender: Gender | null
   ffbad_rank: FfbadRank | null
   role: 'player' | 'admin'
+  status: UserStatus
+  license_number: string | null
   created_at: string
+}
+
+// ---------- Club roster (FFBAD sync) ----------
+
+export interface ClubRosterEntry {
+  license_number: string
+  per_id: string | null
+  first_name: string
+  last_name: string
+  gender: Gender | null
+  rank_singles: FfbadRank | null
+  rank_doubles: FfbadRank | null
+  rank_mixed: FfbadRank | null
+  cote_singles: number | null
+  cote_doubles: number | null
+  cote_mixed: number | null
+  is_data_public: boolean
+  matched_user_id: string | null
+  synced_at: string
+}
+
+export interface RosterResponse {
+  entries: ClubRosterEntry[]
+  last_synced_at: string | null
+}
+
+export interface RosterSyncResult {
+  fetched: number
+  upserted: number
+  auto_approved: number
+  skipped_anonymous: number
+  errors: string[]
 }
 
 export interface Match {

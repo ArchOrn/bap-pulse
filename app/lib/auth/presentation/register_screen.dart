@@ -22,7 +22,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _usernameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-  final _inviteCtrl = TextEditingController();
+  final _licenseCtrl = TextEditingController();
   bool _obscure = true;
 
   @override
@@ -32,7 +32,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _usernameCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
-    _inviteCtrl.dispose();
+    _licenseCtrl.dispose();
     super.dispose();
   }
 
@@ -45,7 +45,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         firstName: _firstNameCtrl.text,
         lastName: _lastNameCtrl.text,
         username: _usernameCtrl.text,
-        inviteCode: _inviteCtrl.text,
+        licenseNumber: _licenseCtrl.text,
       ),
     );
   }
@@ -186,27 +186,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           : null,
                     ),
                     const SizedBox(height: 18),
-                    _label('Code d\'invitation BAP'),
+                    _label('Numéro de licence FFBAD'),
                     TextFormField(
-                      controller: _inviteCtrl,
-                      textCapitalization: TextCapitalization.characters,
+                      controller: _licenseCtrl,
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.done,
                       decoration: const InputDecoration(
-                        hintText: 'ex. BAP-2026-XXXX',
-                        prefixIcon: Icon(Icons.vpn_key_outlined, size: 20),
+                        hintText: 'ex. 06835632',
+                        prefixIcon: Icon(Icons.badge_outlined, size: 20),
                       ),
                       validator: (v) =>
-                          v == null || v.isEmpty ? 'Requis' : null,
+                          v == null || v.trim().isEmpty ? 'Requis' : null,
                     ),
                     const SizedBox(height: 24),
                     PrimaryButton(
                       label: 'Créer mon compte',
                       icon: Icons.arrow_forward,
-                      loading: auth.busy,
-                      onPressed: auth.busy ? null : _submit,
+                      loading: auth.busy || auth.syncing,
+                      onPressed: (auth.busy || auth.syncing) ? null : _submit,
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'En créant un compte, tu acceptes le règlement intérieur de la ligue.',
+                      'On vérifie ta licence auprès du club. Si elle n\'est pas reconnue automatiquement, un admin validera ton accès.',
                       style: AppTextStyles.bodySmall,
                       textAlign: TextAlign.center,
                     ),

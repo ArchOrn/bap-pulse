@@ -34,6 +34,12 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2025-01-15',
 
+  vite: {
+    server: {
+      allowedHosts: ['bo.bappulse.dev.local']
+    }
+  },
+
   typescript: {
     typeCheck: false
   },

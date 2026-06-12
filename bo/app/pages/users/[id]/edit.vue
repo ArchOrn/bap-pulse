@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { Gender, FfbadRank } from '~~/shared/types/api'
-import { FFBAD_RANKS } from '~~/shared/types/api'
 
 const route = useRoute()
 const userId = route.params.id as string
@@ -8,6 +7,7 @@ const userId = route.params.id as string
 useHead({ title: 'Modifier un joueur — BAP Pulse' })
 
 const { baseURL, authHeaders } = useApi()
+const { genderOptions, ffbadOptions } = useUserOptions()
 
 const { data: user, status } = await useFetch<User>(`${baseURL}/users/${userId}`, {
   headers: authHeaders()
@@ -30,17 +30,6 @@ const form = reactive<FormState>({
   gender: '',
   ffbad_rank: ''
 })
-
-const genderOptions = [
-  { value: '', label: 'Non renseigné' },
-  { value: 'MALE', label: 'Homme' },
-  { value: 'FEMALE', label: 'Femme' }
-]
-
-const ffbadOptions = [
-  { value: '', label: 'Non renseigné' },
-  ...FFBAD_RANKS.map(r => ({ value: r, label: r }))
-]
 
 const hasPlayedMatch = computed(() => {
   if (!user.value) return true

@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:bap_pulse/auth/bloc/auth_bloc.dart';
+import 'package:bap_pulse/auth/data/auth_account.dart';
 import 'package:bap_pulse/auth/presentation/forgot_password_screen.dart';
 import 'package:bap_pulse/auth/presentation/login_screen.dart';
 import 'package:bap_pulse/auth/presentation/register_screen.dart';
@@ -18,6 +19,7 @@ import 'package:bap_pulse/leaderboard/presentation/leaderboard_screen.dart';
 import 'package:bap_pulse/news/presentation/news_detail_screen.dart';
 import 'package:bap_pulse/news/presentation/news_list_screen.dart';
 import 'package:bap_pulse/notifications/presentation/notifications_screen.dart';
+import 'package:bap_pulse/onboarding/presentation/pending_approval_screen.dart';
 import 'package:bap_pulse/profile/data/account.dart';
 import 'package:bap_pulse/profile/presentation/delete_account_screen.dart';
 import 'package:bap_pulse/profile/presentation/nickname_edit_screen.dart';
@@ -52,14 +54,27 @@ GoRouter buildRouter(AuthBloc authBloc) {
       final loc = state.matchedLocation;
       final onAuthRoute = loc == '/' || loc == '/login' || loc == '/register' || loc == '/forgot-password';
 
+      // 1. Firebase state not resolved yet — splash handles the spinner.
       if (auth.status == AuthStatus.unknown) return null;
 
+      // 2. Signed out — only the auth surfaces are reachable.
       if (auth.status == AuthStatus.unauthenticated) {
         return onAuthRoute ? null : '/';
       }
 
-      // authenticated — bounce away from auth surfaces
-      if (loc == '/' || loc == '/login' || loc == '/register') {
+      // 3. Signed in but /auth/sync hasn't resolved a status yet — don't
+      //    navigate (avoids flicker). Splash / current screen show a spinner.
+      if (auth.syncing || auth.accountStatus == null) {
+        return null;
+      }
+
+      // 4. Signed in but not approved — hard gate to the pending screen.
+      if (auth.accountStatus != AccountStatus.approved) {
+        return loc == '/pending' ? null : '/pending';
+      }
+
+      // 5. Approved — bounce away from auth surfaces and the pending screen.
+      if (loc == '/' || loc == '/login' || loc == '/register' || loc == '/pending') {
         return '/home';
       }
       return null;
@@ -69,6 +84,7 @@ GoRouter buildRouter(AuthBloc authBloc) {
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
       GoRoute(path: '/forgot-password', builder: (_, _) => const ForgotPasswordScreen()),
+      GoRoute(path: '/pending', builder: (_, _) => const PendingApprovalScreen()),
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
         routes: [

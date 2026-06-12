@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:bap_pulse/auth/bloc/auth_bloc.dart';
+import 'package:bap_pulse/auth/data/auth_account.dart';
 import 'package:bap_pulse/core/router/app_router.dart';
 import 'package:bap_pulse/core/theme/theme.dart';
 import 'package:bap_pulse/core/widgets/mobile_frame.dart';
@@ -83,10 +84,16 @@ class _AppState extends State<App> {
       ],
       child: BlocListener<AuthBloc, AuthState>(
         listenWhen: (prev, curr) =>
-            prev.user?.uid != curr.user?.uid || prev.status != curr.status,
+            prev.user?.uid != curr.user?.uid ||
+            prev.status != curr.status ||
+            prev.accountStatus != curr.accountStatus,
         listener: (context, state) {
           final uid = state.user?.uid;
-          if (state.status == AuthStatus.authenticated && uid != null) {
+          // Only load the profile / register for push once the account is
+          // approved — pending or rejected users have no full profile.
+          if (state.status == AuthStatus.authenticated &&
+              state.accountStatus == AccountStatus.approved &&
+              uid != null) {
             _profileBloc.add(ProfileLoadRequested(uid));
             _notificationsBloc.add(const NotificationsLoadRequested());
             // Push registration: best-effort; failures swallowed inside.

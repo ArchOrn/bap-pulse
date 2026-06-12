@@ -37,6 +37,37 @@ definitions:
     - ChallengeStatusDECLINED
     - ChallengeStatusEXPIRED
     - ChallengeStatusCANCELLED
+  db.ClubRoster:
+    properties:
+      cote_doubles:
+        $ref: '#/definitions/pgtype.Int4'
+      cote_mixed:
+        $ref: '#/definitions/pgtype.Int4'
+      cote_singles:
+        $ref: '#/definitions/pgtype.Int4'
+      first_name:
+        type: string
+      gender:
+        $ref: '#/definitions/pgtype.Text'
+      is_data_public:
+        type: boolean
+      last_name:
+        type: string
+      license_number:
+        type: string
+      matched_user_id:
+        $ref: '#/definitions/pgtype.Text'
+      per_id:
+        $ref: '#/definitions/pgtype.Text'
+      rank_doubles:
+        $ref: '#/definitions/pgtype.Text'
+      rank_mixed:
+        $ref: '#/definitions/pgtype.Text'
+      rank_singles:
+        $ref: '#/definitions/pgtype.Text'
+      synced_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+    type: object
   db.FcmToken:
     properties:
       created_at:
@@ -185,9 +216,32 @@ definitions:
         type: string
       last_name:
         type: string
+      license_number:
+        $ref: '#/definitions/pgtype.Text'
       nickname:
         $ref: '#/definitions/pgtype.Text'
       role:
+        type: string
+      status:
+        $ref: '#/definitions/db.UserStatus'
+    type: object
+  db.UserStatus:
+    enum:
+    - pending
+    - approved
+    - rejected
+    type: string
+    x-enum-varnames:
+    - UserStatusPending
+    - UserStatusApproved
+    - UserStatusRejected
+  handlers.approveRequest:
+    properties:
+      ffbad_rank:
+        description: optional correction, "" leaves unchanged
+        type: string
+      gender:
+        description: optional correction, "" leaves unchanged
         type: string
     type: object
   handlers.createChallengeRequest:
@@ -262,6 +316,15 @@ definitions:
       token:
         type: string
     type: object
+  handlers.rosterResponse:
+    properties:
+      entries:
+        items:
+          $ref: '#/definitions/db.ClubRoster'
+        type: array
+      last_synced_at:
+        type: string
+    type: object
   handlers.setRoleRequest:
     properties:
       admin:
@@ -285,6 +348,12 @@ definitions:
         description: optional, MALE | FEMALE
         type: string
       last_name:
+        type: string
+      license_number:
+        description: FFBAD licence; matched against the club roster
+        type: string
+      nickname:
+        description: optional handle
         type: string
     type: object
   handlers.updateUserRequest:
@@ -497,6 +566,21 @@ definitions:
       nickname:
         type: string
     type: object
+  services.RosterSyncResult:
+    properties:
+      auto_approved:
+        type: integer
+      errors:
+        items:
+          type: string
+        type: array
+      fetched:
+        type: integer
+      skipped_anonymous:
+        type: integer
+      upserted:
+        type: integer
+    type: object
   services.UserMatchHistoryEntry:
     properties:
       elo_change:
@@ -589,6 +673,128 @@ paths:
       summary: Invite a new user
       tags:
       - admin
+  /admin/roster:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.rosterResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List the synced club roster
+      tags:
+      - admin
+  /admin/roster/sync:
+    post:
+      description: Fetches the full club roster (scoped by the club token) and upserts
+        it locally. Pending users whose licence now appears are auto-approved.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/services.RosterSyncResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Sync the club roster from the FFBAD API
+      tags:
+      - admin
+  /admin/users/{uid}/approve:
+    post:
+      consumes:
+      - application/json
+      description: Flips the user to approved. Optionally corrects gender/FFBAD rank
+        (FFBAD data may be stale or missing). If the user hasn't played a match yet,
+        the starting ELO is recomputed from the corrected rank/gender.
+      parameters:
+      - description: Firebase UID of the target user
+        in: path
+        name: uid
+        required: true
+        type: string
+      - description: Optional profile corrections
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/handlers.approveRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.User'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Approve a pending user
+      tags:
+      - admin
+  /admin/users/{uid}/reject:
+    post:
+      parameters:
+      - description: Firebase UID of the target user
+        in: path
+        name: uid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.User'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Reject a pending user
+      tags:
+      - admin
   /admin/users/{uid}/role:
     post:
       consumes:
@@ -637,14 +843,38 @@ paths:
       summary: Grant or revoke admin role
       tags:
       - admin
+  /admin/users/pending:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.User'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List users awaiting validation
+      tags:
+      - admin
   /auth/sync:
     post:
       consumes:
       - application/json
-      description: Called after a successful Firebase login. Creates the user profile
-        on first login, or returns the existing one.
+      description: 'Called after a successful Firebase login. On first login it creates
+        the profile: if the FFBAD licence matches the club roster the account is auto-approved
+        and prefilled (name/gender/rank/ELO from FFBAD), otherwise it is left pending
+        for admin validation. Returns the existing profile on subsequent calls.'
       parameters:
-      - description: User first and last name (required on first login)
+      - description: Profile fields + FFBAD licence (first login)
         in: body
         name: body
         required: true
@@ -663,6 +893,12 @@ paths:
             $ref: '#/definitions/db.User'
         "400":
           description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
           schema:
             additionalProperties:
               type: string

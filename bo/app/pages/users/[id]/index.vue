@@ -3,6 +3,7 @@ const route = useRoute()
 const userId = route.params.id as string
 
 const { baseURL, authHeaders } = useApi()
+const { statusBadge } = useUserOptions()
 
 const { data: user, status } = await useFetch<User>(`${baseURL}/users/${userId}`, {
   headers: authHeaders()
@@ -46,6 +47,8 @@ const infoItems = computed(() => {
   if (!user.value) return []
   return [
     { label: 'Email', value: user.value.email, icon: 'i-lucide-mail' },
+    { label: 'Statut', value: statusBadge(user.value.status).label, icon: 'i-lucide-user-check' },
+    { label: 'Numéro de licence', value: user.value.license_number ?? '—', icon: 'i-lucide-badge' },
     { label: 'Genre', value: genderLabel(user.value.gender), icon: 'i-lucide-user' },
     { label: 'Classement FFBAD', value: user.value.ffbad_rank ?? '—', icon: 'i-lucide-award' },
     { label: 'ELO simple', value: String(user.value.elo_singles), icon: 'i-lucide-trophy' },

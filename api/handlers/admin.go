@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"bap-pulse/db"
+	"bap-pulse/services"
 )
 
 type inviteRequest struct {
@@ -70,12 +71,17 @@ func InviteUser(pool *pgxpool.Pool, authClient *firebaseauth.Client) fiber.Handl
 		}
 
 		// Create the corresponding DB user profile (role defaults to 'player').
+		// Admin-created accounts are approved immediately and have no licence.
 		q := db.New(pool)
 		user, err := q.CreateUser(c.Context(), db.CreateUserParams{
-			ID:        fbUser.UID,
-			FirstName: req.FirstName,
-			LastName:  req.LastName,
-			Email:     req.Email,
+			ID:         fbUser.UID,
+			FirstName:  req.FirstName,
+			LastName:   req.LastName,
+			Email:      req.Email,
+			EloSingles: int32(services.InitialEloFor("", "")),
+			EloDoubles: int32(services.InitialEloFor("", "")),
+			EloMixed:   int32(services.InitialEloFor("", "")),
+			Status:     db.UserStatusApproved,
 		})
 		if err != nil {
 			// Best-effort rollback: remove the Firebase user.

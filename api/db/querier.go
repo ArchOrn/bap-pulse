@@ -11,6 +11,9 @@ import (
 )
 
 type Querier interface {
+	// Used when a roster sync matches a previously-registered pending user: flips
+	// them to approved and seeds gender/rank/ELO from the FFBAD roster entry.
+	ApproveUserFromRoster(ctx context.Context, arg ApproveUserFromRosterParams) (User, error)
 	ConfirmMatch(ctx context.Context, id pgtype.UUID) (Match, error)
 	ContestMatch(ctx context.Context, id pgtype.UUID) (Match, error)
 	// Counts matches the player has already played in this tableau (used for K-factor).
@@ -29,11 +32,13 @@ type Querier interface {
 	// Used to purge tokens reported as unregistered/invalid by FCM.
 	DeleteFcmTokensByValue(ctx context.Context, dollar_1 []string) error
 	DeleteNews(ctx context.Context, id pgtype.UUID) error
+	DeleteRosterEntry(ctx context.Context, licenseNumber string) error
 	DeleteUser(ctx context.Context, id string) error
 	GetChallengeByID(ctx context.Context, id pgtype.UUID) (Challenge, error)
 	// Daily perf points awarded to ONE player in [from, to). Empty days are absent;
 	// callers fill gaps and cumulate as needed.
 	GetDailyPerformancePointsByPlayer(ctx context.Context, arg GetDailyPerformancePointsByPlayerParams) ([]GetDailyPerformancePointsByPlayerRow, error)
+	GetLastRosterSync(ctx context.Context) (pgtype.Timestamptz, error)
 	GetMatchByID(ctx context.Context, id pgtype.UUID) (Match, error)
 	// For a given match, returns each player's ELO BEFORE the match.
 	// Used to compute giant-killer wins (compare opponent ELO at match time).
@@ -43,8 +48,10 @@ type Querier interface {
 	GetNewsByID(ctx context.Context, id pgtype.UUID) (News, error)
 	// Only CONFIRMED matches count for a player's history.
 	GetPlayerMatches(ctx context.Context, team1Player1ID string) ([]Match, error)
+	GetRosterEntryByLicense(ctx context.Context, licenseNumber string) (ClubRoster, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id string) (User, error)
+	GetUserByLicenseNumber(ctx context.Context, licenseNumber pgtype.Text) (User, error)
 	GetUserEloHistory(ctx context.Context, playerID string) ([]EloHistory, error)
 	// Both sides — what the user received and what they sent.
 	ListChallengesForUser(ctx context.Context, fromUserID string) ([]Challenge, error)
@@ -54,9 +61,15 @@ type Querier interface {
 	ListMatches(ctx context.Context) ([]Match, error)
 	ListNews(ctx context.Context, arg ListNewsParams) ([]News, error)
 	ListNotificationsForUser(ctx context.Context, arg ListNotificationsForUserParams) ([]Notification, error)
+	ListRoster(ctx context.Context) ([]ClubRoster, error)
 	ListUsers(ctx context.Context) ([]User, error)
+	ListUsersByStatus(ctx context.Context, status UserStatus) ([]User, error)
 	MarkAllNotificationsRead(ctx context.Context, userID string) error
 	MarkNotificationRead(ctx context.Context, arg MarkNotificationReadParams) (Notification, error)
+	SetRosterMatchedUser(ctx context.Context, arg SetRosterMatchedUserParams) error
+	// Used when an admin corrects a user's gender/FFBAD rank (e.g. at approval).
+	// NULL params leave the existing value untouched.
+	SetUserGenderAndRank(ctx context.Context, arg SetUserGenderAndRankParams) (User, error)
 	SumPerformancePointsByPlayer(ctx context.Context, arg SumPerformancePointsByPlayerParams) ([]SumPerformancePointsByPlayerRow, error)
 	// Sum of perf points awarded to ONE player in [from, to) for the given tableau.
 	SumPerformancePointsByPlayerInRange(ctx context.Context, arg SumPerformancePointsByPlayerInRangeParams) (int32, error)
@@ -69,9 +82,11 @@ type Querier interface {
 	// Used when a user updates their FFBAD/gender BEFORE having played any match.
 	UpdateUserInitialElo(ctx context.Context, arg UpdateUserInitialEloParams) (User, error)
 	UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) (User, error)
+	UpdateUserStatus(ctx context.Context, arg UpdateUserStatusParams) (User, error)
 	// Stores or refreshes a device token. Same token across users is rebound
 	// to the new user (a device can switch accounts).
 	UpsertFcmToken(ctx context.Context, arg UpsertFcmTokenParams) (FcmToken, error)
+	UpsertRosterEntry(ctx context.Context, arg UpsertRosterEntryParams) (ClubRoster, error)
 }
 
 var _ Querier = (*Queries)(nil)

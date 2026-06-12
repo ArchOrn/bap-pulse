@@ -154,6 +154,10 @@ func main() {
 	// Notifier: persists in-app notifications and dispatches push.
 	notifier := services.NewNotifier(db.New(pool), messagingClient)
 
+	// FFBAD API client + weekly (Thursday) roster sync. No-op without a token.
+	ffbadClient := services.NewFFBadClient(cfg.FFBadAPIBaseURL, cfg.FFBadClubToken)
+	services.StartWeeklyRosterSync(pool, ffbadClient)
+
 	// --- Auth ---
 	app.Post("/auth/sync", handlers.Sync(pool))
 
@@ -172,18 +176,20 @@ func main() {
 	app.Get("/members", handlers.ListMembers(pool))
 
 	// --- Matches ---
+	// Write routes that mutate standings require an approved account.
+	approved := middleware.RequireApproved(pool)
 	matches := app.Group("/matches")
 	matches.Get("/", handlers.GetMatches(pool))
-	matches.Post("/", handlers.CreateMatch(pool, notifier))
+	matches.Post("/", approved, handlers.CreateMatch(pool, notifier))
 	matches.Get("/:id", handlers.GetMatch(pool))
-	matches.Post("/:id/confirm", handlers.ConfirmMatch(pool, notifier))
-	matches.Post("/:id/contest", handlers.ContestMatch(pool, notifier))
+	matches.Post("/:id/confirm", approved, handlers.ConfirmMatch(pool, notifier))
+	matches.Post("/:id/contest", approved, handlers.ContestMatch(pool, notifier))
 
 	// --- Challenges (player-to-player, SINGLES only in v1) ---
 	challenges := app.Group("/challenges")
 	challenges.Get("/", handlers.ListChallenges(pool))
-	challenges.Post("/", handlers.CreateChallenge(pool, notifier))
-	challenges.Post("/:id/accept", handlers.AcceptChallenge(pool, notifier))
+	challenges.Post("/", approved, handlers.CreateChallenge(pool, notifier))
+	challenges.Post("/:id/accept", approved, handlers.AcceptChallenge(pool, notifier))
 	challenges.Post("/:id/decline", handlers.DeclineChallenge(pool, notifier))
 	challenges.Post("/:id/cancel", handlers.CancelChallenge(pool))
 
@@ -207,6 +213,11 @@ func main() {
 	admin.Use(middleware.RequireAdmin(pool))
 	admin.Post("/invite", handlers.InviteUser(pool, authClient))
 	admin.Post("/users/:uid/role", handlers.SetAdminRole(pool))
+	admin.Get("/users/pending", handlers.ListPendingUsers(pool))
+	admin.Post("/users/:uid/approve", handlers.ApproveUser(pool))
+	admin.Post("/users/:uid/reject", handlers.RejectUser(pool))
+	admin.Post("/roster/sync", handlers.SyncRoster(pool, ffbadClient))
+	admin.Get("/roster", handlers.GetRoster(pool))
 
 	log.Printf("Server listening on port %s", cfg.Port)
 	log.Fatal(app.Listen(":" + cfg.Port))

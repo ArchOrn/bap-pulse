@@ -2,12 +2,17 @@
 useHead({ title: 'Joueurs — BAP Pulse' })
 
 const { baseURL, authHeaders } = useApi()
+const { statusBadge } = useUserOptions()
 
 const { data: users, status, error, refresh } = await useFetch<User[]>(`${baseURL}/users`, {
   headers: authHeaders()
 })
 
 const fullName = (u: User) => [u.first_name, u.last_name].filter(Boolean).join(' ')
+
+const pendingCount = computed(() =>
+  (users.value ?? []).filter(u => u.status === 'pending').length
+)
 
 // ---- Table columns ----
 const columns = [
@@ -17,6 +22,7 @@ const columns = [
   { accessorKey: 'elo_singles', header: 'ELO S' },
   { accessorKey: 'elo_doubles', header: 'ELO D' },
   { accessorKey: 'elo_mixed', header: 'ELO M' },
+  { accessorKey: 'status', header: 'Statut' },
   { accessorKey: 'role', header: 'Rôle' },
   { accessorKey: 'created_at', header: 'Inscrit le' },
   { accessorKey: 'actions', header: '' }
@@ -79,12 +85,37 @@ const handleInvite = async () => {
         </p>
       </div>
 
-      <UButton
-        icon="i-lucide-user-plus"
-        @click="openInvite"
-      >
-        Inviter un joueur
-      </UButton>
+      <div class="flex items-center gap-2">
+        <UButton
+          icon="i-lucide-user-check"
+          color="neutral"
+          variant="outline"
+          to="/users/pending"
+        >
+          Validations
+          <UBadge
+            v-if="pendingCount > 0"
+            :label="String(pendingCount)"
+            color="warning"
+            variant="solid"
+            size="sm"
+          />
+        </UButton>
+        <UButton
+          icon="i-lucide-refresh-cw"
+          color="neutral"
+          variant="outline"
+          to="/users/roster"
+        >
+          Roster FFBAD
+        </UButton>
+        <UButton
+          icon="i-lucide-user-plus"
+          @click="openInvite"
+        >
+          Inviter un joueur
+        </UButton>
+      </div>
     </div>
 
     <AppCard>
@@ -112,6 +143,14 @@ const handleInvite = async () => {
         :data="rows"
         :columns="columns"
       >
+        <template #status-cell="{ row }">
+          <UBadge
+            :label="statusBadge(row.original.status).label"
+            :color="statusBadge(row.original.status).color"
+            variant="subtle"
+          />
+        </template>
+
         <template #role-cell="{ row }">
           <UBadge
             :label="row.original.role === 'admin' ? 'Admin' : 'Joueur'"

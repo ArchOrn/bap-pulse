@@ -15,6 +15,11 @@ type Config struct {
 	FirebaseCredentialsFile string
 	// Comma-separated list of allowed CORS origins (e.g. "http://localhost:3000,https://bo.example.com")
 	CORSOrigins string
+	// Base URL of the official FFBAD API (default https://api.ffbad.org).
+	FFBadAPIBaseURL string
+	// Club token used to fetch the club roster from the FFBAD API. When empty,
+	// roster sync is disabled (manual + weekly cron both no-op with a warning).
+	FFBadClubToken string
 }
 
 func Load() (*Config, error) {
@@ -28,7 +33,9 @@ func Load() (*Config, error) {
 		FirebaseCredentialsFile: os.Getenv("FIREBASE_CREDENTIALS_FILE"),
 		// Permissive default for dev (Flutter web's port is non-deterministic).
 		// Always lock down via CORS_ORIGINS in prod.
-		CORSOrigins: getEnvOrDefault("CORS_ORIGINS", "*"),
+		CORSOrigins:     getEnvOrDefault("CORS_ORIGINS", "*"),
+		FFBadAPIBaseURL: getEnvOrDefault("FFBAD_API_BASE_URL", "https://api.ffbad.org"),
+		FFBadClubToken:  os.Getenv("FFBAD_CLUB_TOKEN"),
 	}
 
 	if cfg.DatabaseURL == "" {

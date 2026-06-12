@@ -189,6 +189,49 @@ func (ns NullNotificationType) Value() (driver.Value, error) {
 	return string(ns.NotificationType), nil
 }
 
+type UserStatus string
+
+const (
+	UserStatusPending  UserStatus = "pending"
+	UserStatusApproved UserStatus = "approved"
+	UserStatusRejected UserStatus = "rejected"
+)
+
+func (e *UserStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = UserStatus(s)
+	case string:
+		*e = UserStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for UserStatus: %T", src)
+	}
+	return nil
+}
+
+type NullUserStatus struct {
+	UserStatus UserStatus `json:"user_status"`
+	Valid      bool       `json:"valid"` // Valid is true if UserStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullUserStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.UserStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.UserStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullUserStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.UserStatus), nil
+}
+
 type Challenge struct {
 	ID          pgtype.UUID        `json:"id"`
 	FromUserID  string             `json:"from_user_id"`
@@ -200,6 +243,23 @@ type Challenge struct {
 	Status      ChallengeStatus    `json:"status"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	RespondedAt pgtype.Timestamptz `json:"responded_at"`
+}
+
+type ClubRoster struct {
+	LicenseNumber string             `json:"license_number"`
+	PerID         pgtype.Text        `json:"per_id"`
+	FirstName     string             `json:"first_name"`
+	LastName      string             `json:"last_name"`
+	Gender        pgtype.Text        `json:"gender"`
+	RankSingles   pgtype.Text        `json:"rank_singles"`
+	RankDoubles   pgtype.Text        `json:"rank_doubles"`
+	RankMixed     pgtype.Text        `json:"rank_mixed"`
+	CoteSingles   pgtype.Int4        `json:"cote_singles"`
+	CoteDoubles   pgtype.Int4        `json:"cote_doubles"`
+	CoteMixed     pgtype.Int4        `json:"cote_mixed"`
+	IsDataPublic  bool               `json:"is_data_public"`
+	MatchedUserID pgtype.Text        `json:"matched_user_id"`
+	SyncedAt      pgtype.Timestamptz `json:"synced_at"`
 }
 
 type EloHistory struct {
@@ -262,16 +322,18 @@ type Notification struct {
 }
 
 type User struct {
-	ID         string             `json:"id"`
-	Email      string             `json:"email"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
-	Role       string             `json:"role"`
-	FirstName  string             `json:"first_name"`
-	LastName   string             `json:"last_name"`
-	Gender     pgtype.Text        `json:"gender"`
-	FfbadRank  pgtype.Text        `json:"ffbad_rank"`
-	EloSingles int32              `json:"elo_singles"`
-	EloDoubles int32              `json:"elo_doubles"`
-	EloMixed   int32              `json:"elo_mixed"`
-	Nickname   pgtype.Text        `json:"nickname"`
+	ID            string             `json:"id"`
+	Email         string             `json:"email"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	Role          string             `json:"role"`
+	FirstName     string             `json:"first_name"`
+	LastName      string             `json:"last_name"`
+	Gender        pgtype.Text        `json:"gender"`
+	FfbadRank     pgtype.Text        `json:"ffbad_rank"`
+	EloSingles    int32              `json:"elo_singles"`
+	EloDoubles    int32              `json:"elo_doubles"`
+	EloMixed      int32              `json:"elo_mixed"`
+	Nickname      pgtype.Text        `json:"nickname"`
+	Status        UserStatus         `json:"status"`
+	LicenseNumber pgtype.Text        `json:"license_number"`
 }

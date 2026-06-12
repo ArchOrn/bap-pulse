@@ -15,9 +15,18 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
-      buildWhen: (a, b) => a.status != b.status,
+      buildWhen: (a, b) =>
+          a.status != b.status ||
+          a.syncing != b.syncing ||
+          a.accountStatus != b.accountStatus,
       builder: (context, auth) {
-        if (auth.status == AuthStatus.unknown) {
+        // Show the spinner while Firebase resolves, and while an authenticated
+        // session is still syncing its account status (cold start with a cached
+        // session) — avoids flashing the marketing CTA before the gate decides.
+        final resolving = auth.status == AuthStatus.unknown ||
+            (auth.status == AuthStatus.authenticated &&
+                (auth.syncing || auth.accountStatus == null));
+        if (resolving) {
           return const Scaffold(
             body: AuthBackground(
               child: Center(

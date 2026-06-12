@@ -72,6 +72,232 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/roster": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "List the synced club roster",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.rosterResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/roster/sync": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Fetches the full club roster (scoped by the club token) and upserts it locally. Pending users whose licence now appears are auto-approved.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Sync the club roster from the FFBAD API",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/services.RosterSyncResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/pending": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "List users awaiting validation",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.User"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/{uid}/approve": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Flips the user to approved. Optionally corrects gender/FFBAD rank (FFBAD data may be stale or missing). If the user hasn't played a match yet, the starting ELO is recomputed from the corrected rank/gender.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Approve a pending user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Firebase UID of the target user",
+                        "name": "uid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Optional profile corrections",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.approveRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.User"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/{uid}/reject": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Reject a pending user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Firebase UID of the target user",
+                        "name": "uid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.User"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/admin/users/{uid}/role": {
             "post": {
                 "security": [
@@ -152,7 +378,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Called after a successful Firebase login. Creates the user profile on first login, or returns the existing one.",
+                "description": "Called after a successful Firebase login. On first login it creates the profile: if the FFBAD licence matches the club roster the account is auto-approved and prefilled (name/gender/rank/ELO from FFBAD), otherwise it is left pending for admin validation. Returns the existing profile on subsequent calls.",
                 "consumes": [
                     "application/json"
                 ],
@@ -165,7 +391,7 @@ const docTemplate = `{
                 "summary": "Sync user profile",
                 "parameters": [
                     {
-                        "description": "User first and last name (required on first login)",
+                        "description": "Profile fields + FFBAD licence (first login)",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -189,6 +415,15 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -2061,6 +2296,53 @@ const docTemplate = `{
                 "ChallengeStatusCANCELLED"
             ]
         },
+        "db.ClubRoster": {
+            "type": "object",
+            "properties": {
+                "cote_doubles": {
+                    "$ref": "#/definitions/pgtype.Int4"
+                },
+                "cote_mixed": {
+                    "$ref": "#/definitions/pgtype.Int4"
+                },
+                "cote_singles": {
+                    "$ref": "#/definitions/pgtype.Int4"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "is_data_public": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "license_number": {
+                    "type": "string"
+                },
+                "matched_user_id": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "per_id": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "rank_doubles": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "rank_mixed": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "rank_singles": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
+                "synced_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                }
+            }
+        },
         "db.FcmToken": {
             "type": "object",
             "properties": {
@@ -2275,10 +2557,42 @@ const docTemplate = `{
                 "last_name": {
                     "type": "string"
                 },
+                "license_number": {
+                    "$ref": "#/definitions/pgtype.Text"
+                },
                 "nickname": {
                     "$ref": "#/definitions/pgtype.Text"
                 },
                 "role": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/db.UserStatus"
+                }
+            }
+        },
+        "db.UserStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "approved",
+                "rejected"
+            ],
+            "x-enum-varnames": [
+                "UserStatusPending",
+                "UserStatusApproved",
+                "UserStatusRejected"
+            ]
+        },
+        "handlers.approveRequest": {
+            "type": "object",
+            "properties": {
+                "ffbad_rank": {
+                    "description": "optional correction, \"\" leaves unchanged",
+                    "type": "string"
+                },
+                "gender": {
+                    "description": "optional correction, \"\" leaves unchanged",
                     "type": "string"
                 }
             }
@@ -2389,6 +2703,20 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.rosterResponse": {
+            "type": "object",
+            "properties": {
+                "entries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.ClubRoster"
+                    }
+                },
+                "last_synced_at": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.setRoleRequest": {
             "type": "object",
             "properties": {
@@ -2423,6 +2751,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "last_name": {
+                    "type": "string"
+                },
+                "license_number": {
+                    "description": "FFBAD licence; matched against the club roster",
+                    "type": "string"
+                },
+                "nickname": {
+                    "description": "optional handle",
                     "type": "string"
                 }
             }
@@ -2744,6 +3080,29 @@ const docTemplate = `{
                 },
                 "nickname": {
                     "type": "string"
+                }
+            }
+        },
+        "services.RosterSyncResult": {
+            "type": "object",
+            "properties": {
+                "auto_approved": {
+                    "type": "integer"
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "fetched": {
+                    "type": "integer"
+                },
+                "skipped_anonymous": {
+                    "type": "integer"
+                },
+                "upserted": {
+                    "type": "integer"
                 }
             }
         },

@@ -84,3 +84,27 @@ func RequireAdmin(pool *pgxpool.Pool) fiber.Handler {
 		return c.Next()
 	}
 }
+
+// RequireApproved rejects requests from users whose account is not approved
+// (pending FFBAD validation or rejected). Must be used after FirebaseAuth.
+// Read-only routes stay open; this guards write routes that mutate standings.
+func RequireApproved(pool *pgxpool.Pool) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		uid, ok := c.Locals("firebaseUID").(string)
+		if !ok || uid == "" {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Unauthenticated",
+			})
+		}
+
+		q := db.New(pool)
+		user, err := q.GetUserByID(c.Context(), uid)
+		if err != nil || user.Status != db.UserStatusApproved {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+				"error": "Compte en attente de validation",
+			})
+		}
+
+		return c.Next()
+	}
+}
