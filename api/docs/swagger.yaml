@@ -1289,6 +1289,53 @@ paths:
       summary: Contest a pending match score
       tags:
       - matches
+  /matches/record:
+    post:
+      consumes:
+      - application/json
+      description: 'Admin-only. Records an official match between any members — the
+        caller does NOT need to be a player. The match is created CONFIRMED: ELO and
+        performance points are applied immediately, the match-confirmed news is emitted,
+        and NO awaiting-confirmation notification is sent. Players submitting via
+        the app keep using POST /matches (opponent confirmation flow).'
+      parameters:
+      - description: Match details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createMatchRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Record a match as an admin (auto-confirmed)
+      tags:
+      - matches
   /members:
     get:
       description: Returns the full membership, each enriched with monthly performance

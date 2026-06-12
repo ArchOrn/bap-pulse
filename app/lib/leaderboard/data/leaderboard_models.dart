@@ -1,3 +1,5 @@
+import 'package:equatable/equatable.dart';
+
 import 'package:bap_pulse/shared/models/jersey.dart';
 import 'package:bap_pulse/shared/models/player.dart';
 
@@ -33,7 +35,7 @@ extension LeaderboardCriterionX on LeaderboardCriterion {
 
 /// One row of any of the four classements. The metric varies by criterion;
 /// it's exposed as a single `value` so the screen can sort/render uniformly.
-class LeaderboardEntry {
+class LeaderboardEntry extends Equatable {
   final String id;
   final String firstName;
   final String lastName;
@@ -51,6 +53,9 @@ class LeaderboardEntry {
     required this.rank,
     required this.value,
   });
+
+  @override
+  List<Object?> get props => [id, firstName, lastName, gender, elo, rank, value];
 
   String get name => '$firstName $lastName';
 

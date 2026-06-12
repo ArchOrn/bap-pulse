@@ -75,7 +75,7 @@ class LeaderboardLoaded extends LeaderboardState {
   });
 
   @override
-  List<Object?> get props => [criterion, entries.length, cache.length];
+  List<Object?> get props => [criterion, entries, cache];
 }
 
 class LeaderboardError extends LeaderboardState {
@@ -111,40 +111,53 @@ class LeaderboardBloc extends Bloc<LeaderboardEvent, LeaderboardState> {
     LeaderboardLoadRequested event,
     Emitter<LeaderboardState> emit,
   ) async {
-    final cache = state.cache;
-    final cached = cache[event.criterion];
-    if (cached != null) {
-      emit(
-        LeaderboardLoaded(
-          criterion: event.criterion,
-          entries: cached,
-          cache: cache,
-        ),
-      );
-      return;
-    }
-    emit(LeaderboardLoading(criterion: event.criterion, cache: cache));
-    await _fetch(event.criterion, emit, cache);
+    await _loadOrRevalidate(event.criterion, emit);
   }
 
   Future<void> _onCriterionChanged(
     LeaderboardCriterionChanged event,
     Emitter<LeaderboardState> emit,
   ) async {
+    await _loadOrRevalidate(event.criterion, emit);
+  }
+
+  /// Cache-first with background revalidation: when entries are cached, show
+  /// them immediately for a snappy UI, then refetch so standings changed
+  /// server-side (e.g. a match recorded in the back-office) get reflected
+  /// without an app restart. On a cold load (no cache) we show the loading
+  /// state and await the fetch.
+  Future<void> _loadOrRevalidate(
+    LeaderboardCriterion criterion,
+    Emitter<LeaderboardState> emit,
+  ) async {
     final cache = state.cache;
-    final cached = cache[event.criterion];
+    final cached = cache[criterion];
     if (cached != null) {
       emit(
-        LeaderboardLoaded(
-          criterion: event.criterion,
-          entries: cached,
-          cache: cache,
-        ),
+        LeaderboardLoaded(criterion: criterion, entries: cached, cache: cache),
       );
+      await _revalidate(criterion, emit);
       return;
     }
-    emit(LeaderboardLoading(criterion: event.criterion, cache: cache));
-    await _fetch(event.criterion, emit, cache);
+    emit(LeaderboardLoading(criterion: criterion, cache: cache));
+    await _fetch(criterion, emit, cache);
+  }
+
+  /// Background refetch that refreshes the cache for [criterion]. A transient
+  /// failure is swallowed so it doesn't replace good cached data with an error.
+  Future<void> _revalidate(
+    LeaderboardCriterion criterion,
+    Emitter<LeaderboardState> emit,
+  ) async {
+    try {
+      final entries = await _api.fetch(criterion);
+      final next = Map.of(state.cache)..[criterion] = entries;
+      emit(
+        LeaderboardLoaded(criterion: criterion, entries: entries, cache: next),
+      );
+    } catch (_) {
+      // Keep the currently displayed cached entries on a refresh failure.
+    }
   }
 
   Future<void> _onRefresh(

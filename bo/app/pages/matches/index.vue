@@ -175,7 +175,7 @@ const handleCreate = async () => {
       body.team1_player2_id = createForm.team1_player2_id
       body.team2_player2_id = createForm.team2_player2_id
     }
-    await $fetch(`${baseURL}/matches`, {
+    await $fetch(`${baseURL}/matches/record`, {
       method: 'POST',
       headers: authHeaders(),
       body

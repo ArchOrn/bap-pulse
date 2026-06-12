@@ -181,6 +181,8 @@ func main() {
 	matches := app.Group("/matches")
 	matches.Get("/", handlers.GetMatches(pool))
 	matches.Post("/", approved, handlers.CreateMatch(pool, notifier))
+	// Admin-recorded matches: official, auto-confirmed, no opponent confirmation.
+	matches.Post("/record", middleware.RequireAdmin(pool), handlers.CreateAdminMatch(pool))
 	matches.Get("/:id", handlers.GetMatch(pool))
 	matches.Post("/:id/confirm", approved, handlers.ConfirmMatch(pool, notifier))
 	matches.Post("/:id/contest", approved, handlers.ContestMatch(pool, notifier))

@@ -162,83 +162,24 @@ func CreateMatch(pool *pgxpool.Pool, notifier *services.Notifier) fiber.Handler 
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 		}
 
-		if msg := validateSets(req.Sets); msg != "" {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": msg})
+		q := db.New(pool)
+		params, verr := buildMatchParams(c, q, req)
+		if verr != nil {
+			return c.Status(verr.status).JSON(fiber.Map{"error": verr.msg})
 		}
 
-		isDoubles := req.MatchType == string(db.MatchTypeDOUBLES) || req.MatchType == string(db.MatchTypeMIXED)
-
-		if req.Team1Player1ID == "" || req.Team2Player1ID == "" {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "team1_player1_id and team2_player1_id are required"})
-		}
-		if isDoubles && (req.Team1Player2ID == "" || req.Team2Player2ID == "") {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "All 4 player IDs are required for doubles/mixed"})
-		}
-
-		playerIDs := []string{req.Team1Player1ID, req.Team2Player1ID}
-		if isDoubles {
-			playerIDs = append(playerIDs, req.Team1Player2ID, req.Team2Player2ID)
-		}
-		seen := make(map[string]bool, len(playerIDs))
-		callerInMatch := false
-		for _, id := range playerIDs {
-			if seen[id] {
-				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "A player cannot appear more than once in a match"})
-			}
-			seen[id] = true
-			if id == uid {
-				callerInMatch = true
-			}
-		}
+		// Self-report rule: the submitter must be one of the players in the match.
+		callerInMatch := req.Team1Player1ID == uid || req.Team2Player1ID == uid ||
+			req.Team1Player2ID == uid || req.Team2Player2ID == uid
 		if !callerInMatch {
 			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "You can only submit matches you played in"})
 		}
 
-		q := db.New(pool)
+		params.Status = db.MatchStatusPENDING
+		params.SubmittedByID = pgtype.Text{String: uid, Valid: true}
+		params.ConfirmedAt = pgtype.Timestamptz{}
 
-		if _, err := q.GetUserByID(c.Context(), req.Team1Player1ID); err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Team 1 player 1 not found"})
-		}
-		if _, err := q.GetUserByID(c.Context(), req.Team2Player1ID); err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Team 2 player 1 not found"})
-		}
-		team1P2 := pgtype.Text{}
-		team2P2 := pgtype.Text{}
-		if isDoubles {
-			if _, err := q.GetUserByID(c.Context(), req.Team1Player2ID); err != nil {
-				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Team 1 player 2 not found"})
-			}
-			if _, err := q.GetUserByID(c.Context(), req.Team2Player2ID); err != nil {
-				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Team 2 player 2 not found"})
-			}
-			team1P2 = pgtype.Text{String: req.Team1Player2ID, Valid: true}
-			team2P2 = pgtype.Text{String: req.Team2Player2ID, Valid: true}
-		}
-
-		set3T1 := pgtype.Int4{}
-		set3T2 := pgtype.Int4{}
-		if len(req.Sets) == 3 {
-			set3T1 = pgtype.Int4{Int32: req.Sets[2].Team1, Valid: true}
-			set3T2 = pgtype.Int4{Int32: req.Sets[2].Team2, Valid: true}
-		}
-
-		match, err := q.CreateMatch(c.Context(), db.CreateMatchParams{
-			MatchType:      db.MatchType(req.MatchType),
-			Team1Player1ID: req.Team1Player1ID,
-			Team1Player2ID: team1P2,
-			Team2Player1ID: req.Team2Player1ID,
-			Team2Player2ID: team2P2,
-			Set1Team1:      req.Sets[0].Team1,
-			Set1Team2:      req.Sets[0].Team2,
-			Set2Team1:      req.Sets[1].Team1,
-			Set2Team2:      req.Sets[1].Team2,
-			Set3Team1:      set3T1,
-			Set3Team2:      set3T2,
-			PlayedAt:       pgtype.Timestamptz{Time: time.Now(), Valid: true},
-			Status:         db.MatchStatusPENDING,
-			SubmittedByID:  pgtype.Text{String: uid, Valid: true},
-			ConfirmedAt:    pgtype.Timestamptz{},
-		})
+		match, err := q.CreateMatch(c.Context(), params)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create match"})
 		}
@@ -263,6 +204,141 @@ func CreateMatch(pool *pgxpool.Pool, notifier *services.Notifier) fiber.Handler 
 
 		return c.Status(fiber.StatusCreated).JSON(match)
 	}
+}
+
+// CreateAdminMatch godoc
+//
+//	@Summary		Record a match as an admin (auto-confirmed)
+//	@Description	Admin-only. Records an official match between any members — the caller does NOT need to be a player. The match is created CONFIRMED: ELO and performance points are applied immediately, the match-confirmed news is emitted, and NO awaiting-confirmation notification is sent. Players submitting via the app keep using POST /matches (opponent confirmation flow).
+//	@Tags			matches
+//	@Security		BearerAuth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		createMatchRequest	true	"Match details"
+//	@Success		201		{object}	map[string]interface{}
+//	@Failure		400		{object}	map[string]string
+//	@Failure		404		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/matches/record [post]
+func CreateAdminMatch(pool *pgxpool.Pool) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		uid := c.Locals("firebaseUID").(string)
+
+		var req createMatchRequest
+		if err := c.BodyParser(&req); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+		}
+
+		q := db.New(pool)
+		params, verr := buildMatchParams(c, q, req)
+		if verr != nil {
+			return c.Status(verr.status).JSON(fiber.Map{"error": verr.msg})
+		}
+
+		// Admin-recorded match: authoritative and confirmed on the spot. No
+		// caller-in-match restriction and no awaiting-confirmation notification.
+		params.Status = db.MatchStatusCONFIRMED
+		params.SubmittedByID = pgtype.Text{String: uid, Valid: true}
+		params.ConfirmedAt = pgtype.Timestamptz{Time: time.Now(), Valid: true}
+
+		match, err := q.CreateMatch(c.Context(), params)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create match"})
+		}
+
+		eloChanges, err := applyEloChangesForMatch(c, q, match)
+		if err != nil {
+			return err
+		}
+
+		if err := services.GenerateMatchNews(c.Context(), q, match); err != nil {
+			log.Printf("news_generator: %v", err)
+		}
+
+		return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+			"match": match,
+			"elo":   eloChanges,
+		})
+	}
+}
+
+// matchParamsError carries a client-facing validation failure (HTTP status +
+// message) from buildMatchParams back to the handler.
+type matchParamsError struct {
+	status int
+	msg    string
+}
+
+// buildMatchParams validates the request body and resolves/checks the players,
+// returning CreateMatchParams with status / submitted_by / confirmed_at left
+// for the caller to set. Shared by the player self-report (CreateMatch) and the
+// admin auto-confirmed (CreateAdminMatch) flows.
+func buildMatchParams(c *fiber.Ctx, q *db.Queries, req createMatchRequest) (db.CreateMatchParams, *matchParamsError) {
+	if msg := validateSets(req.Sets); msg != "" {
+		return db.CreateMatchParams{}, &matchParamsError{fiber.StatusBadRequest, msg}
+	}
+
+	isDoubles := req.MatchType == string(db.MatchTypeDOUBLES) || req.MatchType == string(db.MatchTypeMIXED)
+
+	if req.Team1Player1ID == "" || req.Team2Player1ID == "" {
+		return db.CreateMatchParams{}, &matchParamsError{fiber.StatusBadRequest, "team1_player1_id and team2_player1_id are required"}
+	}
+	if isDoubles && (req.Team1Player2ID == "" || req.Team2Player2ID == "") {
+		return db.CreateMatchParams{}, &matchParamsError{fiber.StatusBadRequest, "All 4 player IDs are required for doubles/mixed"}
+	}
+
+	playerIDs := []string{req.Team1Player1ID, req.Team2Player1ID}
+	if isDoubles {
+		playerIDs = append(playerIDs, req.Team1Player2ID, req.Team2Player2ID)
+	}
+	seen := make(map[string]bool, len(playerIDs))
+	for _, id := range playerIDs {
+		if seen[id] {
+			return db.CreateMatchParams{}, &matchParamsError{fiber.StatusBadRequest, "A player cannot appear more than once in a match"}
+		}
+		seen[id] = true
+	}
+
+	if _, err := q.GetUserByID(c.Context(), req.Team1Player1ID); err != nil {
+		return db.CreateMatchParams{}, &matchParamsError{fiber.StatusNotFound, "Team 1 player 1 not found"}
+	}
+	if _, err := q.GetUserByID(c.Context(), req.Team2Player1ID); err != nil {
+		return db.CreateMatchParams{}, &matchParamsError{fiber.StatusNotFound, "Team 2 player 1 not found"}
+	}
+	team1P2 := pgtype.Text{}
+	team2P2 := pgtype.Text{}
+	if isDoubles {
+		if _, err := q.GetUserByID(c.Context(), req.Team1Player2ID); err != nil {
+			return db.CreateMatchParams{}, &matchParamsError{fiber.StatusNotFound, "Team 1 player 2 not found"}
+		}
+		if _, err := q.GetUserByID(c.Context(), req.Team2Player2ID); err != nil {
+			return db.CreateMatchParams{}, &matchParamsError{fiber.StatusNotFound, "Team 2 player 2 not found"}
+		}
+		team1P2 = pgtype.Text{String: req.Team1Player2ID, Valid: true}
+		team2P2 = pgtype.Text{String: req.Team2Player2ID, Valid: true}
+	}
+
+	set3T1 := pgtype.Int4{}
+	set3T2 := pgtype.Int4{}
+	if len(req.Sets) == 3 {
+		set3T1 = pgtype.Int4{Int32: req.Sets[2].Team1, Valid: true}
+		set3T2 = pgtype.Int4{Int32: req.Sets[2].Team2, Valid: true}
+	}
+
+	return db.CreateMatchParams{
+		MatchType:      db.MatchType(req.MatchType),
+		Team1Player1ID: req.Team1Player1ID,
+		Team1Player2ID: team1P2,
+		Team2Player1ID: req.Team2Player1ID,
+		Team2Player2ID: team2P2,
+		Set1Team1:      req.Sets[0].Team1,
+		Set1Team2:      req.Sets[0].Team2,
+		Set2Team1:      req.Sets[1].Team1,
+		Set2Team2:      req.Sets[1].Team2,
+		Set3Team1:      set3T1,
+		Set3Team2:      set3T2,
+		PlayedAt:       pgtype.Timestamptz{Time: time.Now(), Valid: true},
+	}, nil
 }
 
 // ConfirmMatch godoc
